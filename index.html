@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>mstoeckle bauchbinder</title>
+    <link rel="stylesheet" type="text/css" href="semantic.min.css">
+    <style>
+      body {
+        padding: 20px;
+        background: #333;
+        color: #fff;
+      }
+
+      .ui.inverted.form input:not([type]), .ui.inverted.form input[type=date], .ui.inverted.form input[type=datetime-local], .ui.inverted.form input[type=email], .ui.inverted.form input[type=file], .ui.inverted.form input[type=number], .ui.inverted.form input[type=password], .ui.inverted.form input[type=search], .ui.inverted.form input[type=tel], .ui.inverted.form input[type=text], .ui.inverted.form input[type=time], .ui.inverted.form input[type=url] {
+        background: #222;
+        color: #fff;
+      }
+
+      .ui.inverted.form .dropdown input.search, .ui.default.dropdown:not(.button)>.text, .ui.dropdown:not(.button)>.default.text {
+        color: #222;
+      }
+
+      .copy {
+        position: fixed;
+        bottom: 5px;
+        right: 5px;
+        text-align: right;
+        font-size: 10px;
+      }
+
+      .tab.segment {
+        background: none;
+        color: #ccc;
+      }
+      
+      .ui.cards>.card.inverted {
+        background: #333;
+        -webkit-box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(255,255,255,.68);
+        box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(255,255,255,.68);
+        overflow: hidden;
+      }
+
+      .ui.card.inverted>.content>.description, .ui.cards>.card.inverted>.content>.description {
+        color: rgba(255,255,255,.68);
+      }
+
+      .ui.card.inverted>.content>.header, .ui.cards>.card.inverted>.content>.header {
+        color: rgba(255,255,255,.85);
+      }
+
+      .ui.cards>.card.inverted.active {
+        -webkit-box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(33,186,69,.68);
+        box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(33,186,69,.68);
+      }
+
+      .ui.card.inverted.active>.content>.description, .ui.cards>.card.inverted.active>.content>.description {
+        color: rgba(33,186,69,.68);
+      }
+
+      .ui.card.inverted.active>.content>.header, .ui.cards>.card.inverted.active>.content>.header {
+        color: rgba(33,186,69,.85);
+      }
+
+      
+      .card.inverted.active>.ui.attached.bottom.button {
+        background-color: #21ba45;
+        color: #fff;
+        -webkit-box-shadow: 0 0 0 1px rgba(34,36,38,.15)!important;
+        box-shadow: 0 0 0 1px rgba(34,36,38,.15)!important;
+      }
+
+      .ui.modal {
+        background: transparent;
+      }
+
+      .ui.modal>.header, .ui.modal>.content {
+        background: #333;
+        color: #fff;
+        border-color: #555;
+      }
+
+      .ui.modal>.actions {
+        background: #323232;
+        border-color: #555;
+      }
+
+      .ui.modal>.close {
+        top: 1rem;
+        right: 1rem;
+      }
+
+      .inverted > select.ui.dropdown {
+        background: #222;
+        color: #fff;
+      }
+
+      .ui.secondary.inverted.pointing.menu {
+        border: none;
+      }
+
+      .ui.tab.active {
+        border: none;
+        box-shadow: none;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div id="app" class="ui fluid container inverted">
+      <div class="row">
+        <div class="col">
+          <button class="ui right floated labeled icon red button" v-on:click="stopLowerthird()">
+            <i class="eye slash icon"></i>
+            ausblenden
+          </button>
+          <h2>bauchbinder</h2>
+        </div>
+      </div>
+
+      <div class="ui divider" style="clear:both; padding-top: 20px;"></div>
+      
+      <div class="ui pointing secondary menu inverted">
+        <a class="item active" data-tab="items">Bauchbinden</a>
+        <a class="item" data-tab="design">Gestaltung</a>
+        <a class="item" data-tab="animation">Animation</a>
+        <a class="item" data-tab="info">Info</a>
+      </div>
+
+      <div class="ui tab segment active" data-tab="items">
+        <div class="row">
+          <div class="col" style="text-align: right;">
+            <button class="ui green labeled icon button" v-on:click="showModal">
+              <i class="plus icon"></i>
+              neue Bauchbinde
+            </button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:20px;">
+          <div class="col">
+            <draggable v-model="lowerthirds" draggable=".card" class="ui cards" @end="onDragEnd">
+              <div class="card inverted" v-bind:class="{ active: (active == index) }" v-for="(lowerthird, index) in lowerthirds" :key="index">
+                <div class="content">
+                  <span class="right floated"><i class="edit icon" v-on:click="showModal(index)"></i> {{index+1}}</span>
+                  
+                  <div class="header">{{lowerthird.name}}</div>
+                  <div class="description">
+                    {{lowerthird.title}}
+                  </div>
+                </div>
+                <div class="ui bottom attached button" v-on:click="playLowerthird(index)">
+                  <i class="play icon"></i>
+                  anzeigen
+                </div>
+              </div>
+            </draggable>
+          </div>        
+        </div>
+      </div>
+
+      <div class="ui tab segment" data-tab="design">
+        <div class="row" style="margin-top: 20px;">
+          <div class="col">
+            <h2>style</h2>
+            <form class="ui form inverted" v-on:submit.prevent>
+              <h4 class="ui dividing header inverted">Bauchbinde</h4>
+              <div class="fields">
+                <div class="four wide field inverted">
+                  <label>Breite (min in %)</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="0" max="100" name="design[whitewidth]" v-model="design.white.width" maxlength="3" placeholder="Breite">
+                    <i class="arrows alternate horizontal icon inverted"></i>
+                  </div>
+                </div>
+                <div class="four wide field inverted">
+                  <label>Abstand links/rechts (in %)</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="-100" max="100" name="design[whiteleft]" v-model="design.white.left" maxlength="3" placeholder="Abstand seite">
+                    <i class="arrow right icon inverted"></i>
+                  </div>
+                </div>
+                <div class="four wide field inverted">
+                  <label>Abstand unten (in %)</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="-100" max="100" name="design[whitebottom]" v-model="design.white.bottom" maxlength="3" placeholder="Abstand unten">
+                    <i class="arrow up icon inverted"></i>
+                  </div>
+                </div>
+                <div class="four wide field inverted">
+                  <label>Farbe (CSS konform)</label>
+                  <div class="ui left icon input inverted">
+                    <input type="text" step="0.01" name="design[whitecolor]" v-model="design.white.color" placeholder="rgba(R,G,B,A)">
+                    <i class="paint brush icon inverted"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="fields">
+                <div class="four wide field">
+                  <label>Position</label>
+                  <div class="ui icon buttons">
+                    <button class="ui button" :class="{ blue: (design.white.divalign == 0) }"  v-on:click.prevent="design.white.divalign = 0">
+                      <i class="align left icon"></i>
+                    </button>
+                    <button class="ui button" :class="{ blue: (design.white.divalign == 1) }"  v-on:click.prevent="design.white.divalign = 1">
+                      <i class="align center icon"></i>
+                    </button>
+                    <button class="ui button" :class="{ blue: (design.white.divalign == 2) }"  v-on:click.prevent="design.white.divalign = 2">
+                      <i class="align right icon"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="four wide field">
+                  <label>Text Ausrichtung</label>
+                  <div class="ui icon buttons">
+                    <button class="ui button" :class="{ blue: (design.white.textalign == 0) }"  v-on:click.prevent="design.white.textalign = 0">
+                      <i class="align left icon"></i>
+                    </button>
+                    <button class="ui button" :class="{ blue: (design.white.textalign == 1) }"  v-on:click.prevent="design.white.textalign = 1">
+                      <i class="align center icon"></i>
+                    </button>
+                    <button class="ui button" :class="{ blue: (design.white.textalign == 2) }"  v-on:click.prevent="design.white.textalign = 2">
+                      <i class="align right icon"></i>
+                    </button>
+                  </div>
+                </div>
+  
+                <div class="four wide field inverted">
+                  <label>Text Abstand horizontal</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" maxlength="3" placeholder="Abstand seite">
+                    <i class="arrow right icon inverted"></i>
+                  </div>
+                </div>
+                <div class="four wide field inverted">
+                  <label>Text Abstand vertikal</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" maxlength="3" placeholder="Abstand unten">
+                    <i class="arrow up icon inverted"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="fields">
+                <div class="four wide field inverted">
+                  <label>Ecken Rundung</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" maxlength="4" placeholder="Ecken Rundung">
+                    <i class="square outline icon inverted"></i>
+                  </div>
+                </div>
+              </div>
+              <h4 class="ui dividing header inverted">Schrift Name</h4>
+              <div class="field">
+                <label>Schriftart</label>
+                <div class="ui fluid search selection dropdown" ref="fontdropdownH1">
+                  <input type="hidden" name="fontfamily" v-model="design.h1.fontfamily">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">{{ design.h1.fontfamily }}</div>
+                  <div class="menu">
+                    <div v-for="font in fonts" class="item">{{font}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="fields">
+                <div class="field">
+                  <label>Schriftgröße</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.h1.fontsize" maxlength="3" placeholder="Abstand unten">
+                    <i class="text height icon inverted"></i>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Stil</label>
+                  <div class="ui icon buttons">
+                    <button class="ui button" :class="{ blue: design.h1.bold }"  v-on:click.prevent="toggleH1Bold()">
+                      <i class="bold icon"></i>
+                    </button>
+                    <button class="ui button" :class="{ blue: design.h1.italic }"  v-on:click.prevent="toggleH1Italic()">
+                      <i class="italic icon"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="four wide field inverted">
+                  <label>Farbe (CSS konform)</label>
+                  <div class="ui left icon input inverted">
+                    <input type="text" step="0.01" v-model="design.h1.color" placeholder="rgb(R,G,B)">
+                    <i class="paint brush icon inverted"></i>
+                  </div>
+                </div>
+              </div>
+              <h4 class="ui dividing header inverted">Schrift Titel</h4>
+              <div class="field">
+                <label>Schriftart</label>
+                <div class="ui fluid search selection dropdown" ref="fontdropdownH2">
+                  <input type="hidden" name="fontfamily" v-model="design.h2.fontfamily">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">{{ design.h2.fontfamily }}</div>
+                  <div class="menu">
+                    <div v-for="font in fonts" class="item">{{font}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="fields">
+                <div class="field">
+                  <label>Schriftgröße</label>
+                  <div class="ui left icon input inverted">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.h2.fontsize" maxlength="3" placeholder="Abstand unten">
+                    <i class="text height icon inverted"></i>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Stil</label>
+                  <div class="ui icon buttons">
+                    <button class="ui button" :class="{ blue: design.h2.bold }"  v-on:click.prevent="toggleH2Bold()">
+                      <i class="bold icon"></i>
+                    </button>
+                    <button class="ui button" :class="{ blue: design.h2.italic }"  v-on:click.prevent="toggleH2Italic()">
+                      <i class="italic icon"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="four wide field inverted">
+                  <label>Farbe (CSS konform)</label>
+                  <div class="ui left icon input inverted">
+                    <input type="text" step="0.01" v-model="design.h2.color" placeholder="rgb(R,G,B)">
+                    <i class="paint brush icon inverted"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <h4 class="ui dividing header inverted">Custom CSS</h4>
+                <textarea v-model="design.customcss"></textarea>  
+              </div>
+
+              <button class="ui right floated labeled icon button" v-on:click="updateCSS">
+                <i class="sync icon"></i>
+                Update Styles
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="ui tab segment" data-tab="animation">
+        <div class="row" style="margin-top: 20px;">
+          <div class="col">
+            <h2>animation</h2>
+          </div>
+          <div class="col" style="margin-top:20px;">
+            <div class="ui buttons">
+              <button class="ui labeled icon button" v-bind:class="[animation.type == 'fade' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('fade')">
+                <i class="adjust icon"></i>
+                fade
+              </button>
+              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideleft' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideleft')">
+                <i class="long arrow alternate right icon"></i>
+                slideleft
+              </button>
+              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideright' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideright')">
+                <i class="long arrow alternate left icon"></i>
+                slideright
+              </button>
+              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideup' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideup')">
+                <i class="long arrow alternate up icon"></i>
+                slideup
+              </button>
+              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideup_textdelay' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideup_textdelay')">
+                <i class="long arrow alternate up icon"></i>
+                slideup textdelay
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col" style="margin-top: 40px;">
+          <form class="ui form inverted" v-on:submit.prevent>
+            <h4 class="ui dividing header inverted">Animationsparameter</h4>
+            <div class="fields">
+              <div class="four wide field inverted">
+                <label>Dauer (in Millisekunden)</label>
+                <div class="ui left icon input inverted">
+                  <input type="number" step="1" min="1" max="5000" name="fxduration" v-model="animation.duration" maxlength="4" placeholder="Dauer">
+                  <i class="hourglass end icon inverted"></i>
+                </div>
+              </div>
+              <div class="four wide field inverted">
+                <label>Bescheunigungskurve</label>
+                <div class="ui left icon input inverted">
+                  <select class="ui dropdown" v-model="animation.easing">
+                    <option value="linear">linear</option>
+                    <option value="easeInQuad">easeInQuad</option>
+                    <option value="easeInCubic">easeInCubic</option>
+                    <option value="easeInQuart">easeInQuart</option>
+                    <option value="easeInQuint">easeInQuint</option>
+                    <option value="easeInSine">easeInSine</option>
+                    <option value="easeInExpo">easeInExpo</option>
+                    <option value="easeInCirc">easeInCirc</option>
+                    <option value="easeInBack">easeInBack</option>
+                    <option value="easeInBounce">easeInBounce</option>
+                    <option value="easeInOutQuad">easeInOutQuad</option>
+                    <option value="easeInOutCubic">easeInOutCubic</option>
+                    <option value="easeInOutQuart">easeInOutQuart</option>
+                    <option value="easeInOutQuint">easeInOutQuint</option>
+                    <option value="easeInOutSine">easeInOutSine</option>
+                    <option value="easeInOutExpo">easeInOutExpo</option>
+                    <option value="easeInOutCirc">easeInOutCirc (Standard)</option>
+                    <option value="easeInOutBack">easeInOutBack</option>
+                    <option value="easeInOutBounce">easeInOutBounce</option>
+                    <option value="easeOutQuad">easeOutQuad</option>
+                    <option value="easeOutCubic">easeOutCubic</option>
+                    <option value="easeOutQuart">easeOutQuart</option>
+                    <option value="easeOutQuint">easeOutQuint</option>
+                    <option value="easeOutSine">easeOutSine</option>
+                    <option value="easeOutExpo">easeOutExpo</option>
+                    <option value="easeOutCirc">easeOutCirc</option>
+                    <option value="easeOutBack">easeOutBack</option>
+                    <option value="easeOutBounce">easeOutBounce</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button class="ui right floated labeled icon button" v-on:click="updateJS">
+              <i class="sync icon"></i>
+              Update Animation
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="ui tab segment" data-tab="info">
+        <div class="row" style="margin-top: 20px;">
+          <div class="col">
+            <h2>infos</h2>
+            <div class="ui inverted segment">
+              <p>Link für OBS Browser Quelle: http://localhost:5000</p>
+              <p>Vollbild für Key und Fill Fenster: Doppelclick ins Fenster</p>
+              <p>Shortcuts: [STRG/CTRL]+[ALT/OPTION]+[0-9] wobei 0 ausblenden, und 1-9 einblenden nach ID ist</p>
+              <p>Compagnion Anbindung über "Generic HTTP Modul":<br>BaseURL: http://localhost:5000/v1/<br>Button Action anzeigen: [POST] "show/X" wobei X die ID des Eintrags ist z.B. "show/1"<br>Button Action ausblenden: [POST] "hide"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 50px;">
+        <div class="col" style="clear: both; margin-top:20px;">
+          <div class="ui divider"></div>
+
+          <button class="ui right floated labeled icon button" v-on:click="openFile">
+            <i class="folder open icon"></i>
+            öffnen
+          </button>
+          <button class="ui right floated labeled icon button" v-on:click="saveFile">
+            <i class="save icon"></i>
+            speichern
+          </button>
+      
+          <button class="ui floated labeled icon teal button" v-on:click="openWinKey">
+            <i class="window maximize outline icon"></i>
+            key
+          </button>
+          <button class="ui floated labeled icon teal button" v-on:click="openWinFill">
+            <i class="window maximize outline icon"></i>
+            fill
+          </button>
+          <div style="clear:both; height: 30px;"></div>
+        </div>
+      </div>
+
+      <!-- app end -->
+
+      <!-- lower third modal -->
+      <div class="ui modal">
+        <i class="close icon"></i>
+        <div v-if="newentryid == null" class="header">
+          Neue Bauchbinde
+        </div>
+        <div v-else class="header">
+          Bauchbinde Nr. {{newentryid}}
+        </div>
+        <div class="content">
+          <div class="row">
+            <div class="col">
+              <div style="margin-top: 10px;">
+              <form class="ui inverted form" v-on:submit.prevent="addLowerthird">
+                <div class="field inverted">
+                  <label class="inverted">Name</label>
+                  <input type="text" name="name" placeholder="Name" v-model="newname">
+                </div>
+                <div class="field inverted">
+                  <label>Titel</label>
+                  <input type="text" name="title" placeholder="Titel" v-model="newtitle">
+                </div>
+              </form>
+              </div>
+            </div>        
+          </div>
+        </div>
+        <div class="actions">
+          <div v-if="newentryid != null" class="ui icon inverted red deny button" v-on:click="deleteLowerthird(newentryid)"><i class="trash icon"></i></div>
+          <div class="ui black deny button">abbrechen</div>
+          <div v-if="newentryid == null" class="ui green right labeled icon button" v-on:click="addLowerthird">hinzufügen <i class="plus icon"></i></div>
+          <div class="ui positive right labeled icon button" v-on:click="addLowerthird">
+            speichern und beenden
+            <i class="checkmark icon"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="copy">&copy; 2021 - mstoeckle.de version: 2.4</div>
+    <script>window.$ = window.jQuery = require('./public/jquery-3.5.1.min.js');</script>
+    <script src="vue.js"></script>
+    <script src="./semantic.min.js"></script>
+    <script src="./Sortable.min.js"></script>
+    <script src="./vuedraggable.umd.min.js"></script>
+    <script src="window.js"></script>
+  </body>
+</html>

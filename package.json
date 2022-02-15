@@ -1,0 +1,22 @@
+{
+  "name": "bauchbinder",
+  "version": "2.5.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack-win": "electron-packager . bauchbinder --overwrite --asar --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\""
+  },
+  "author": "Michael Stoeckle",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "font-list": "^1.2.11",
+    "handlebars": "^4.7.6",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "electron": "^9.0.0",
+    "electron-packager": "^14.2.1"
+  }
+}

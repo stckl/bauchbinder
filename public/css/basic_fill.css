@@ -1,0 +1,23 @@
+html, body {
+    background: #000;
+}
+
+div.bauchbinde {
+    opacity: 1;
+}
+
+div.bauchbinde > div {
+    opacity: 1;
+}
+
+div.bauchbinde > .color {
+    opacity: 1;
+}
+
+div.bauchbinde > .white {
+    opacity: 1;
+}
+
+div.bauchbinde > .white > .text {
+    opacity: 1;
+}
