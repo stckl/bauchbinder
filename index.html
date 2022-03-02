@@ -434,17 +434,22 @@
           <div class="col">
             <h2>infos</h2>
             <div class="ui inverted segment">
-              <p>Link für OBS Browser Quelle: http://localhost:5000</p>
+              <h3>Bauchbinder einbinden</h3>
+              <p>Link für OBS Browser Quelle: <a href="http://127.0.0.1:5000" v-on:click.prevent="require('electron').shell.openExternal('http://127.0.0.1:5000');">http://127.0.0.1:5000</a></p>
+              <h3>Key and Fill per HDMI</h3>
               <p>Vollbild für Key und Fill Fenster: Doppelclick ins Fenster</p>
+              <h3>Shortcuts und Compagnion Einbindung</h3>
               <p>Shortcuts: [STRG/CTRL]+[ALT/OPTION]+[0-9] wobei 0 ausblenden, und 1-9 einblenden nach ID ist</p>
               <p>Compagnion Anbindung über "Generic HTTP Modul":<br>BaseURL: http://localhost:5000/v1/<br>Button Action anzeigen: [POST] "show/X" wobei X die ID des Eintrags ist z.B. "show/1"<br>Button Action ausblenden: [POST] "hide"</p>
               <p></p>
-              <p>Helferlein für CSS:</p>
+              <h3>Helferlein für CSS:</h3>
               <p>Flexbox Layouting: <a v-on:click.prevent="require('electron').shell.openExternal('https://css-tricks.com/snippets/css/a-guide-to-flexbox/');">https://css-tricks.com/snippets/css/a-guide-to-flexbox/</a></p>
               <p>Farbverlauf: <a v-on:click.prevent="require('electron').shell.openExternal('https://cssgradient.io');">https://cssgradient.io</a></p>
               <p>SVGs einbinden: <a v-on:click.prevent="require('electron').shell.openExternal('https://yoksel.github.io/url-encoder/');">https://yoksel.github.io/url-encoder/</a></p>
               <p>Images einbinden: <a v-on:click.prevent="require('electron').shell.openExternal('https://www.base64-image.de');">https://www.base64-image.de</a></p>
-              
+              <p></p>
+              <h3>Bleibe auf dem neuesten Stand</h3>
+              <p>Bauchbinder auf GitHub:  <a v-on:click.prevent="require('electron').shell.openExternal('https://github.com/stckl/bauchbinder');">https://github.com/stckl/bauchbinder</a></p>
             </div>
           </div>
         </div>
