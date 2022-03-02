@@ -47,6 +47,7 @@ var app = new Vue({
         newentryid: null,
         fonts: [],
         active: -1,
+        appversion: window.require('electron').remote.app.getVersion()
     },
 
     methods: {
@@ -105,7 +106,7 @@ var app = new Vue({
                         if(loadedData.lowerthirds) {
                             console.log("loading data");
                             self.lowerthirds = loadedData.lowerthirds;
-                            
+
                             ipc.send('update-data', loadedData.lowerthirds);
                         }
                         if(loadedData.design) {

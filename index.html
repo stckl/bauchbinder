@@ -438,6 +438,13 @@
               <p>Vollbild für Key und Fill Fenster: Doppelclick ins Fenster</p>
               <p>Shortcuts: [STRG/CTRL]+[ALT/OPTION]+[0-9] wobei 0 ausblenden, und 1-9 einblenden nach ID ist</p>
               <p>Compagnion Anbindung über "Generic HTTP Modul":<br>BaseURL: http://localhost:5000/v1/<br>Button Action anzeigen: [POST] "show/X" wobei X die ID des Eintrags ist z.B. "show/1"<br>Button Action ausblenden: [POST] "hide"</p>
+              <p></p>
+              <p>Helferlein für CSS:</p>
+              <p>Flexbox Layouting: <a v-on:click.prevent="require('electron').shell.openExternal('https://css-tricks.com/snippets/css/a-guide-to-flexbox/');">https://css-tricks.com/snippets/css/a-guide-to-flexbox/</a></p>
+              <p>Farbverlauf: <a v-on:click.prevent="require('electron').shell.openExternal('https://cssgradient.io');">https://cssgradient.io</a></p>
+              <p>SVGs einbinden: <a v-on:click.prevent="require('electron').shell.openExternal('https://yoksel.github.io/url-encoder/');">https://yoksel.github.io/url-encoder/</a></p>
+              <p>Images einbinden: <a v-on:click.prevent="require('electron').shell.openExternal('https://www.base64-image.de');">https://www.base64-image.de</a></p>
+              
             </div>
           </div>
         </div>
@@ -507,9 +514,10 @@
           </div>
         </div>
       </div>
+
+      <div class="copy">&copy; 2021 - mstoeckle.de version: {{ appversion }}</div>
     </div>
 
-    <div class="copy">&copy; 2021 - mstoeckle.de version: 2.4</div>
     <script>window.$ = window.jQuery = require('./public/jquery-3.5.1.min.js');</script>
     <script src="vue.js"></script>
     <script src="./semantic.min.js"></script>
