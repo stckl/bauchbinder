@@ -105,11 +105,13 @@ var app = new Vue({
                         if(loadedData.lowerthirds) {
                             console.log("loading data");
                             self.lowerthirds = loadedData.lowerthirds;
+                            
                             ipc.send('update-data', loadedData.lowerthirds);
                         }
                         if(loadedData.design) {
                             console.log("loading design ...");
                             self.design = loadedData.design;
+
                             ipc.send('update-css', loadedData.design);
                         }
                         if(loadedData.animation) {
@@ -120,6 +122,8 @@ var app = new Vue({
                                 self.animation.easing = 'easeInOutCirc';
                             } else
                                 self.animation = loadedData.animation;
+
+                            self.updateJS();
                         }
                     })
                 }
