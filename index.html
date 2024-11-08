@@ -371,6 +371,19 @@
               </button>
             </div>
           </div>
+          <div class="col" style="margin-top:20px;">
+            <button class="ui labeled icon button" v-bind:class="[animation.type == 'custom' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('custom')">
+              <i class="random icon"></i>
+              custom
+            </button>
+          </div>
+        </div>
+
+        <div v-if="animation.type == 'custom'" class="col" style="margin-top: 40px;">
+          <form class="ui form inverted" v-on:submit.prevent>
+            <h4 class="ui dividing header inverted">Custom Animation</h4>
+            <textarea v-model="animation.code" style="min-height: 80vh;"></textarea>  
+          </form>
         </div>
 
         <div class="col" style="margin-top: 40px;">
@@ -435,7 +448,7 @@
             <h2>infos</h2>
             <div class="ui inverted segment">
               <h3>Bauchbinder einbinden</h3>
-              <p>Link für OBS Browser Quelle: <a href="http://127.0.0.1:5000" v-on:click.prevent="require('electron').shell.openExternal('http://127.0.0.1:5000');">http://127.0.0.1:5000</a></p>
+              <p>Link für OBS Browser Quelle: <a href="http://127.0.0.1:5001" v-on:click.prevent="require('electron').shell.openExternal('http://127.0.0.1:5001');">http://127.0.0.1:5001</a></p>
               <h3>Key and Fill per HDMI</h3>
               <p>Vollbild für Key und Fill Fenster: Doppelclick ins Fenster</p>
               <h3>Shortcuts und Compagnion Einbindung</h3>

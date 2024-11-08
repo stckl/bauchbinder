@@ -12,11 +12,17 @@ const { dialog } = require('electron')
 let animationStyle = 'fade';
 let animationParams = { 
   duration: 750,
-  easing: 'easeInOutCirc'
+  easing: 'easeInOutCirc',
+  code: ''
 };
 let customCSS = '';
 
-expressapp.set('port', process.env.PORT || 5000);
+fs.readFile('animations/fade.js', 'utf8', function(err, data) {
+  if (err) console.log("Error", err);
+    animationParams.code = data;
+});
+
+expressapp.set('port', process.env.PORT || 5001);
 expressapp.use(express.static(path.join(__dirname, 'public/')));
 
 expressapp.get('/', function(req, res) {
@@ -25,12 +31,22 @@ expressapp.get('/', function(req, res) {
 
 expressapp.get('/animate.js', function(req, res) {
   res.header("Content-Type", "application/javascript");
-  res.write('// --------------------------------------\n// FX PARAMETERS\n// --------------------------------------\n');
-  res.write('const FX_DURATION = ' + animationParams.duration + '\n');
-  res.write('const FX_EASING = \'' + animationParams.easing + '\'\n');
-  res.write('\n\n');
-  fs.createReadStream(__dirname + '/animations/' + animationStyle + '.js').pipe(res);
-  //res.sendFile(path.join(__dirname, 'animations/' + animationStyle + '.js'));
+
+  if(animationStyle == 'custom') {
+    res.write('// --------------------------------------\n// FX PARAMETERS\n// --------------------------------------\n');
+    res.write('const FX_DURATION = ' + animationParams.duration + '\n');
+    res.write('const FX_EASING = \'' + animationParams.easing + '\'\n');
+    res.write('\n\n');
+    res.write(animationParams.code);
+    res.end();
+  } else {
+    res.write('// --------------------------------------\n// FX PARAMETERS\n// --------------------------------------\n');
+    res.write('const FX_DURATION = ' + animationParams.duration + '\n');
+    res.write('const FX_EASING = \'' + animationParams.easing + '\'\n');
+    res.write('\n\n');
+    fs.createReadStream(__dirname + '/animations/' + animationStyle + '.js').pipe(res);
+    //res.sendFile(path.join(__dirname, 'animations/' + animationStyle + '.js'));
+  }
 });
 
 expressapp.get('/custom.css', function(req, res) {
@@ -207,6 +223,7 @@ ipc.on('update-js', function(event, arg) {
   animationStyle = arg.type;
   animationParams.duration = arg.duration;
   animationParams.easing = arg.easing;
+  animationParams.code = arg.code;
 
   if(winKey)
     winKey.reload();

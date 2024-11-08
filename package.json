@@ -1,11 +1,12 @@
 {
   "name": "bauchbinder",
-  "version": "2.6.0",
+  "version": "3.0.0",
   "description": "",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "pack-win": "electron-packager . bauchbinder --overwrite --asar --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\""
+    "pack-win": "electron-packager . bauchbinder --overwrite --asar --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\"",
+    "pack-macarm": "electron-packager . bauchbinder --overwrite --asar --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\""
   },
   "author": "Michael Stoeckle",
   "license": "ISC",
