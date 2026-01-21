@@ -44,7 +44,7 @@ Für Mischer wie Blackmagic ATEM, die getrennte Signale für Fill (Grafik) und K
 
 ### 2. Steuerung
 
-Im Hauptfenster kannst du Texte bearbeiten, Designs anpassen und Animationen wählen.
+Im Hauptfenster können Texte bearbeitet, Designs angepasst und Animationen gewählt werden.
 
 **Globale Hotkeys:**
 *   `Strg + Alt + 1-9`: Zeigt die Bauchbinde mit der entsprechenden ID (1-9) aus der Liste.
@@ -74,27 +74,3 @@ npm install
 # Development Server starten (Vite + Electron)
 npm run dev:exe
 ```
-
-### Icons generieren
-Wenn das Quell-Icon (`assets/Bauchbinder_icon.png`) geändert wird, können alle Plattform-Icons neu generiert werden:
-```bash
-npm run generate-icons
-```
-
-### Building & Release
-
-Das Projekt nutzt **GitHub Actions** für automatische Releases.
-Um eine neue Version zu veröffentlichen:
-
-1.  Versionsnummer in `package.json` erhöhen.
-2.  Änderungen committen.
-3.  Einen neuen Git-Tag erstellen (z.B. `v4.0.1`).
-4.  Tag pushen.
-
-```bash
-npm version patch # oder minor/major
-git push && git push --tags
-```
-
-GitHub baut automatisch die Windows- und macOS-Versionen und erstellt ein Release.
-
