@@ -140,11 +140,26 @@ const App = {
     setup() {
         const lowerthirds = ref([]);
         const design = reactive({
-            white: { width: 40, left: 5, bottom: 7, color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible', _overrides: {} },
-            h1: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 5, bold: false, italic: false, color: '#000000', _overrides: {} },
-            h2: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 3.7, bold: false, italic: false, color: '#000000', _overrides: {} },
+            white: { 
+                width: 40, left: 5, bottom: 7, height: 0, fixedWidth: false, fixedHeight: false,
+                color: 'rgba(255,255,255,0.8)', 
+                paddingh: 5, paddingv: 2.6, borderradius: 0, 
+                divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible',
+                flexAlign: 'center', flexJustify: 'center', flexGap: 2, imageHeight: true, imageManualHeight: 10,
+                _overrides: {} 
+            },
+            layoutOrder: [
+                { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
+                { id: '.image', name: 'Bild (Bauchbinde)', alignSelf: 'auto' },
+                { id: '.text', name: 'Text', alignSelf: 'auto' }
+            ],
+            logoStyle: { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true, _overrides: {} },
+            imageStyle: { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true, _overrides: {} },
+            h1: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 5, italic: false, color: '#000000', _overrides: {} },
+            h2: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 3.7, italic: false, color: '#000000', _overrides: {} },
             unifiedCss: '',
-            customFonts: [] 
+            customFonts: [],
+            logo: null // Base64 data for global logo
         });
 
         const PRESETS = {
@@ -194,7 +209,9 @@ const App = {
                 '.white': 'Box',
                 '.text': 'Text-Bereich',
                 'h1': 'Name (H1)',
-                'h2': 'Titel (H2)'
+                'h2': 'Titel (H2)',
+                '.logo': 'Bild (Global)',
+                '.image': 'Bild (Bauchbinde)'
             };
             return names[selector] || selector;
         };
@@ -217,6 +234,11 @@ const App = {
             if (selector === '.bauchbinde' || selector === '.bauchbinde-instance') {
                 if (prop === 'bottom') return design.white.bottom + 'vh';
                 if (prop === 'borderRadius') return 0;
+            }
+            if (selector === '.logo' || selector === '.image') {
+                // Images usually don't have direct mapped design properties in the simple GUI, 
+                // so we rely on Custom CSS or defaults.
+                // We could map 'width' or 'height' here if we add GUI controls for them later.
             }
 
             // 2. Fallback: Search in Custom CSS part of unifiedCss
@@ -255,6 +277,9 @@ const App = {
             }
             if (selector === '.bauchbinde' || selector === '.bauchbinde-instance') {
                 if (prop === 'bottom') { design.white.bottom = parseFloat(value) || 0; return; }
+            }
+            if (selector === '.logo' || selector === '.image') {
+                // Pass through to custom CSS logic below
             }
 
             // Auto-Unit Intelligence
@@ -356,7 +381,7 @@ ${selector} {
             }
         };
 
-        const newname = ref(''), newtitle = ref(''), newentryid = ref(null), active = ref(-1), appversion = ref('4.0.0');
+        const newname = ref(''), newtitle = ref(''), newimage = ref(null), newentryid = ref(null), active = ref(-1), appversion = ref('4.0.0');
         const systemFonts = ref([]), manualFonts = ref([]);
         const cssConflicts = ref([]);
 
@@ -456,16 +481,62 @@ ${selector} {
 `;
 
             css += `.bb-box {\n`;
-            css += line(design.white, 'width', 'min-width', `${design.white.width}vw`);
+            css += line(design.white, 'width', design.white.fixedWidth ? 'width' : 'min-width', `${design.white.width}vw`);
+            if (design.white.height > 0) {
+                css += line(design.white, 'height', design.white.fixedHeight ? 'height' : 'min-height', `${design.white.height}vh`);
+            }
             css += line(design.white, 'left', 'margin', `0 ${design.white.left}vw`);
             css += line(design.white, 'color', 'background', design.white.color);
             css += line(design.white, 'borderradius', 'border-radius', `${design.white.borderradius}px`);
             css += `  padding: ${design.white.paddingv}vh ${design.white.paddingh}vh;
   text-align: ${['left', 'center', 'right'][design.white.textalign]};
   overflow: ${design.white.overflow || 'hidden'};
+  display: flex;
+  flex-direction: row;
+  align-items: ${design.white.flexAlign || 'center'};
+  justify-content: ${design.white.flexJustify || 'center'};
+  gap: ${design.white.flexGap || 0}vh;
 }
 
-.text {\n`;
+.bb-box > img {
+  object-fit: contain;
+}
+
+`;
+            
+            const imgBlock = (sel, obj) => {
+                let s = `${sel} {\n`;
+                if (obj.fitHeight) {
+                    s += `  height: 100%;\n  width: auto;\n`;
+                } else {
+                    s += line(obj, 'height', 'height', (obj.height > 0 ? obj.height + '%' : 'auto'));
+                    s += line(obj, 'width', 'width', (obj.width > 0 ? obj.width + '%' : 'auto'));
+                }
+                s += line(obj, 'radius', 'border-radius', obj.radius + 'px');
+                s += line(obj, 'opacity', 'opacity', obj.opacity);
+                s += line(obj, 'margin', 'margin', `0 ${obj.margin}px`);
+                
+                if (obj.position && obj.position !== 'static') {
+                    s += line(obj, 'position', 'position', obj.position);
+                    s += line(obj, 'x', 'left', obj.x + 'vw');
+                    s += line(obj, 'y', 'top', obj.y + 'vh');
+                } else {
+                    s += `  position: static;\n`;
+                }
+
+                s += `}\n\n`;
+                return s;
+            };
+
+            css += imgBlock('.logo', design.logoStyle);
+            css += imgBlock('.image', design.imageStyle);
+            
+            // Order & Align Self
+            design.layoutOrder.forEach((item, index) => {
+                css += `${item.id} { order: ${index + 1}; align-self: ${item.alignSelf || 'auto'}; }\n`;
+            });
+
+            css += `\n.text {\n`;
             css += `  overflow: ${design.white.textOverflow || 'visible'};
 }
 
@@ -478,7 +549,7 @@ ${selector} {
                 s += `  line-height: ${obj.fontsize}vh;
 `;
                 s += line(obj, 'color', 'color', obj.color);
-                s += line(obj, 'fontweight', 'font-weight', obj.fontweight || (obj.bold ? 'bold' : 'normal'));
+                s += line(obj, 'fontweight', 'font-weight', obj.fontweight || 'normal');
                 s += line(obj, 'italic', 'font-style', obj.italic ? 'italic' : 'normal');
                 s += line(obj, 'texttransform', 'text-transform', obj.texttransform || 'none');
                 s += line(obj, 'fontvariant', 'font-variant', obj.fontvariant || 'normal');
@@ -508,7 +579,15 @@ ${selector} {
             if (align) design.white.divalign = ['left', 'center', 'right'].indexOf(align);
 
             const minWidth = extractValue('.bb-box', 'min-width') || extractValue('.white', 'min-width');
-            if (minWidth) design.white.width = parseFloat(minWidth);
+            const fixedWidth = extractValue('.bb-box', 'width');
+            if (minWidth) { design.white.width = parseFloat(minWidth); design.white.fixedWidth = false; }
+            else if (fixedWidth) { design.white.width = parseFloat(fixedWidth); design.white.fixedWidth = true; }
+            
+            const minHeight = extractValue('.bb-box', 'min-height');
+            const fixedHeight = extractValue('.bb-box', 'height');
+            if (minHeight) { design.white.height = parseFloat(minHeight); design.white.fixedHeight = false; }
+            else if (fixedHeight) { design.white.height = parseFloat(fixedHeight); design.white.fixedHeight = true; }
+
             const bg = extractValue('.bb-box', 'background') || extractValue('.white', 'background');
             if (bg) design.white.color = bg;
             const radius = extractValue('.bb-box', 'border-radius') || extractValue('.white', 'border-radius');
@@ -526,7 +605,7 @@ ${selector} {
                 const color = extractValue(sel, 'color');
                 if (color) obj.color = color;
                 const weight = extractValue(sel, 'font-weight');
-                if (weight) { obj.fontweight = weight; obj.bold = (weight === 'bold' || parseInt(weight) >= 700); }
+                if (weight) obj.fontweight = weight;
                 const style = extractValue(sel, 'font-style');
                 if (style) obj.italic = (style === 'italic');
                 const transform = extractValue(sel, 'text-transform');
@@ -535,6 +614,33 @@ ${selector} {
                 if (variant) obj.fontvariant = variant;
             };
             parseText('h1', design.h1); parseText('h2', design.h2);
+
+            const parseImg = (sel, obj) => {
+                const h = extractValue(sel, 'height');
+                if (h === '100%') obj.fitHeight = true;
+                else if (h && h.includes('%')) { obj.height = parseFloat(h); obj.fitHeight = false; }
+                else obj.fitHeight = false; // Default to false if specific height set, or auto
+
+                const w = extractValue(sel, 'width');
+                if (w && w.includes('%')) obj.width = parseFloat(w);
+                const r = extractValue(sel, 'border-radius');
+                if (r) obj.radius = parseFloat(r);
+                const o = extractValue(sel, 'opacity');
+                if (o) obj.opacity = parseFloat(o);
+                const m = extractValue(sel, 'margin');
+                if (m) {
+                    const parts = m.split(' ');
+                    if (parts.length > 1) obj.margin = parseFloat(parts[1]);
+                }
+                const p = extractValue(sel, 'position');
+                if (p) obj.position = p;
+                const x = extractValue(sel, 'left');
+                if (x) obj.x = parseFloat(x);
+                const y = extractValue(sel, 'top');
+                if (y) obj.y = parseFloat(y);
+            };
+            parseImg('.logo', design.logoStyle);
+            parseImg('.image', design.imageStyle);
         };
 
         const migrateFontsAndStyles = (customcss) => {
@@ -558,9 +664,9 @@ ${selector} {
         };
 
         const addLowerthird = () => {
-            if (newentryid.value !== null) { lowerthirds.value[newentryid.value] = { name: newname.value, title: newtitle.value }; }
-            else { lowerthirds.value.push({ name: newname.value, title: newtitle.value }); }
-            newname.value = ''; newtitle.value = ''; newentryid.value = null;
+            if (newentryid.value !== null) { lowerthirds.value[newentryid.value] = { name: newname.value, title: newtitle.value, image: newimage.value }; }
+            else { lowerthirds.value.push({ name: newname.value, title: newtitle.value, image: newimage.value }); }
+            newname.value = ''; newtitle.value = ''; newimage.value = null; newentryid.value = null;
             ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); $('#entry-modal').modal('hide');
         };
 
@@ -585,6 +691,12 @@ ${selector} {
                         if (ld.design) {
                             if (!ld.design.customFonts) ld.design.customFonts = [];
                             design.h1._overrides = {}; design.h2._overrides = {}; design.white._overrides = {};
+                            if (!design.logoStyle) design.logoStyle = { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true, _overrides: {} };
+                            else { if (design.logoStyle.fitHeight === undefined) design.logoStyle.fitHeight = true; if (!design.logoStyle.position) design.logoStyle.position = 'static'; if (design.logoStyle.x === undefined) design.logoStyle.x = 0; if (design.logoStyle.y === undefined) design.logoStyle.y = 0; }
+                            
+                            if (!design.imageStyle) design.imageStyle = { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true, _overrides: {} };
+                            else { if (design.imageStyle.fitHeight === undefined) design.imageStyle.fitHeight = true; if (!design.imageStyle.position) design.imageStyle.position = 'static'; if (design.imageStyle.x === undefined) design.imageStyle.x = 0; if (design.imageStyle.y === undefined) design.imageStyle.y = 0; }
+                            
                             if (!ld.design.unifiedCss) {
                                 Object.assign(design, ld.design);
                                 const cleaned = migrateFontsAndStyles(ld.design.customcss || "");
@@ -592,6 +704,16 @@ ${selector} {
                             } else {
                                 Object.assign(design, ld.design);
                                 parseCssToProperties(design.unifiedCss); 
+                            }
+                            if (!design.layoutOrder) {
+                                design.layoutOrder = [
+                                    { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
+                                    { id: '.image', name: 'Bild (Bauchbinde)', alignSelf: 'auto' },
+                                    { id: '.text', name: 'Text', alignSelf: 'auto' }
+                                ];
+                            } else {
+                                // Migration: Ensure alignSelf exists
+                                design.layoutOrder.forEach(item => { if(!item.alignSelf) item.alignSelf = 'auto'; });
                             }
                             ipc.send('update-css', JSON.parse(JSON.stringify(design)));
                         }
@@ -661,24 +783,52 @@ ${selector} {
             });
         };
 
+        const handleImageDrop = (e) => {
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => { newimage.value = event.target.result; };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        const handleLogoDrop = (e) => {
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => { design.logo = event.target.result; };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        const removeImage = () => { newimage.value = null; };
+        const removeLogo = () => { design.logo = null; };
+
         const removeCustomFont = (i) => { design.customFonts.splice(i, 1); updateFontCSS(); };
         const applyFontToH1 = (n) => { design.h1.fontfamily = n; };
         const applyFontToH2 = (n) => { design.h2.fontfamily = n; };
-        const toggleH1Bold = () => { design.h1.bold = !design.h1.bold; }, toggleH1Italic = () => { design.h1.italic = !design.h1.italic; }, toggleH1Variant = () => { design.h1.fontvariant = design.h1.fontvariant === 'small-caps' ? 'normal' : 'small-caps'; };
-        const toggleH2Bold = () => { design.h2.bold = !design.h2.bold; }, toggleH2Italic = () => { design.h2.italic = !design.h2.italic; }, toggleH2Variant = () => { design.h2.fontvariant = design.h2.fontvariant === 'small-caps' ? 'normal' : 'small-caps'; };
+        
+        const isBold = (w) => w === 'bold' || parseInt(w) >= 700;
+        const toggleH1Bold = () => { design.h1.fontweight = isBold(design.h1.fontweight) ? 'normal' : 'bold'; };
+        const toggleH2Bold = () => { design.h2.fontweight = isBold(design.h2.fontweight) ? 'normal' : 'bold'; };
+        
+        const toggleH1Italic = () => { design.h1.italic = !design.h1.italic; }, toggleH1Variant = () => { design.h1.fontvariant = design.h1.fontvariant === 'small-caps' ? 'normal' : 'small-caps'; };
+        const toggleH2Italic = () => { design.h2.italic = !design.h2.italic; }, toggleH2Variant = () => { design.h2.fontvariant = design.h2.fontvariant === 'small-caps' ? 'normal' : 'small-caps'; };
         const openWinKey = () => ipc.send('openwinkey'), openWinFill = () => ipc.send('openwinfill'), setAnimation = (t) => { animation.type = t; };
         const toggleFullscreenKey = () => ipc.send('toggle-fullscreen-key');
         const toggleFullscreenFill = () => ipc.send('toggle-fullscreen-fill');
         const onDragEnd = () => { active.value = -1; ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); };
         const showModal = (e) => {
             let id = (typeof e === 'number') ? e : null;
-            if (id !== null) { newname.value = lowerthirds.value[id].name; newtitle.value = lowerthirds.value[id].title; newentryid.value = id; }
-            else { newname.value = ''; newtitle.value = ''; newentryid.value = null; }
+            if (id !== null) { newname.value = lowerthirds.value[id].name; newtitle.value = lowerthirds.value[id].title; newimage.value = lowerthirds.value[id].image || null; newentryid.value = id; }
+            else { newname.value = ''; newtitle.value = ''; newimage.value = null; newentryid.value = null; }
             $('#entry-modal').modal('show');
         };
 
         let isSyncing = false;
-        watch(() => [design.white, design.h1, design.h2], () => {
+        watch(() => [design.white, design.h1, design.h2, design.layoutOrder], () => {
             if (!isSyncing) {
                 isSyncing = true;
                 const parts = design.unifiedCss.split('/* CUSTOM */');
@@ -719,21 +869,22 @@ ${selector} {
             $('#entry-modal').modal();
             $('#conflict-modal').modal({ closable: false });
             $('.ui.dropdown').dropdown();
+            $('.ui.checkbox').checkbox();
             initAccordions();
             fontList.getFonts().then(ret => { systemFonts.value = ret; }).catch(err => console.log(err));
         });
 
         return {
-            lowerthirds, design, animation, newname, newtitle, newentryid, active, appversion, allFonts, systemFonts, manualFonts,
+            lowerthirds, design, animation, newname, newtitle, newimage, newentryid, active, appversion, allFonts, systemFonts, manualFonts,
             cssConflicts, resolveConflict,
             addLowerthird, playLowerthird, stopLowerthird, deleteLowerthird, saveFile, openFile, openWinKey, openWinFill, setAnimation, onDragEnd, showModal,
             toggleH1Bold, toggleH1Italic, toggleH1Variant, toggleH2Bold, toggleH2Italic, toggleH2Variant, 
             toggleFullscreenKey, toggleFullscreenFill,
             addCustomFont, removeCustomFont, applyFontToH1, applyFontToH2,
-            handleFontDrop,
+            handleFontDrop, handleImageDrop, handleLogoDrop, removeImage, removeLogo,
             addAnimationStep, removeAnimationStep, loadPreset, setStepProperty, getMotionXType, getMotionYType,
             getDesignValueForEditor, updateDesignValueFromAnimation,
-            editingStep, openStepEditor, getFriendlyName
+            editingStep, openStepEditor, getFriendlyName, isBold
         };
     }
 };

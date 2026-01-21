@@ -104,11 +104,11 @@ expressapp.post('/v1/hide', function(req, res) {
 
 io.on('connection', (socket) => {
     console.log('a user connected');
-    socket.emit('status-update', { activeId: activeLowerThirdId });
+    socket.emit('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
     socket.on('request-state', () => {
       socket.emit('update-css', lastDesign);
       socket.emit('update-js', lastAnimation);
-      socket.emit('status-update', { activeId: activeLowerThirdId });
+      socket.emit('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
     });
 });
 
@@ -129,6 +129,7 @@ let lastDesign = {
 };
 let lastAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
 let activeLowerThirdId = null;
+let activeLowerThirdData = null;
 
 function createWindow () {
   const width = isDev ? 1400 : 800;
@@ -260,26 +261,29 @@ function showLowerThirdByID(arg) {
   console.log('show lowerthird by id', arg)
   if(id >= 1 && data && data.length >= id) {
     activeLowerThirdId = id;
-    var arg = data[id-1]
-    showLowerThird(arg)
-    io.emit('status-update', { activeId: activeLowerThirdId });
-    sendToWindows('status-update', { activeId: activeLowerThirdId });
+    activeLowerThirdData = JSON.parse(JSON.stringify(data[id-1]));
+    activeLowerThirdData.id = id; // Inject ID for sync tracking
+    showLowerThird(activeLowerThirdData)
+    io.emit('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
+    sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
   }
 }
 
 function hideLowerThird() {
   activeLowerThirdId = null;
+  activeLowerThirdData = null;
   var arg = null;
   sendToWindows('hide-lowerthird', arg)
   io.emit('hide-lowerthird', arg)
-  io.emit('status-update', { activeId: activeLowerThirdId });
-  sendToWindows('status-update', { activeId: activeLowerThirdId });
+  io.emit('status-update', { activeId: activeLowerThirdId, activeItem: null });
+  sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: null });
   console.log('hide lowerthird', arg)
 }
 
 ipc.on('request-state', (event) => {
   if (lastDesign) event.reply('update-css', lastDesign);
   if (lastAnimation) event.reply('update-js', lastAnimation);
+  event.reply('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
 });
 
 ipc.on('update-data', function (event, arg) {

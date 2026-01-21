@@ -69,36 +69,54 @@
                         <form class="ui form inverted" v-on:submit.prevent>
                           
                           <h4 class="ui dividing header inverted">Bauchbinde</h4>
-                          <div class="fields">
-                            <div class="four wide field">
-                              <label>Breite (min in %)</label>
-                              <div class="ui left icon input">
-                                <input type="number" step="0.01" min="0" max="100" v-model="design.white.width" placeholder="Breite">
+                          <div class="ui doubling four column grid">
+                            <div class="column field">
+                              <label>Breite (in %)</label>
+                              <div class="ui right labeled input left icon fluid inverted">
                                 <i class="arrows alternate horizontal icon"></i>
+                                <input type="number" step="0.1" min="0" max="100" v-model="design.white.width" placeholder="Breite">
+                                <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
+                                  <div class="ui checkbox inverted" style="margin: 0;">
+                                    <input type="checkbox" v-model="design.white.fixedWidth">
+                                    <label style="color: #fff !important; padding-left: 1.5rem;">Fest</label>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <div class="four wide field">
+                            <div class="column field">
+                              <label>Mindesthöhe (in vh)</label>
+                              <div class="ui right labeled input left icon fluid inverted">
+                                <i class="arrows alternate vertical icon"></i>
+                                <input type="number" step="0.1" min="0" max="100" v-model="design.white.height" placeholder="Höhe">
+                                <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
+                                  <div class="ui checkbox inverted" style="margin: 0;">
+                                    <input type="checkbox" v-model="design.white.fixedHeight">
+                                    <label style="color: #fff !important; padding-left: 1.5rem;">Fest</label>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="column field">
                               <label>Abstand links/rechts (in %)</label>
-                              <div class="ui left icon input">
+                              <div class="ui left icon input fluid inverted">
                                 <input type="number" step="0.01" min="-100" max="100" v-model="design.white.left" placeholder="Abstand seite">
                                 <i class="arrow right icon"></i>
                               </div>
                             </div>
-                            <div class="four wide field">
+                            <div class="column field">
                               <label>Abstand unten (in %)</label>
-                              <div class="ui left icon input">
+                              <div class="ui left icon input fluid inverted">
                                 <input type="number" step="0.01" min="-100" max="100" v-model="design.white.bottom" placeholder="Abstand unten">
                                 <i class="arrow up icon"></i>
                               </div>
                             </div>
-                            <div class="four wide field">
+                          
+                            <div class="column field">
                               <color-picker v-model="design.white.color" label="Hintergrundfarbe"></color-picker>
                             </div>
-                          </div>
-                          <div class="fields">
-                            <div class="four wide field">
+                            <div class="column field">
                               <label>Position</label>
-                              <div class="ui icon inverted buttons">
+                              <div class="ui icon inverted buttons fluid">
                                 <button class="ui button" :class="{ blue: (design.white.divalign == 0) }"  v-on:click.prevent="design.white.divalign = 0">
                                   <i class="align left icon"></i>
                                 </button>
@@ -110,9 +128,9 @@
                                 </button>
                               </div>
                             </div>
-                            <div class="four wide field">
+                            <div class="column field">
                               <label>Text Ausrichtung</label>
-                              <div class="ui icon inverted buttons">
+                              <div class="ui icon inverted buttons fluid">
                                 <button class="ui button" :class="{ blue: (design.white.textalign == 0) }"  v-on:click.prevent="design.white.textalign = 0">
                                   <i class="align left icon"></i>
                                 </button>
@@ -125,126 +143,240 @@
                               </div>
                             </div>
               
-                            <div class="four wide field">
+                            <div class="column field">
                               <label>Text Abstand horizontal</label>
-                              <div class="ui left icon input">
+                              <div class="ui left icon input fluid inverted">
                                 <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" placeholder="Abstand seite">
                                 <i class="arrow right icon"></i>
                               </div>
                             </div>
-                            <div class="four wide field">
+                            <div class="column field">
                               <label>Text Abstand vertikal</label>
-                              <div class="ui left icon input">
+                              <div class="ui left icon input fluid inverted">
                                 <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" placeholder="Abstand unten">
                                 <i class="arrow up icon"></i>
                               </div>
                             </div>
-                          </div>
-                          <div class="fields">
-                            <div class="four wide field">
+                            <div class="column field">
                               <label>Ecken Rundung</label>
-                              <div class="ui left icon input">
+                              <div class="ui left icon input fluid inverted">
                                 <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" placeholder="Ecken Rundung">
-                                <i class="square outline icon"></i>
+                                <i class="circle outline icon"></i>
                               </div>
                             </div>
-                            <div class="four wide field">
-                              <label>Box Überlauf (Box Overflow)</label>
-                              <select class="ui inverted dropdown" v-model="design.white.overflow">
-                                <option value="hidden">Verstecken (Hidden)</option>
-                                <option value="visible">Anzeigen (Visible)</option>
-                              </select>
+                            <div class="column field">
+                              <label>Box Überlauf</label>
+                              <div class="ui toggle checkbox inverted">
+                                <input type="checkbox" v-model="design.white.overflow" true-value="visible" false-value="hidden">
+                                <label>Sichtbar</label>
+                              </div>
                             </div>
-                            <div class="four wide field">
-                              <label>Text Überlauf (Text Overflow)</label>
-                              <select class="ui inverted dropdown" v-model="design.white.textOverflow">
-                                <option value="hidden">Verstecken (Hidden)</option>
-                                <option value="visible">Anzeigen (Visible)</option>
-                              </select>
+                            <div class="column field">
+                              <label>Text Überlauf</label>
+                              <div class="ui toggle checkbox inverted">
+                                <input type="checkbox" v-model="design.white.textOverflow" true-value="visible" false-value="hidden">
+                                <label>Sichtbar</label>
+                              </div>
+                            </div>
+                          </div>
+
+                          <h4 class="ui dividing header inverted">Layout Inhalt (Flexbox)</h4>
+                          <div class="ui doubling four column grid">
+                            <div class="column field">
+                              <label>Vertikale Ausrichtung (Box)</label>
+                              <div class="ui icon inverted buttons fluid">
+                                <button class="ui button" :class="{ blue: (design.white.flexAlign == 'flex-start') }"  v-on:click.prevent="design.white.flexAlign = 'flex-start'" title="Oben">
+                                  <i class="align left icon" style="transform: rotate(90deg)"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.flexAlign == 'center') }"  v-on:click.prevent="design.white.flexAlign = 'center'" title="Mitte">
+                                  <i class="align center icon" style="transform: rotate(90deg)"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.flexAlign == 'flex-end') }"  v-on:click.prevent="design.white.flexAlign = 'flex-end'" title="Unten">
+                                  <i class="align right icon" style="transform: rotate(90deg)"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.flexAlign == 'stretch') }"  v-on:click.prevent="design.white.flexAlign = 'stretch'" title="Strecken">
+                                  <i class="arrows alternate vertical icon"></i>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Horizontale Ausrichtung</label>
+                              <div class="ui icon inverted buttons fluid">
+                                <button class="ui button" :class="{ blue: (design.white.flexJustify == 'flex-start') }"  v-on:click.prevent="design.white.flexJustify = 'flex-start'" title="Links">
+                                  <i class="align left icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.flexJustify == 'center') }"  v-on:click.prevent="design.white.flexJustify = 'center'" title="Mitte">
+                                  <i class="align center icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.flexJustify == 'flex-end') }"  v-on:click.prevent="design.white.flexJustify = 'flex-end'" title="Rechts">
+                                  <i class="align right icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.flexJustify == 'space-between') }"  v-on:click.prevent="design.white.flexJustify = 'space-between'" title="Verteilen">
+                                  <i class="arrows alternate horizontal icon"></i>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Abstand (Gap in vh)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="0.1" min="0" max="50" v-model="design.white.flexGap">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
                             </div>
                           </div>
                           
-                          <h4 class="ui dividing header inverted">Schrift Name</h4>
+                          <div class="field">
+                              <label>Reihenfolge & Ausrichtung (Klick auf Icon ändert Ausrichtung)</label>
+                              <draggable v-model="design.layoutOrder" item-key="id" class="ui inverted horizontal list" style="background: #333; padding: 10px; border-radius: 4px; display: flex; gap: 10px; justify-content: flex-start; overflow-x: auto;">
+                                <template #item="{element}">
+                                  <div class="item" style="cursor: move; padding: 5px 10px; background: #444; border-radius: 4px; border: 1px solid #555; text-align: center; min-width: 110px; display: flex; align-items: center; gap: 8px;">
+                                    <i class="bars icon" style="transform: rotate(90deg); color: #888;"></i>
+                                    <i v-if="element.id == '.logo' || element.id == '.image'" class="image outline icon" style="color: #aaa;"></i>
+                                    <i v-else class="font icon" style="color: #aaa;"></i>
+                                    <div class="content" style="font-size: 0.9em; flex-grow: 1; text-align: left;">{{element.name.replace('Bild ', '').replace('(', '').replace(')', '')}}</div>
+                                    <i class="icon link" :class="{
+                                      'asterisk': element.alignSelf == 'auto' || !element.alignSelf,
+                                      'align left': element.alignSelf == 'flex-start',
+                                      'align center': element.alignSelf == 'center',
+                                      'align right': element.alignSelf == 'flex-end',
+                                      'arrows alternate vertical': element.alignSelf == 'stretch'
+                                    }" :style="{ transform: (element.alignSelf == 'flex-start' || element.alignSelf == 'center' || element.alignSelf == 'flex-end') ? 'rotate(90deg)' : 'none', color: element.alignSelf != 'auto' ? '#54c8ff' : '#666' }"
+                                    @click="element.alignSelf = {
+                                      'auto': 'flex-start', 
+                                      'flex-start': 'center', 
+                                      'center': 'flex-end', 
+                                      'flex-end': 'stretch', 
+                                      'stretch': 'auto'
+                                    }[element.alignSelf || 'auto']" title="Vertikale Ausrichtung ändern"></i>
+                                  </div>
+                                </template>
+                              </draggable>
+                            </div>
+                          </div>
+
+                          <h4 class="ui dividing header inverted">Stil: Bild (Global)</h4>
+                          <div class="ui doubling four column grid">
+                            <div class="column field">
+                              <label>Höhe (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.logoStyle.height" :disabled="design.white.imageHeight">
+                                <i class="arrows alternate vertical icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Breite (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.logoStyle.width" :disabled="design.white.imageHeight">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Ecken Rundung</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="1000" v-model="design.logoStyle.radius">
+                                <i class="circle outline icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Seitenabstand (px)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="100" v-model="design.logoStyle.margin">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                          </div>
+
+                          <h4 class="ui dividing header inverted">Stil: Bild (Bauchbinde)</h4>
+                          <div class="ui doubling four column grid">
+                            <div class="column field">
+                              <label>Höhe (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.imageStyle.height" :disabled="design.white.imageHeight">
+                                <i class="arrows alternate vertical icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Breite (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.imageStyle.width" :disabled="design.white.imageHeight">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Ecken Rundung</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="1000" v-model="design.imageStyle.radius">
+                                <i class="circle outline icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Seitenabstand (px)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="100" v-model="design.imageStyle.margin">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <h4 class="ui dividing header inverted">Typografie</h4>
+                          
+                          <h5 class="ui header inverted">Name (H1)</h5>
                           <div class="field">
                             <label>Schriftart</label>
                             <fomantic-dropdown v-model="design.h1.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
                           </div>
-                          <div class="fields">
-                            <div class="field">
-                              <label>Stil</label>
-                              <div class="ui icon inverted buttons">
-                                <button class="ui button" :class="{ blue: design.h1.bold }"  v-on:click.prevent="toggleH1Bold()">
-                                  <i class="bold icon"></i>
-                                </button>
-                                <button class="ui button" :class="{ blue: design.h1.italic }"  v-on:click.prevent="toggleH1Italic()">
-                                  <i class="italic icon"></i>
-                                </button>
-                                <button class="ui button" :class="{ blue: design.h1.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH1Variant()" title="Kapitälchen">
-                                  <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
-                                </button>
-                              </div>
+                          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;">
+                            <div class="ui labeled input inverted mini">
+                              <div class="ui label">Größe</div>
+                              <input type="number" step="0.1" v-model="design.h1.fontsize" style="width: 70px;">
                             </div>
-                            <div class="field">
-                              <label>Umwandlung</label>
-                              <div class="ui small basic inverted icon buttons">
+                            <div class="ui labeled input inverted mini">
+                              <div class="ui label">Dicke</div>
+                              <input type="text" v-model="design.h1.fontweight" placeholder="800" style="width: 60px;">
+                            </div>
+                            <div style="width: 140px;">
+                               <color-picker v-model="design.h1.color"></color-picker>
+                            </div>
+                            <div class="ui icon inverted buttons mini">
+                                <button class="ui button" :class="{ blue: isBold(design.h1.fontweight) }"  v-on:click.prevent="toggleH1Bold()" title="Fett"><i class="bold icon"></i></button>
+                                <button class="ui button" :class="{ blue: design.h1.italic }"  v-on:click.prevent="toggleH1Italic()" title="Kursiv"><i class="italic icon"></i></button>
+                                <button class="ui button" :class="{ blue: design.h1.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH1Variant()" title="Kapitälchen"><span style="font-variant: small-caps; font-weight: bold;">Aa</span></button>
+                            </div>
+                            <div class="ui small basic inverted icon buttons mini">
                                 <button class="ui button" :class="{ blue: design.h1.texttransform === 'none' }" v-on:click.prevent="design.h1.texttransform = 'none'" title="Normal">Aa</button>
                                 <button class="ui button" :class="{ blue: design.h1.texttransform === 'uppercase' }" v-on:click.prevent="design.h1.texttransform = 'uppercase'" title="GROSS">AA</button>
                                 <button class="ui button" :class="{ blue: design.h1.texttransform === 'lowercase' }" v-on:click.prevent="design.h1.texttransform = 'lowercase'" title="klein">aa</button>
                                 <button class="ui button" :class="{ blue: design.h1.texttransform === 'capitalize' }" v-on:click.prevent="design.h1.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
-                              </div>
-                            </div>
-                            <div class="field">
-                              <label>Dicke</label>
-                              <input type="text" v-model="design.h1.fontweight" placeholder="800" style="width: 80px;">
-                            </div>
-                            <div class="field">
-                              <label>Größe (vh)</label>
-                              <input type="number" step="0.1" v-model="design.h1.fontsize" style="width: 80px;">
-                            </div>
-                            <div class="four wide field">
-                              <color-picker v-model="design.h1.color" label="Schriftfarbe Name"></color-picker>
                             </div>
                           </div>
             
-                          <h4 class="ui dividing header inverted">Schrift Titel</h4>
+                          <h5 class="ui header inverted" style="margin-top: 20px;">Titel (H2)</h5>
                           <div class="field">
                             <label>Schriftart</label>
                             <fomantic-dropdown v-model="design.h2.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
                           </div>
-                          <div class="fields">
-                            <div class="field">
-                              <label>Stil</label>
-                              <div class="ui icon inverted buttons">
-                                <button class="ui button" :class="{ blue: design.h2.bold }"  v-on:click.prevent="toggleH2Bold()">
-                                  <i class="bold icon"></i>
-                                </button>
-                                <button class="ui button" :class="{ blue: design.h2.italic }"  v-on:click.prevent="toggleH2Italic()">
-                                  <i class="italic icon"></i>
-                                </button>
-                                <button class="ui button" :class="{ blue: design.h2.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH2Variant()" title="Kapitälchen">
-                                  <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
-                                </button>
-                              </div>
+                          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;">
+                            <div class="ui labeled input inverted mini">
+                              <div class="ui label">Größe</div>
+                              <input type="number" step="0.1" v-model="design.h2.fontsize" style="width: 70px;">
                             </div>
-                            <div class="field">
-                              <label>Umwandlung</label>
-                              <div class="ui small basic inverted icon buttons">
+                            <div class="ui labeled input inverted mini">
+                              <div class="ui label">Dicke</div>
+                              <input type="text" v-model="design.h2.fontweight" placeholder="800" style="width: 60px;">
+                            </div>
+                            <div style="width: 140px;">
+                               <color-picker v-model="design.h2.color"></color-picker>
+                            </div>
+                            <div class="ui icon inverted buttons mini">
+                                <button class="ui button" :class="{ blue: isBold(design.h2.fontweight) }"  v-on:click.prevent="toggleH2Bold()" title="Fett"><i class="bold icon"></i></button>
+                                <button class="ui button" :class="{ blue: design.h2.italic }"  v-on:click.prevent="toggleH2Italic()" title="Kursiv"><i class="italic icon"></i></button>
+                                <button class="ui button" :class="{ blue: design.h2.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH2Variant()" title="Kapitälchen"><span style="font-variant: small-caps; font-weight: bold;">Aa</span></button>
+                            </div>
+                            <div class="ui small basic inverted icon buttons mini">
                                 <button class="ui button" :class="{ blue: design.h2.texttransform === 'none' }" v-on:click.prevent="design.h2.texttransform = 'none'" title="Normal">Aa</button>
                                 <button class="ui button" :class="{ blue: design.h2.texttransform === 'uppercase' }" v-on:click.prevent="design.h2.texttransform = 'uppercase'" title="GROSS">AA</button>
                                 <button class="ui button" :class="{ blue: design.h2.texttransform === 'lowercase' }" v-on:click.prevent="design.h2.texttransform = 'lowercase'" title="klein">aa</button>
                                 <button class="ui button" :class="{ blue: design.h2.texttransform === 'capitalize' }" v-on:click.prevent="design.h2.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
-                              </div>
-                            </div>
-                            <div class="field">
-                              <label>Dicke</label>
-                              <input type="text" v-model="design.h2.fontweight" placeholder="800" style="width: 80px;">
-                            </div>
-                            <div class="field">
-                              <label>Größe (vh)</label>
-                              <input type="number" step="0.1" v-model="design.h2.fontsize" style="width: 80px;">
-                            </div>
-                            <div class="four wide field">
-                              <color-picker v-model="design.h2.color" label="Schriftfarbe Titel"></color-picker>
                             </div>
                           </div>
             
@@ -277,7 +409,174 @@
                 </div>
               </div>
 
-              <h4 class="ui dividing header inverted">Unified CSS Editor</h4>
+                          <h4 class="ui dividing header inverted">Bilder</h4>
+                          
+                          <h5 class="ui header inverted" style="margin-top: 10px;">Stil: Bild (Global)</h5>
+                          <div class="ui doubling four column grid">
+                            <div class="column field">
+                              <label>Größe anpassen</label>
+                              <div class="ui toggle checkbox inverted">
+                                <input type="checkbox" v-model="design.logoStyle.fitHeight">
+                                <label>100% Höhe</label>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Höhe (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.logoStyle.height" :disabled="design.logoStyle.fitHeight">
+                                <i class="arrows alternate vertical icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Breite (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.logoStyle.width" :disabled="design.logoStyle.fitHeight">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Ecken Rundung</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="1000" v-model="design.logoStyle.radius">
+                                <i class="circle outline icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Seitenabstand (px)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="100" v-model="design.logoStyle.margin">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Positionierung</label>
+                              <select class="ui inverted dropdown fluid" v-model="design.logoStyle.position">
+                                <option value="static">Standard (Flex)</option>
+                                <option value="relative">Relativ</option>
+                                <option value="absolute">Absolut</option>
+                              </select>
+                            </div>
+                            <div class="column field" v-if="design.logoStyle.position !== 'static'">
+                              <label>X-Pos (vw)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="0.1" v-model="design.logoStyle.x">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field" v-if="design.logoStyle.position !== 'static'">
+                              <label>Y-Pos (vh)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="0.1" v-model="design.logoStyle.y">
+                                <i class="arrows alternate vertical icon"></i>
+                              </div>
+                            </div>
+                          </div>
+
+                          <h5 class="ui header inverted" style="margin-top: 20px;">Stil: Bild (Bauchbinde)</h5>
+                          <div class="ui doubling four column grid">
+                            <div class="column field">
+                              <label>Größe anpassen</label>
+                              <div class="ui toggle checkbox inverted">
+                                <input type="checkbox" v-model="design.imageStyle.fitHeight">
+                                <label>100% Höhe</label>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Höhe (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.imageStyle.height" :disabled="design.imageStyle.fitHeight">
+                                <i class="arrows alternate vertical icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Breite (in %)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="200" v-model="design.imageStyle.width" :disabled="design.imageStyle.fitHeight">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Ecken Rundung</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="1000" v-model="design.imageStyle.radius">
+                                <i class="circle outline icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Seitenabstand (px)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="1" min="0" max="100" v-model="design.imageStyle.margin">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field">
+                              <label>Positionierung</label>
+                              <select class="ui inverted dropdown fluid" v-model="design.imageStyle.position">
+                                <option value="static">Standard (Flex)</option>
+                                <option value="relative">Relativ</option>
+                                <option value="absolute">Absolut</option>
+                              </select>
+                            </div>
+                            <div class="column field" v-if="design.imageStyle.position !== 'static'">
+                              <label>X-Pos (vw)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="0.1" v-model="design.imageStyle.x">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="column field" v-if="design.imageStyle.position !== 'static'">
+                              <label>Y-Pos (vh)</label>
+                              <div class="ui left icon input fluid inverted">
+                                <input type="number" step="0.1" v-model="design.imageStyle.y">
+                                <i class="arrows alternate vertical icon"></i>
+                              </div>
+                            </div>
+                          </div>
+                                                                                                        <input type="number" step="1" min="0" max="1000" v-model="design.imageStyle.radius">
+                                                                                                        <i class="circle outline icon"></i>
+                                                                                                      </div>
+                                                                                                    </div>
+                                                                                                    <div class="column field">
+                                                                                                      <label>Seitenabstand (px)</label>
+                                                                                                      <div class="ui left icon input fluid inverted">
+                                                                                                        <input type="number" step="1" min="0" max="100" v-model="design.imageStyle.margin">
+                                                                                                        <i class="arrows alternate horizontal icon"></i>
+                                                                                                      </div>
+                                                                                                    </div>
+                                                                                                    <div class="column field">
+                                                                                                      <label>Positionierung</label>
+                                                                                                      <select class="ui inverted dropdown fluid" v-model="design.imageStyle.position">
+                                                                                                        <option value="static">Standard (Flex)</option>
+                                                                                                        <option value="relative">Relativ</option>
+                                                                                                        <option value="absolute">Absolut</option>
+                                                                                                      </select>
+                                                                                                    </div>
+                                                                                                    <div class="column field" v-if="design.imageStyle.position !== 'static'">
+                                                                                                      <label>X-Pos (vw)</label>
+                                                                                                      <div class="ui left icon input fluid inverted">
+                                                                                                        <input type="number" step="0.1" v-model="design.imageStyle.x">
+                                                                                                        <i class="arrows alternate horizontal icon"></i>
+                                                                                                      </div>
+                                                                                                    </div>
+                                                                                                    <div class="column field" v-if="design.imageStyle.position !== 'static'">
+                                                                                                      <label>Y-Pos (vh)</label>
+                                                                                                      <div class="ui left icon input fluid inverted">
+                                                                                                        <input type="number" step="0.1" v-model="design.imageStyle.y">
+                                                                                                        <i class="arrows alternate vertical icon"></i>
+                                                                                                      </div>
+                                                                                                    </div>
+                                                                                                  </div>              
+                                                                                                  <h5 class="ui header inverted" style="margin-top: 20px;">Upload: Bild (Global)</h5>
+                                                                                                  <div class="field">
+                                                                                                    <div v-if="!design.logo" class="ui segment" style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;" @dragover.prevent @drop.prevent="handleLogoDrop">
+                                                                                                      <i class="huge image outline icon" style="color: #555;"></i>
+                                                                                                      <p style="margin-top: 10px; color: #888;">Bild hierher ziehen</p>
+                                                                                                    </div>
+                                                                                                    <div v-else class="ui segment" style="background: #1b1c1d; text-align: center; position: relative;">
+                                                                                                       <img :src="design.logo" style="max-height: 100px; max-width: 100%;">
+                                                                                                       <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px;" @click="removeLogo"><i class="trash icon"></i></div>
+                                                                                                    </div>
+                                                                                                  </div>              <h4 class="ui dividing header inverted">Unified CSS Editor</h4>
               <div class="field">
                 <css-editor v-model="design.unifiedCss"></css-editor>
               </div>
@@ -376,6 +675,8 @@
                   <option value=".text">Text-Bereich</option>
                   <option value="h1">Name (H1)</option>
                   <option value="h2">Titel (H2)</option>
+                  <option value=".logo">Bild (Global)</option>
+                  <option value=".image">Bild (Bauchbinde)</option>
                 </select>
               </div>
               <div v-if="editingStep.step.selector === 'h1' || editingStep.step.selector === 'h2'" class="field">
@@ -389,8 +690,18 @@
             </div>
 
             <div class="three fields">
-              <div class="field"><label>Dauer (ms)</label><input type="number" class="inverted" v-model="editingStep.step.duration"></div>
-              <div class="field"><label>Verzögerung (ms)</label><input type="number" class="inverted" v-model="editingStep.step.delay"></div>
+              <div class="field">
+                <label>Dauer (ms)</label>
+                <div class="ui input inverted fluid">
+                  <input type="number" v-model="editingStep.step.duration">
+                </div>
+              </div>
+              <div class="field">
+                <label>Verzögerung (ms)</label>
+                <div class="ui input inverted fluid">
+                  <input type="number" v-model="editingStep.step.delay">
+                </div>
+              </div>
               <div class="field">
                 <label>Kurve</label>
                 <select v-model="editingStep.step.easing" class="ui dropdown inverted selection">
@@ -415,13 +726,37 @@
               <div class="content active">
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.opacity !== undefined" @change="$event.target.checked ? editingStep.step.properties.opacity = (editingStep.phase==='show'?[0, getDesignValueForEditor(editingStep.step.selector, 'opacity')]:[getDesignValueForEditor(editingStep.step.selector, 'opacity'), 0]) : delete editingStep.step.properties.opacity"><label>Deckkraft</label></div></div>
                 <div v-if="editingStep.step.properties.opacity !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.opacity[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'opacity')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'opacity', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.opacity[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'opacity')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'opacity', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="number" step="0.1" v-model="editingStep.step.properties.opacity[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'opacity')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'opacity', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="number" step="0.1" v-model="editingStep.step.properties.opacity[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'opacity')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'opacity', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.scale !== undefined" @change="$event.target.checked ? editingStep.step.properties.scale = (editingStep.phase==='show'?[0, 1]:[1, 0]) : delete editingStep.step.properties.scale"><label>Größe (Scale)</label></div></div>
                 <div v-if="editingStep.step.properties.scale !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.scale[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'scale')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'scale', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.scale[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'scale')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'scale', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="number" step="0.1" v-model="editingStep.step.properties.scale[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'scale')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'scale', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="number" step="0.1" v-model="editingStep.step.properties.scale[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'scale')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'scale', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -436,8 +771,20 @@
                     <option value="left">Position Links (vw)</option>
                   </select>
                   <div v-if="getMotionXType(editingStep.step) !== 'none'" class="fields mini-fields inverted">
-                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionXType(editingStep.step)][0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionXType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionXType(editingStep.step), $event.target.value)"></div>
-                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionXType(editingStep.step)][1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionXType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionXType(editingStep.step), $event.target.value)"></div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                      <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                      <div class="ui input inverted mini fluid">
+                        <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties[getMotionXType(editingStep.step)][0]">
+                        <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, getMotionXType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionXType(editingStep.step), $event.target.value)">
+                      </div>
+                    </div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                      <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                      <div class="ui input inverted mini fluid">
+                        <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties[getMotionXType(editingStep.step)][1]">
+                        <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, getMotionXType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionXType(editingStep.step), $event.target.value)">
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="field">
@@ -448,14 +795,38 @@
                     <option value="top">Position Oben (vh)</option>
                   </select>
                   <div v-if="getMotionYType(editingStep.step) !== 'none'" class="fields mini-fields inverted">
-                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionYType(editingStep.step)][0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionYType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionYType(editingStep.step), $event.target.value)"></div>
-                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionYType(editingStep.step)][1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionYType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionYType(editingStep.step), $event.target.value)"></div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                      <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                      <div class="ui input inverted mini fluid">
+                        <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties[getMotionYType(editingStep.step)][0]">
+                        <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, getMotionYType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionYType(editingStep.step), $event.target.value)">
+                      </div>
+                    </div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                      <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                      <div class="ui input inverted mini fluid">
+                        <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties[getMotionYType(editingStep.step)][1]">
+                        <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, getMotionYType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionYType(editingStep.step), $event.target.value)">
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.rotate !== undefined" @change="$event.target.checked ? editingStep.step.properties.rotate = [-45, 0] : delete editingStep.step.properties.rotate"><label>Rotation</label></div></div>
                 <div v-if="editingStep.step.properties.rotate !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="number" class="inverted" v-model="editingStep.step.properties.rotate[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'rotate')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'rotate', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="number" class="inverted" v-model="editingStep.step.properties.rotate[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'rotate')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'rotate', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="number" v-model="editingStep.step.properties.rotate[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'rotate')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'rotate', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="number" v-model="editingStep.step.properties.rotate[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'rotate')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'rotate', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -465,8 +836,20 @@
                 <div v-for="prop in ['marginTop','marginRight','marginBottom','marginLeft','paddingTop','paddingRight','paddingBottom','paddingLeft']" :key="prop" style="margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
                   <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties[prop] !== undefined" @change="$event.target.checked ? editingStep.step.properties[prop] = ['0px', getDesignValueForEditor(editingStep.step.selector, prop)] : delete editingStep.step.properties[prop]"><label>{{prop}}</label></div></div>
                   <div v-if="editingStep.step.properties[prop] !== undefined" class="fields mini-fields inverted">
-                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties[prop][0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, prop)" @input="updateDesignValueFromAnimation(editingStep.step.selector, prop, $event.target.value)"></div>
-                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties[prop][1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, prop)" @input="updateDesignValueFromAnimation(editingStep.step.selector, prop, $event.target.value)"></div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                      <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                      <div class="ui input inverted mini fluid">
+                        <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties[prop][0]">
+                        <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, prop)" @input="updateDesignValueFromAnimation(editingStep.step.selector, prop, $event.target.value)">
+                      </div>
+                    </div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                      <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                      <div class="ui input inverted mini fluid">
+                        <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties[prop][1]">
+                        <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, prop)" @input="updateDesignValueFromAnimation(editingStep.step.selector, prop, $event.target.value)">
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -476,20 +859,56 @@
               <div v-if="!['h1','h2'].includes(editingStep.step.selector)" class="content">
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.backgroundColor !== undefined" @change="$event.target.checked ? editingStep.step.properties.backgroundColor = ['#ffffff', getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')] : delete editingStep.step.properties.backgroundColor"><label>Hintergrundfarbe</label></div></div>
                 <div v-if="editingStep.step.properties.backgroundColor !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.backgroundColor[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'backgroundColor', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.backgroundColor[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'backgroundColor', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties.backgroundColor[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'backgroundColor', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties.backgroundColor[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'backgroundColor', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
                 
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.borderColor !== undefined" @change="$event.target.checked ? editingStep.step.properties.borderColor = ['#ffffff', getDesignValueForEditor(editingStep.step.selector, 'borderColor')] : delete editingStep.step.properties.borderColor"><label>Rahmenfarbe</label></div></div>
                 <div v-if="editingStep.step.properties.borderColor !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.borderColor[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderColor', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.borderColor[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderColor', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties.borderColor[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'borderColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderColor', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties.borderColor[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'borderColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderColor', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
 
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.borderWidth !== undefined" @change="$event.target.checked ? editingStep.step.properties.borderWidth = ['0px', getDesignValueForEditor(editingStep.step.selector, 'borderWidth')] : delete editingStep.step.properties.borderWidth"><label>Rahmendicke</label></div></div>
                 <div v-if="editingStep.step.properties.borderWidth !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.borderWidth[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderWidth')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderWidth', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.borderWidth[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderWidth')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderWidth', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties.borderWidth[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'borderWidth')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderWidth', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties.borderWidth[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'borderWidth')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderWidth', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
 
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" v-model="editingStep.step.lineDraw"><label>Border als Linie zeichnen</label></div></div>
@@ -500,20 +919,56 @@
               <div v-if="['h1','h2'].includes(editingStep.step.selector)" class="content">
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.color !== undefined" @change="$event.target.checked ? editingStep.step.properties.color = ['#ffffff', getDesignValueForEditor(editingStep.step.selector, 'color')] : delete editingStep.step.properties.color"><label>Schriftfarbe</label></div></div>
                 <div v-if="editingStep.step.properties.color !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.color[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'color')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'color', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.color[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'color')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'color', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties.color[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'color')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'color', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties.color[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'color')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'color', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
 
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.fontSize !== undefined" @change="$event.target.checked ? editingStep.step.properties.fontSize = ['1vh', getDesignValueForEditor(editingStep.step.selector, 'fontSize')] : delete editingStep.step.properties.fontSize"><label>Textgröße</label></div></div>
                 <div v-if="editingStep.step.properties.fontSize !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.fontSize[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'fontSize')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'fontSize', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.fontSize[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'fontSize')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'fontSize', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties.fontSize[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'fontSize')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'fontSize', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties.fontSize[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'fontSize')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'fontSize', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
 
                 <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.width !== undefined" @change="$event.target.checked ? editingStep.step.properties.width = ['0vw', getDesignValueForEditor(editingStep.step.selector, 'width')] : delete editingStep.step.properties.width"><label>Textbreite</label></div></div>
                 <div v-if="editingStep.step.properties.width !== undefined" class="fields mini-fields inverted">
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.width[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'width')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'width', $event.target.value)"></div>
-                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.width[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'width')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'width', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}">
+                    <label>{{editingStep.phase==='show'?'Start':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='show'" type="text" v-model="editingStep.step.properties.width[0]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'width')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'width', $event.target.value)">
+                    </div>
+                  </div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}">
+                    <label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label>
+                    <div class="ui input inverted mini fluid">
+                      <input v-if="editingStep.phase==='hide'" type="text" v-model="editingStep.step.properties.width[1]">
+                      <input v-else type="text" :value="getDesignValueForEditor(editingStep.step.selector, 'width')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'width', $event.target.value)">
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -616,11 +1071,29 @@
               <form class="ui inverted form" v-on:submit.prevent="addLowerthird">
                 <div class="field">
                   <label>Name</label>
-                  <input type="text" name="name" placeholder="Name" v-model="newname">
+                  <div class="ui input inverted fluid">
+                    <input type="text" name="name" placeholder="Name" v-model="newname">
+                  </div>
                 </div>
                 <div class="field">
                   <label>Titel</label>
-                  <input type="text" name="title" placeholder="Titel" v-model="newtitle">
+                  <div class="ui input inverted fluid">
+                    <input type="text" name="title" placeholder="Titel" v-model="newtitle">
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Bild (Optional)</label>
+                  <div v-if="!newimage" class="ui placeholder segment inverted" style="min-height: 100px; cursor: pointer;" @dragover.prevent @drop.prevent="handleImageDrop" @click="$refs.imgInput.click()">
+                    <div class="ui icon header">
+                      <i class="image outline icon"></i>
+                      Bild hierher ziehen oder klicken
+                    </div>
+                    <input type="file" ref="imgInput" style="display: none" accept="image/*" @change="handleImageDrop({ dataTransfer: { files: $event.target.files } })">
+                  </div>
+                  <div v-else class="ui segment inverted" style="text-align: center; position: relative; padding: 0;">
+                    <img :src="newimage" style="max-height: 150px; max-width: 100%;">
+                    <div class="ui top right attached label red" style="cursor: pointer;" @click="removeImage"><i class="trash icon"></i></div>
+                  </div>
                 </div>
               </form>
               </div>

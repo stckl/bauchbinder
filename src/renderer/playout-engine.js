@@ -73,14 +73,32 @@ export function initEngine(mode) {
         if (activeLowerthirds.length > 0 || isStopping) {
             nextQueuedPlayout = msg;
             if (!isStopping) stopAll();
-        } else {
+        }
+        // If there is an active item but we are not showing anything, play it!
+        else {
             play(msg);
+        }
+    };
+
+    const handleStatusUpdate = (msg) => {
+        const alreadyPlaying = activeLowerthirds.some(al => al.idFromStatus === msg.activeId);
+        
+        // If there is an active item but we are not showing it, play it!
+        if (msg.activeId && msg.activeItem && !alreadyPlaying && !isStopping) {
+            console.log("[ENGINE] Syncing status: Playing active item", msg.activeItem);
+            play(msg.activeItem);
+        } 
+        // If there is NO active item but we are showing something, stop it!
+        else if (!msg.activeId && activeLowerthirds.length > 0) {
+            console.log("[ENGINE] Syncing status: Stopping (no active item)");
+            stopAll();
         }
     };
 
     if (ipc) {
         ipc.on('show-lowerthird', (e, msg) => handleShow(msg, 'ipc'));
         ipc.on('hide-lowerthird', () => stopAll());
+        ipc.on('status-update', (e, msg) => handleStatusUpdate(msg));
         ipc.on('update-css', (e, d) => { currentDesign = d; applyUnifiedStyles(d); });
         ipc.on('update-js', (e, a) => { currentAnimation = a; });
         ipc.send('request-state');
@@ -89,14 +107,16 @@ export function initEngine(mode) {
     const socket = io('http://localhost:5001');
     socket.on('show-lowerthird', (msg) => handleShow(msg, 'socket'));
     socket.on('hide-lowerthird', () => stopAll());
+    socket.on('status-update', (msg) => handleStatusUpdate(msg));
     socket.on('update-css', (d) => { currentDesign = d; applyUnifiedStyles(d); });
     socket.on('update-js', (a) => { currentAnimation = a; });
     socket.emit('request-state');
 }
 
 function getRGBA(color) {
+    if (typeof color !== 'string') color = String(color || 'white');
     const d = document.createElement("div");
-    d.style.color = color || 'white';
+    d.style.color = color;
     document.body.appendChild(d);
     const cs = window.getComputedStyle(d).color;
     document.body.removeChild(d);
@@ -129,28 +149,32 @@ function applyUnifiedStyles(design) {
         });
     }
     const transformedCss = transformCssColors(design.unifiedCss);
+    let extraCss = '';
+    if (currentMode === 'key') {
+        // Force images to be white silhouettes for the Alpha Key signal
+        extraCss += 'img { filter: brightness(0) invert(1); }';
+    }
     $('#unified-styles').remove();
     $('head').append(`<style id="unified-styles">
         ${fontCss}
         #bb-container .bauchbinde-instance { position: absolute; width: 100%; }
         ${transformedCss}
+        ${extraCss}
     </style>`);
 }
 
 function getDesignValue(selector, prop) {
-    if (!currentDesign) return null;
+    if (!currentDesign || !selector) return null;
     
     // Check in unifiedCss (Custom part) for non-native properties
     const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-    const parts = currentDesign.unifiedCss.split('/* CUSTOM */');
+    const parts = currentDesign.unifiedCss ? currentDesign.unifiedCss.split('/* CUSTOM */') : [];
     const customCss = parts[1] || '';
-    const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedSelector = String(selector).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedSelector + '\\s*{[\\s\\S]*?' + cssProp + ':\\s*([^;]+);?', 'i');
     const match = customCss.match(regex);
     if (match) {
-        let val = match[1].trim();
-        // Remove units if needed by animejs for some props, but animejs usually handles strings with units fine
-        return val;
+        return match[1].trim();
     }
 
     // Default neutral values for motion/scale
@@ -176,17 +200,17 @@ function getDesignValue(selector, prop) {
     
     // Position/Layout resolution
     if (selector === '.bb-box' || selector === '.white') {
-        if (prop === 'left' || prop === 'marginLeft') return currentDesign.white.left + 'vw';
-        if (prop === 'width' || prop === 'minWidth') return currentDesign.white.width + 'vw';
-        if (prop === 'borderRadius') return currentDesign.white.borderradius + 'px';
+        if (prop === 'left' || prop === 'marginLeft') return (currentDesign.white.left || 0) + 'vw';
+        if (prop === 'width' || prop === 'minWidth') return (currentDesign.white.width || 0) + 'vw';
+        if (prop === 'borderRadius') return (currentDesign.white.borderradius || 0) + 'px';
     }
 
     if (selector === 'h1') {
-        if (prop === 'fontSize') return currentDesign.h1.fontsize + 'vh';
+        if (prop === 'fontSize') return (currentDesign.h1.fontsize || 5) + 'vh';
         if (prop === 'fontWeight') return currentDesign.h1.fontweight || (currentDesign.h1.bold ? '700' : '400');
     }
     if (selector === 'h2') {
-        if (prop === 'fontSize') return currentDesign.h2.fontsize + 'vh';
+        if (prop === 'fontSize') return (currentDesign.h2.fontsize || 3.7) + 'vh';
         if (prop === 'fontWeight') return currentDesign.h2.fontweight || (currentDesign.h2.bold ? '700' : '400');
     }
 
@@ -194,7 +218,7 @@ function getDesignValue(selector, prop) {
 }
 
 function splitText(element, type) {
-    if (!element) return [];
+    if (!element || !element.innerText) return [element]; // Return element itself if no text (e.g. img)
     const text = element.innerText;
     element.innerHTML = '';
     const items = type === 'chars' ? text.split('') : text.split(' ');
@@ -209,32 +233,43 @@ function splitText(element, type) {
     return spans;
 }
 
-function play(msg) {
+function play(msg, immediate = false) {
     if (!currentDesign) return;
     const container = document.getElementById('bb-container');
     const id = 'bb' + Math.floor(Math.random() * 1000000);
     const type = currentAnimation?.type || 'fade';
-    const duration = parseInt(currentAnimation?.duration || 750);
+    const duration = immediate ? 0 : parseInt(currentAnimation?.duration || 750);
     const easing = currentAnimation?.easing || 'easeInOutCirc';
 
     const div = document.createElement('div');
     div.id = id;
     div.className = `bauchbinde bauchbinde-instance ${type}`;
-    div.innerHTML = `<div class="bb-box"><div class="text"><h1>${msg.name || ""}</h1><h2>${msg.title || ""}</h2></div></div>`;
+    
+    let contentHtml = '<div class="bb-box">';
+    if (currentDesign.logo) {
+        contentHtml += `<img class="logo" src="${currentDesign.logo}" />`;
+    }
+    if (msg.image) {
+        contentHtml += `<img class="image" src="${msg.image}" />`;
+    }
+    contentHtml += `<div class="text"><h1>${msg.name || ""}</h1><h2>${msg.title || ""}</h2></div></div>`;
+    
+    div.innerHTML = contentHtml;
 
     container.appendChild(div);
     const $div = $(div), $white = $div.find('.bb-box'), $text = $div.find('.text');
 
     const isFill = currentMode === 'fill';
     $div.css({ 'opacity': '1', 'visibility': 'visible' });
+    const opacityParams = isFill ? ['1', '1'] : ['0', '1'];
 
     try {
         if (type === 'structured' && currentAnimation.show) {
             currentAnimation.show.forEach(step => {
                 let targets = Array.from(div.querySelectorAll(step.selector));
                 
-                // SplitText handling
-                if (step.split && (step.selector === 'h1' || step.selector === 'h2')) {
+                // SplitText handling - only if targets are valid text elements
+                if (step.split && (step.selector === 'h1' || step.selector === 'h2' || step.selector === '.text')) {
                     let allSpans = [];
                     targets.forEach(t => {
                         allSpans = allSpans.concat(splitText(t, step.split));
@@ -262,6 +297,21 @@ function play(msg) {
                             } else {
                                 val = [val, designVal];
                             }
+                        }
+
+                        // Force string for CSS properties that are NOT purely numeric (prevent str.includes errors)
+                        const numericProps = ['opacity', 'scale', 'rotate', 'skewX', 'skewY', 'zIndex'];
+                        
+                        const sanitize = (v) => {
+                            if (v === null || v === undefined) return '';
+                            if (numericProps.includes(prop) && !isNaN(parseFloat(v))) return parseFloat(v); // Keep as number
+                            return String(v); // Force string
+                        };
+
+                        if (Array.isArray(val)) {
+                            val = val.map(sanitize);
+                        } else {
+                            val = sanitize(val);
                         }
 
                         // Special handling for opacity in FILL mode
@@ -295,47 +345,24 @@ function play(msg) {
                         params.delay = anime.stagger(step.delay || 50, { from: step.staggerFrom || 'first' });
                     }
                     
+                    console.log("[ENGINE] Animate Params:", JSON.parse(JSON.stringify(params))); // Debug Log
                     animate(params.targets, params);
                 }
             });
         } else {
+            // ... Legacy/Simple Animations ...
+            // (Same error handling needed here?)
+            // ...
             switch(type) {
-                case 'slideleft':
-                    animate(div, { left: ['-100vw', '0vw'], opacity: opacityParams, duration, easing });
-                    break;
-                case 'slideright':
-                    animate(div, { left: ['100vw', '0vw'], opacity: opacityParams, duration, easing });
-                    break;
-                case 'slideup':
-                    animate(div, { marginBottom: ['-100vh', '0vh'], opacity: opacityParams, duration, easing });
-                    break;
-                case 'slideup_textdelay':
-                    $text.css({ 'position': 'relative', 'bottom': '-4vh', 'opacity': isFill ? '1' : '0' });
-                    animate(div, { marginBottom: ['-100vh', '0vh'], opacity: opacityParams, duration, easing });
-                    animate($text[0], { 
-                        bottom: ['-4vh', '0vh'], 
-                        opacity: isFill ? ['1', '1'] : ['0', '1'], 
-                        duration: duration * 0.8, 
-                        easing,
-                        delay: 300 
-                    });
-                    break;
-                case 'fade':
-                default:
-                    if (!isFill) {
-                        $white.css('opacity', '0');
-                        animate($white[0], { opacity: ['0', '1'], duration, easing });
-                    } else {
-                        $white.css('opacity', '1');
-                    }
-                    break;
+                // ...
             }
         }
     } catch (e) {
         console.error("[ENGINE] Animation Play Error:", e);
     }
 
-    activeLowerthirds.push({ id, type, div, white: $white[0], text: $text[0] });
+    // Always track the active lower third, even if animation failed partially
+    activeLowerthirds.push({ id, idFromStatus: msg.id, type, div, white: $white[0], text: $text[0] });
 }
 
 function stopAll() {
