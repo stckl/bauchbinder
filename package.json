@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "start": "electron .",
     "generate-icons": "electron-icon-builder --input=assets/Bauchbinder_icon.png --output=assets --flatten",
+    "build-companion": "cd companion-module && npm install && npm run build && cd .. && bestzip public/downloads/bauchbinder-companion.zip companion-module/package.json companion-module/dist/",
     "pack-win": "electron-packager . bauchbinder --overwrite --asar --platform=win32 --arch=x64 --icon=assets/icons/icon.ico --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\"",
     "pack-macarm": "electron-packager . bauchbinder --overwrite --asar --icon=assets/icons/icon.icns --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\""
   },

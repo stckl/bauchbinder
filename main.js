@@ -78,6 +78,16 @@ expressapp.get('/custom.css', function(req, res) {
 });
 
 // rest api
+expressapp.get('/v1/list', function(req, res) {
+  // Map data to include useful IDs (1-based index)
+  const list = data ? data.map((item, index) => ({
+    id: index + 1,
+    name: item.name,
+    title: item.title
+  })) : [];
+  res.json(list);
+});
+
 expressapp.post('/v1/show/:id', function(req, res) {
   showLowerThirdByID(req.params.id)
   res.send("ok")
