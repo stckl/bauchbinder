@@ -121,3 +121,30 @@ body {
   background: rgba(255, 255, 255, 0.1) !important;
   color: rgba(255, 255, 255, 0.9) !important;
 }
+
+/* Inverted Dropdown Menu Styles */
+.ui.inverted.selection.dropdown .menu {
+  background: #1b1c1d !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.ui.inverted.selection.dropdown .menu > .item {
+  color: rgba(255,255,255,0.8) !important;
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+.ui.inverted.selection.dropdown .menu > .item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+}
+
+.ui.inverted.selection.dropdown .menu > .selected.item {
+  background: rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+}
+
+.ui.inverted.selection.dropdown {
+  background: #222 !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}

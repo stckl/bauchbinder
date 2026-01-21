@@ -507,6 +507,7 @@ const App = {
             $('.menu .item').tab();
             $('#entry-modal').modal();
             $('#conflict-modal').modal({ closable: false });
+            $('.ui.dropdown').dropdown();
             fontList.getFonts().then(ret => { systemFonts.value = ret; }).catch(err => console.log(err));
         });
 

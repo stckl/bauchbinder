@@ -66,176 +66,175 @@
         <div class="row" style="margin-top: 20px;">
           <div class="col">
             <h2>style</h2>
-            <form class="ui form inverted" v-on:submit.prevent>
+                        <form class="ui form inverted" v-on:submit.prevent>
+                          
+                          <h4 class="ui dividing header inverted">Bauchbinde</h4>
+                          <div class="fields">
+                            <div class="four wide field">
+                              <label>Breite (min in %)</label>
+                              <div class="ui left icon input">
+                                <input type="number" step="0.01" min="0" max="100" v-model="design.white.width" placeholder="Breite">
+                                <i class="arrows alternate horizontal icon"></i>
+                              </div>
+                            </div>
+                            <div class="four wide field">
+                              <label>Abstand links/rechts (in %)</label>
+                              <div class="ui left icon input">
+                                <input type="number" step="0.01" min="-100" max="100" v-model="design.white.left" placeholder="Abstand seite">
+                                <i class="arrow right icon"></i>
+                              </div>
+                            </div>
+                            <div class="four wide field">
+                              <label>Abstand unten (in %)</label>
+                              <div class="ui left icon input">
+                                <input type="number" step="0.01" min="-100" max="100" v-model="design.white.bottom" placeholder="Abstand unten">
+                                <i class="arrow up icon"></i>
+                              </div>
+                            </div>
+                            <div class="four wide field">
+                              <color-picker v-model="design.white.color" label="Hintergrundfarbe"></color-picker>
+                            </div>
+                          </div>
+                          <div class="fields">
+                            <div class="four wide field">
+                              <label>Position</label>
+                              <div class="ui icon inverted buttons">
+                                <button class="ui button" :class="{ blue: (design.white.divalign == 0) }"  v-on:click.prevent="design.white.divalign = 0">
+                                  <i class="align left icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.divalign == 1) }"  v-on:click.prevent="design.white.divalign = 1">
+                                  <i class="align center icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.divalign == 2) }"  v-on:click.prevent="design.white.divalign = 2">
+                                  <i class="align right icon"></i>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="four wide field">
+                              <label>Text Ausrichtung</label>
+                              <div class="ui icon inverted buttons">
+                                <button class="ui button" :class="{ blue: (design.white.textalign == 0) }"  v-on:click.prevent="design.white.textalign = 0">
+                                  <i class="align left icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.textalign == 1) }"  v-on:click.prevent="design.white.textalign = 1">
+                                  <i class="align center icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: (design.white.textalign == 2) }"  v-on:click.prevent="design.white.textalign = 2">
+                                  <i class="align right icon"></i>
+                                </button>
+                              </div>
+                            </div>
               
-              <h4 class="ui dividing header">Bauchbinde</h4>
-              <div class="fields">
-                <div class="four wide field">
-                  <label>Breite (min in %)</label>
-                  <div class="ui left icon input">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.width" placeholder="Breite">
-                    <i class="arrows alternate horizontal icon"></i>
-                  </div>
-                </div>
-                <div class="four wide field">
-                  <label>Abstand links/rechts (in %)</label>
-                  <div class="ui left icon input">
-                    <input type="number" step="0.01" min="-100" max="100" v-model="design.white.left" placeholder="Abstand seite">
-                    <i class="arrow right icon"></i>
-                  </div>
-                </div>
-                <div class="four wide field">
-                  <label>Abstand unten (in %)</label>
-                  <div class="ui left icon input">
-                    <input type="number" step="0.01" min="-100" max="100" v-model="design.white.bottom" placeholder="Abstand unten">
-                    <i class="arrow up icon"></i>
-                  </div>
-                </div>
-                <div class="four wide field">
-                  <color-picker v-model="design.white.color" label="Hintergrundfarbe"></color-picker>
-                </div>
-              </div>
-              <div class="fields">
-                <div class="four wide field">
-                  <label>Position</label>
-                  <div class="ui icon inverted buttons">
-                    <button class="ui button" :class="{ blue: (design.white.divalign == 0) }"  v-on:click.prevent="design.white.divalign = 0">
-                      <i class="align left icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: (design.white.divalign == 1) }"  v-on:click.prevent="design.white.divalign = 1">
-                      <i class="align center icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: (design.white.divalign == 2) }"  v-on:click.prevent="design.white.divalign = 2">
-                      <i class="align right icon"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="four wide field">
-                  <label>Text Ausrichtung</label>
-                  <div class="ui icon inverted buttons">
-                    <button class="ui button" :class="{ blue: (design.white.textalign == 0) }"  v-on:click.prevent="design.white.textalign = 0">
-                      <i class="align left icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: (design.white.textalign == 1) }"  v-on:click.prevent="design.white.textalign = 1">
-                      <i class="align center icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: (design.white.textalign == 2) }"  v-on:click.prevent="design.white.textalign = 2">
-                      <i class="align right icon"></i>
-                    </button>
-                  </div>
-                </div>
-  
-                <div class="four wide field">
-                  <label>Text Abstand horizontal</label>
-                  <div class="ui left icon input">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" placeholder="Abstand seite">
-                    <i class="arrow right icon"></i>
-                  </div>
-                </div>
-                <div class="four wide field">
-                  <label>Text Abstand vertikal</label>
-                  <div class="ui left icon input">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" placeholder="Abstand unten">
-                    <i class="arrow up icon"></i>
-                  </div>
-                </div>
-              </div>
-              <div class="fields">
-                <div class="four wide field">
-                  <label>Ecken Rundung</label>
-                  <div class="ui left icon input">
-                    <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" placeholder="Ecken Rundung">
-                    <i class="square outline icon"></i>
-                  </div>
-                </div>
-              </div>
-              
-              <h4 class="ui dividing header">Schrift Name</h4>
-              <div class="field">
-                <label>Schriftart</label>
-                <fomantic-dropdown v-model="design.h1.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
-              </div>
-              <div class="fields">
-                <div class="field">
-                  <label>Stil</label>
-                  <div class="ui icon inverted buttons">
-                    <button class="ui button" :class="{ blue: design.h1.bold }"  v-on:click.prevent="toggleH1Bold()">
-                      <i class="bold icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: design.h1.italic }"  v-on:click.prevent="toggleH1Italic()">
-                      <i class="italic icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: design.h1.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH1Variant()" title="Kapitälchen">
-                      <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="field">
-                  <label>Umwandlung</label>
-                  <div class="ui small basic inverted icon buttons">
-                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'none' }" v-on:click.prevent="design.h1.texttransform = 'none'" title="Normal">Aa</button>
-                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'uppercase' }" v-on:click.prevent="design.h1.texttransform = 'uppercase'" title="GROSS">AA</button>
-                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'lowercase' }" v-on:click.prevent="design.h1.texttransform = 'lowercase'" title="klein">aa</button>
-                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'capitalize' }" v-on:click.prevent="design.h1.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
-                  </div>
-                </div>
-                <div class="field">
-                  <label>Dicke</label>
-                  <input type="text" v-model="design.h1.fontweight" placeholder="800" style="width: 80px;">
-                </div>
-                <div class="field">
-                  <label>Größe (vh)</label>
-                  <input type="number" step="0.1" v-model="design.h1.fontsize" style="width: 80px;">
-                </div>
-                <div class="four wide field">
-                  <color-picker v-model="design.h1.color" label="Schriftfarbe Name"></color-picker>
-                </div>
-              </div>
-
-              <h4 class="ui dividing header">Schrift Titel</h4>
-              <div class="field">
-                <label>Schriftart</label>
-                <fomantic-dropdown v-model="design.h2.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
-              </div>
-              <div class="fields">
-                <div class="field">
-                  <label>Stil</label>
-                  <div class="ui icon inverted buttons">
-                    <button class="ui button" :class="{ blue: design.h2.bold }"  v-on:click.prevent="toggleH2Bold()">
-                      <i class="bold icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: design.h2.italic }"  v-on:click.prevent="toggleH2Italic()">
-                      <i class="italic icon"></i>
-                    </button>
-                    <button class="ui button" :class="{ blue: design.h2.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH2Variant()" title="Kapitälchen">
-                      <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="field">
-                  <label>Umwandlung</label>
-                  <div class="ui small basic inverted icon buttons">
-                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'none' }" v-on:click.prevent="design.h2.texttransform = 'none'" title="Normal">Aa</button>
-                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'uppercase' }" v-on:click.prevent="design.h2.texttransform = 'uppercase'" title="GROSS">AA</button>
-                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'lowercase' }" v-on:click.prevent="design.h2.texttransform = 'lowercase'" title="klein">aa</button>
-                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'capitalize' }" v-on:click.prevent="design.h2.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
-                  </div>
-                </div>
-                <div class="field">
-                  <label>Dicke</label>
-                  <input type="text" v-model="design.h2.fontweight" placeholder="800" style="width: 80px;">
-                </div>
-                <div class="field">
-                  <label>Größe (vh)</label>
-                  <input type="number" step="0.1" v-model="design.h2.fontsize" style="width: 80px;">
-                </div>
-                <div class="four wide field">
-                  <color-picker v-model="design.h2.color" label="Schriftfarbe Titel"></color-picker>
-                </div>
-              </div>
-
-                            <h4 class="ui dividing header">Eigene Schriftarten (Base64)</h4>
-
+                            <div class="four wide field">
+                              <label>Text Abstand horizontal</label>
+                              <div class="ui left icon input">
+                                <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" placeholder="Abstand seite">
+                                <i class="arrow right icon"></i>
+                              </div>
+                            </div>
+                            <div class="four wide field">
+                              <label>Text Abstand vertikal</label>
+                              <div class="ui left icon input">
+                                <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" placeholder="Abstand unten">
+                                <i class="arrow up icon"></i>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="fields">
+                            <div class="four wide field">
+                              <label>Ecken Rundung</label>
+                              <div class="ui left icon input">
+                                <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" placeholder="Ecken Rundung">
+                                <i class="square outline icon"></i>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <h4 class="ui dividing header inverted">Schrift Name</h4>
+                          <div class="field">
+                            <label>Schriftart</label>
+                            <fomantic-dropdown v-model="design.h1.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
+                          </div>
+                          <div class="fields">
+                            <div class="field">
+                              <label>Stil</label>
+                              <div class="ui icon inverted buttons">
+                                <button class="ui button" :class="{ blue: design.h1.bold }"  v-on:click.prevent="toggleH1Bold()">
+                                  <i class="bold icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: design.h1.italic }"  v-on:click.prevent="toggleH1Italic()">
+                                  <i class="italic icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: design.h1.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH1Variant()" title="Kapitälchen">
+                                  <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <label>Umwandlung</label>
+                              <div class="ui small basic inverted icon buttons">
+                                <button class="ui button" :class="{ blue: design.h1.texttransform === 'none' }" v-on:click.prevent="design.h1.texttransform = 'none'" title="Normal">Aa</button>
+                                <button class="ui button" :class="{ blue: design.h1.texttransform === 'uppercase' }" v-on:click.prevent="design.h1.texttransform = 'uppercase'" title="GROSS">AA</button>
+                                <button class="ui button" :class="{ blue: design.h1.texttransform === 'lowercase' }" v-on:click.prevent="design.h1.texttransform = 'lowercase'" title="klein">aa</button>
+                                <button class="ui button" :class="{ blue: design.h1.texttransform === 'capitalize' }" v-on:click.prevent="design.h1.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <label>Dicke</label>
+                              <input type="text" v-model="design.h1.fontweight" placeholder="800" style="width: 80px;">
+                            </div>
+                            <div class="field">
+                              <label>Größe (vh)</label>
+                              <input type="number" step="0.1" v-model="design.h1.fontsize" style="width: 80px;">
+                            </div>
+                            <div class="four wide field">
+                              <color-picker v-model="design.h1.color" label="Schriftfarbe Name"></color-picker>
+                            </div>
+                          </div>
+            
+                          <h4 class="ui dividing header inverted">Schrift Titel</h4>
+                          <div class="field">
+                            <label>Schriftart</label>
+                            <fomantic-dropdown v-model="design.h2.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
+                          </div>
+                          <div class="fields">
+                            <div class="field">
+                              <label>Stil</label>
+                              <div class="ui icon inverted buttons">
+                                <button class="ui button" :class="{ blue: design.h2.bold }"  v-on:click.prevent="toggleH2Bold()">
+                                  <i class="bold icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: design.h2.italic }"  v-on:click.prevent="toggleH2Italic()">
+                                  <i class="italic icon"></i>
+                                </button>
+                                <button class="ui button" :class="{ blue: design.h2.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH2Variant()" title="Kapitälchen">
+                                  <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <label>Umwandlung</label>
+                              <div class="ui small basic inverted icon buttons">
+                                <button class="ui button" :class="{ blue: design.h2.texttransform === 'none' }" v-on:click.prevent="design.h2.texttransform = 'none'" title="Normal">Aa</button>
+                                <button class="ui button" :class="{ blue: design.h2.texttransform === 'uppercase' }" v-on:click.prevent="design.h2.texttransform = 'uppercase'" title="GROSS">AA</button>
+                                <button class="ui button" :class="{ blue: design.h2.texttransform === 'lowercase' }" v-on:click.prevent="design.h2.texttransform = 'lowercase'" title="klein">aa</button>
+                                <button class="ui button" :class="{ blue: design.h2.texttransform === 'capitalize' }" v-on:click.prevent="design.h2.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <label>Dicke</label>
+                              <input type="text" v-model="design.h2.fontweight" placeholder="800" style="width: 80px;">
+                            </div>
+                            <div class="field">
+                              <label>Größe (vh)</label>
+                              <input type="number" step="0.1" v-model="design.h2.fontsize" style="width: 80px;">
+                            </div>
+                            <div class="four wide field">
+                              <color-picker v-model="design.h2.color" label="Schriftfarbe Titel"></color-picker>
+                            </div>
+                          </div>
+            
+                                        <h4 class="ui dividing header inverted">Eigene Schriftarten (Base64)</h4>
                             <div class="field">
 
                               <div class="ui segment" 
@@ -331,7 +330,7 @@
               <div class="four wide field inverted">
                 <label>Bescheunigungskurve</label>
                 <div class="ui left icon input inverted">
-                  <select class="ui dropdown" v-model="animation.easing">
+                  <select class="ui inverted dropdown" v-model="animation.easing">
                     <option value="linear">linear</option>
                     <option value="easeInQuad">easeInQuad</option>
                     <option value="easeInCubic">easeInCubic</option>
