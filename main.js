@@ -227,6 +227,19 @@ ipc.on('log-debug', (event, arg) => {
   logger.info('RENDERER DEBUG:', arg);
 });
 
+ipc.handle('download-to-base64', async (event, url) => {
+  try {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    const contentType = response.headers.get('content-type') || 'font/woff2';
+    return { data: base64, type: contentType };
+  } catch (err) {
+    logger.error('Download failed:', { url, error: err.message });
+    return null;
+  }
+});
+
 ipc.on('show-lowerthird', (event, arg) => showLowerThird(arg));
 ipc.on('hide-lowerthird', () => hideLowerThird());
 ipc.on('openwinkey', () => createKeyWin());

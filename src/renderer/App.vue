@@ -19,6 +19,16 @@
       <a class="item" :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">Info</a>
     </div>
 
+    <!-- Migration Alert -->
+    <div v-if="pendingMigrationUrls.length > 0" class="ui message yellow" style="margin-top: 10px;">
+      <div class="header">Externe Ressourcen gefunden</div>
+      <p>Dieses Projekt enthält Links zu {{ pendingMigrationUrls.length }} externen Schriftarten. Möchtest du diese herunterladen und direkt im Projekt speichern?</p>
+      <button class="ui button yellow" :class="{ loading: isMigrating }" @click="migrateExternalFonts">
+        <i class="download icon"></i> Herunterladen und Einbetten
+      </button>
+      <button class="ui button basic" @click="pendingMigrationUrls = []">Ignorieren</button>
+    </div>
+
     <div class="ui tab segment" :class="{ active: activeTab === 'items' }">
       <ItemsTab />
     </div>
@@ -88,6 +98,42 @@ const fontList = require('font-list');
 
 const activeTab = ref('items');
 const appversion = ref('4.1.0');
+const pendingMigrationUrls = ref([]);
+const isMigrating = ref(false);
+
+const migrateExternalFonts = async () => {
+    isMigrating.ref = true;
+    for (const item of pendingMigrationUrls.value) {
+        const result = await ipc.invoke('download-to-base64', item.url);
+        if (result) {
+            // Add to custom fonts
+            const ext = item.url.split('.').pop().split('?')[0];
+            const name = item.name || `Migrated Font ${state.design.customFonts.length + 1}`;
+            
+            if (!state.design.customFonts.some(f => f.name === name)) {
+                state.design.customFonts.push({
+                    name: name,
+                    data: result.data,
+                    type: ext
+                });
+            }
+        }
+    }
+    
+    // Clean up CSS: Remove @font-face blocks that had these URLs
+    let css = state.design.unifiedCss;
+    // Simple regex to remove the @font-face rules that we migrated
+    // (This is a bit broad but safe since we now have the fonts in the store)
+    css = css.replace(/@font-face\s*{[\s\S]*?}/g, (match) => {
+        return match.includes('http') ? '/* Migrated to embedded font */' : match;
+    });
+    
+    state.design.unifiedCss = css;
+    pendingMigrationUrls.value = [];
+    isMigrating.value = false;
+    ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
+    alert("Migration abgeschlossen! Alle Schriften sind nun eingebettet.");
+};
 
 const stopLowerthird = () => { 
     ipc.send('hide-lowerthird'); 
@@ -118,7 +164,14 @@ const openFile = () => {
                 state.design.logo = null;
                 state.design.customFonts = [];
                 // Reset to specific defaults
-                state.design.white = { width: 10, left: 5, bottom: 7, height: 1, color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, divalign: 0, textalign: 0 };
+                state.design.white = { 
+                    width: 10, left: 5, bottom: 7, height: 1, fixedWidth: false, fixedHeight: false,
+                    color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, 
+                    divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible',
+                    flexAlign: 'center', flexJustify: 'center', flexGap: 2, imageHeight: true, imageManualHeight: 10
+                };
+                state.design.h1 = { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 5, italic: false, color: '#000000' };
+                state.design.h2 = { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 3.7, italic: false, color: '#000000' };
                 state.animation = { type: 'structured', duration: 750, easing: 'easeInOutCirc', code: '', show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }], hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }] };
                 
                 if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
@@ -134,6 +187,18 @@ const openFile = () => {
                         }
                     }
                     Object.assign(state.design, ld.design);
+                    
+                    // Scan for external font URLs for migration
+                    const urlRegex = /url\(['"]?(https?:\/\/[^'")]*)['"]?\)/g;
+                    const urls = [];
+                    let match;
+                    while ((match = urlRegex.exec(state.design.unifiedCss)) !== null) {
+                        // Try to find the font name in the surrounding block
+                        const block = state.design.unifiedCss.substring(Math.max(0, match.index - 200), match.index);
+                        const nameMatch = block.match(/font-family:\s*['"]?([^'"]*)['"]?/i);
+                        urls.push({ url: match[1], name: nameMatch ? nameMatch[1] : null });
+                    }
+                    if (urls.length > 0) pendingMigrationUrls.value = urls;
                 }
                 
                 if (ld.animation) {

@@ -759,10 +759,14 @@ const auditCSS = (cssText) => {
     const normalizeSelector = (s) => {
         return s.trim()
             .replace(/\.bauchbinde-instance\s+/, '')
-            .replace(/\.bauchbinde\s+/, '')
-            .replace(/div\.white/, '.bb-box')
-            .replace(/\.white/, '.bb-box')
-            .replace(/>\s*/, '')
+            .replace(/^div\.bauchbinde/, '.bauchbinde')
+            .replace(/^div\.white/, '.bb-box')
+            .replace(/^div\.bb-box/, '.bb-box')
+            .replace(/^\.white/, '.bb-box')
+            .replace(/^h1/, 'h1') // Keep tags but ensure consistent
+            .replace(/^h2/, 'h2')
+            .replace(/>\s*/g, '')
+            .replace(/\s+/g, ' ')
             .trim();
     };
 
@@ -779,7 +783,11 @@ const auditCSS = (cssText) => {
             else if (l.includes('}')) currentSel = null;
             else if (currentSel && l.includes(':')) {
                 const p = l.match(/^\s*([^:]+):\s*([^;]+);?/);
-                if (p) map[currentSel][p[1].trim()] = p[2].trim().replace(/!important/g, '').trim();
+                if (p) {
+                    const key = p[1].trim();
+                    const val = p[2].trim().replace(/!important/g, '').replace(/['"]/g, '').trim();
+                    map[currentSel][key] = val;
+                }
             }
         });
         return map;
