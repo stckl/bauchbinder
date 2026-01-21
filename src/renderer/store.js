@@ -1,11 +1,10 @@
-import { reactive, ref, watch } from 'vue';
-import { ipcRenderer as ipc } from 'electron';
+import { reactive, ref } from 'vue';
 
 export const state = reactive({
     lowerthirds: [],
     design: {
         white: { 
-            width: 40, left: 5, bottom: 7, height: 0, fixedWidth: false, fixedHeight: false,
+            width: 10, left: 5, bottom: 7, height: 1, fixedWidth: false, fixedHeight: false,
             color: 'rgba(255,255,255,0.8)', 
             paddingh: 5, paddingv: 2.6, borderradius: 0, 
             divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible',
@@ -26,17 +25,15 @@ export const state = reactive({
         logo: null
     },
     animation: {
-        type: 'fade', 
+        type: 'structured', 
         duration: 750, 
         easing: 'easeInOutCirc', 
         code: '',
-        show: [],
-        hide: []
+        show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     }
 });
 
 export const activeIndex = ref(-1);
 export const systemFonts = ref([]);
 export const manualFonts = ref([]);
-
-// Sync logic can move here or stay in main app logic

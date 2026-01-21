@@ -6,10 +6,6 @@ h1, h2 {
     color: #fff;
 }
 
-div.bauchbinde > .color {
-    background: #fff;
-}
-
-div.bauchbinde > .white {
+.bb-box {
     background: #fff;
 }

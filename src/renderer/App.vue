@@ -111,12 +111,41 @@ const openFile = () => {
         if (!res.canceled && res.filePaths.length > 0) {
             fs.readFile(res.filePaths[0], 'utf8', (err, data) => {
                 const ld = JSON.parse(data);
-                // Simple state assignment - watchers in tabs should pick it up
-                if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
-                if (ld.design) Object.assign(state.design, ld.design); // Deep merge/assign needed? Watch out for reactivity
-                if (ld.animation) Object.assign(state.animation, ld.animation);
                 
-                // Trigger updates explicitly if watchers don't fire on Object.assign
+                // --- FULL RESET ---
+                state.lowerthirds = [];
+                state.design.unifiedCss = '';
+                state.design.logo = null;
+                state.design.customFonts = [];
+                // Reset to specific defaults
+                state.design.white = { width: 10, left: 5, bottom: 7, height: 1, color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, divalign: 0, textalign: 0 };
+                state.animation = { type: 'structured', duration: 750, easing: 'easeInOutCirc', code: '', show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }], hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }] };
+                
+                if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
+                
+                if (ld.design) {
+                    // Migration for older files: Convert customcss/css to unifiedCss
+                    if (!ld.design.unifiedCss) {
+                        let legacyCss = ld.design.customcss || ld.design.css || '';
+                        if (legacyCss) {
+                            // Globally replace .white with .bb-box for old custom styles
+                            legacyCss = legacyCss.replace(/\.white/g, '.bb-box');
+                            ld.design.unifiedCss = "/* GUI */\n/* CUSTOM */\n" + legacyCss;
+                        }
+                    }
+                    Object.assign(state.design, ld.design);
+                }
+                
+                if (ld.animation) {
+                    // Handle legacy simple animation strings
+                    if (typeof ld.animation === 'string') {
+                        state.animation.type = ld.animation;
+                    } else {
+                        Object.assign(state.animation, ld.animation);
+                    }
+                }
+                
+                // Trigger sync to main process
                 ipc.send('update-data', JSON.parse(JSON.stringify(state.lowerthirds)));
                 ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
                 ipc.send('update-js', JSON.parse(JSON.stringify(state.animation)));
@@ -131,6 +160,27 @@ onMounted(() => {
         if (arg && arg.activeId !== undefined) {
             activeIndex.value = arg.activeId !== null ? (arg.activeId - 1) : -1;
         }
+    });
+
+    // Listen for state updates to keep the store in sync
+    ipc.on('update-css', (event, arg) => {
+        if (arg) {
+            // Merge carefully
+            Object.assign(state.design, arg);
+        }
+    });
+    ipc.on('update-js', (event, arg) => {
+        if (arg) {
+            if (arg.type) state.animation.type = arg.type;
+            if (arg.duration) state.animation.duration = arg.duration;
+            if (arg.easing) state.animation.easing = arg.easing;
+            if (arg.show) state.animation.show = arg.show;
+            if (arg.hide) state.animation.hide = arg.hide;
+            if (arg.code !== undefined) state.animation.code = arg.code;
+        }
+    });
+    ipc.on('update-data', (event, arg) => {
+        if (arg) state.lowerthirds = arg;
     });
     
     // Request initial state

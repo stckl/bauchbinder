@@ -4,8 +4,17 @@ import $ from 'jquery';
 
 window['$'] = window['jQuery'] = $;
 
-const animate = animeModule.animate || animeModule.default?.animate || animeModule.default || animeModule;
+// Robust Anime.js 4.x resolution
+const animate = animeModule.animate || animeModule.default?.animate || (typeof animeModule === 'function' ? animeModule : null);
+const stagger = animeModule.stagger || animeModule.default?.stagger;
+
+console.log("[ENGINE] Anime resolution:", { 
+    animate: typeof animate === 'function' ? 'OK' : 'FAIL',
+    stagger: typeof stagger === 'function' ? 'OK' : 'FAIL'
+});
+
 window['anime'] = animate;
+if (animate) window['anime'].stagger = stagger;
 
 let ipc = null;
 if (typeof window !== 'undefined' && window.process && window.process.versions?.electron) {
@@ -99,8 +108,15 @@ export function initEngine(mode) {
         ipc.on('show-lowerthird', (e, msg) => handleShow(msg, 'ipc'));
         ipc.on('hide-lowerthird', () => stopAll());
         ipc.on('status-update', (e, msg) => handleStatusUpdate(msg));
-        ipc.on('update-css', (e, d) => { currentDesign = d; applyUnifiedStyles(d); });
-        ipc.on('update-js', (e, a) => { currentAnimation = a; });
+        ipc.on('update-css', (e, d) => { 
+            console.log("[ENGINE] IPC update-css received:", d); 
+            currentDesign = d; 
+            applyUnifiedStyles(d); 
+        });
+        ipc.on('update-js', (e, a) => { 
+            console.log("[ENGINE] IPC update-js received:", a); 
+            currentAnimation = a; 
+        });
         ipc.send('request-state');
     }
 
@@ -108,8 +124,15 @@ export function initEngine(mode) {
     socket.on('show-lowerthird', (msg) => handleShow(msg, 'socket'));
     socket.on('hide-lowerthird', () => stopAll());
     socket.on('status-update', (msg) => handleStatusUpdate(msg));
-    socket.on('update-css', (d) => { currentDesign = d; applyUnifiedStyles(d); });
-    socket.on('update-js', (a) => { currentAnimation = a; });
+    socket.on('update-css', (d) => { 
+        console.log("[ENGINE] Socket update-css received:", d); 
+        currentDesign = d; 
+        applyUnifiedStyles(d); 
+    });
+    socket.on('update-js', (a) => { 
+        console.log("[ENGINE] Socket update-js received:", a); 
+        currentAnimation = a; 
+    });
     socket.emit('request-state');
 }
 
@@ -140,26 +163,28 @@ function transformCssColors(css) {
 }
 
 function applyUnifiedStyles(design) {
-    if (!design || !design.unifiedCss) return;
+    if (!design || !design.unifiedCss) {
+        console.warn("[ENGINE] applyUnifiedStyles: No CSS provided or design missing.");
+        return;
+    }
     let fontCss = '';
     if (design.customFonts) {
         design.customFonts.forEach(font => {
-            let format = font.type === 'ttf' ? 'truetype' : (font.type === 'otf' ? 'opentype' : font.type);
-            fontCss += `@font-face { font-family: '${font.name}'; src: url(data:font/${font.type};base64,${font.data}) format('${format}'); }\n`;
+            if (font.data && font.name) {
+                let format = font.type === 'ttf' ? 'truetype' : (font.type === 'otf' ? 'opentype' : font.type);
+                fontCss += `@font-face { font-family: '${font.name}'; src: url(data:font/${font.type};base64,${font.data}) format('${format}'); }\n`;
+            }
         });
     }
     const transformedCss = transformCssColors(design.unifiedCss);
-    let extraCss = '';
-    if (currentMode === 'key') {
-        // Force images to be white silhouettes for the Alpha Key signal
-        extraCss += 'img { filter: brightness(0) invert(1); }';
-    }
+    console.log("[ENGINE] Applying CSS (first 100 chars):", transformedCss.substring(0, 100) + "...");
+    
     $('#unified-styles').remove();
     $('head').append(`<style id="unified-styles">
         ${fontCss}
-        #bb-container .bauchbinde-instance { position: absolute; width: 100%; }
+        .bauchbinde-instance { position: absolute; width: 100%; }
         ${transformedCss}
-        ${extraCss}
+        .bauchbinde-instance h1, .bauchbinde-instance h2 { margin: 0; padding: 0; }
     </style>`);
 }
 
@@ -167,8 +192,8 @@ function getDesignValue(selector, prop) {
     if (!currentDesign || !selector) return null;
     
     // Check in unifiedCss (Custom part) for non-native properties
-    const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-    const parts = currentDesign.unifiedCss ? currentDesign.unifiedCss.split('/* CUSTOM */') : [];
+    const cssProp = typeof prop === 'string' ? prop.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
+    const parts = (typeof currentDesign.unifiedCss === 'string') ? currentDesign.unifiedCss.split('/* CUSTOM */') : [];
     const customCss = parts[1] || '';
     const escapedSelector = String(selector).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedSelector + '\\s*{[\\s\\S]*?' + cssProp + ':\\s*([^;]+);?', 'i');
@@ -189,6 +214,8 @@ function getDesignValue(selector, prop) {
         'marginBottom': '0vh'
     };
 
+    const isNumeric = ['opacity', 'scale', 'rotate', 'skewX', 'skewY', 'zIndex'].includes(prop);
+
     // Color resolution from design
     if (prop === 'backgroundColor') {
         if (selector === '.bb-box' || selector === '.white') return currentDesign.white.color;
@@ -203,18 +230,23 @@ function getDesignValue(selector, prop) {
         if (prop === 'left' || prop === 'marginLeft') return (currentDesign.white.left || 0) + 'vw';
         if (prop === 'width' || prop === 'minWidth') return (currentDesign.white.width || 0) + 'vw';
         if (prop === 'borderRadius') return (currentDesign.white.borderradius || 0) + 'px';
+        if (prop === 'opacity') return 1;
     }
 
     if (selector === 'h1') {
         if (prop === 'fontSize') return (currentDesign.h1.fontsize || 5) + 'vh';
         if (prop === 'fontWeight') return currentDesign.h1.fontweight || (currentDesign.h1.bold ? '700' : '400');
+        if (prop === 'opacity') return 1;
     }
     if (selector === 'h2') {
         if (prop === 'fontSize') return (currentDesign.h2.fontsize || 3.7) + 'vh';
         if (prop === 'fontWeight') return currentDesign.h2.fontweight || (currentDesign.h2.bold ? '700' : '400');
+        if (prop === 'opacity') return 1;
     }
 
-    return defaults[prop] !== undefined ? defaults[prop] : null;
+    let val = defaults[prop] !== undefined ? defaults[prop] : null;
+    if (isNumeric && val !== null && typeof val === 'string') return parseFloat(val);
+    return val;
 }
 
 function splitText(element, type) {
@@ -287,76 +319,143 @@ function play(msg, immediate = false) {
                     
                     // Add properties
                     Object.keys(step.properties).forEach(prop => {
-                        let val = JSON.parse(JSON.stringify(step.properties[prop]));
+                        const rawVal = step.properties[prop];
                         
-                        // Enforce design value as target (end value)
-                        const designVal = getDesignValue(step.selector, prop);
-                        if (designVal !== null) {
-                            if (Array.isArray(val)) {
-                                val[1] = designVal;
-                            } else {
-                                val = [val, designVal];
-                            }
-                        }
-
-                        // Force string for CSS properties that are NOT purely numeric (prevent str.includes errors)
                         const numericProps = ['opacity', 'scale', 'rotate', 'skewX', 'skewY', 'zIndex'];
-                        
+                        const propName = typeof prop === 'string' ? prop : String(prop);
+                        const isNumeric = numericProps.includes(propName);
+
                         const sanitize = (v) => {
-                            if (v === null || v === undefined) return '';
-                            if (numericProps.includes(prop) && !isNaN(parseFloat(v))) return parseFloat(v); // Keep as number
-                            return String(v); // Force string
+                            if (v === null || v === undefined) return isNumeric ? 0 : '';
+                            if (isNumeric) return !isNaN(parseFloat(v)) ? parseFloat(v) : 0;
+                            return String(v);
                         };
 
-                        if (Array.isArray(val)) {
-                            val = val.map(sanitize);
+                        // Extract start and end values
+                        let startVal, endVal;
+                        if (Array.isArray(rawVal)) {
+                            startVal = sanitize(rawVal[0]);
+                            endVal = sanitize(rawVal[1]);
                         } else {
-                            val = sanitize(val);
+                            endVal = sanitize(rawVal);
+                            startVal = sanitize(getDesignValue(step.selector, propName));
                         }
 
-                        // Special handling for opacity in FILL mode
-                        if (prop === 'opacity' && isFill) val = ['1', '1'];
+                        // Apply current design value as target if it overrides
+                        const designVal = getDesignValue(step.selector, propName);
+                        if (designVal !== null) {
+                            endVal = sanitize(designVal);
+                        }
+
+                        // Set initial state using animate.set (more reliable in v4)
+                        if (typeof animate.set === 'function') {
+                            const setProps = {};
+                            setProps[propName] = startVal;
+                            animate.set(targets, setProps);
+                        } else {
+                            // Fallback to manual style
+                            targets.forEach(el => {
+                                if (el && el.style) {
+                                    if (propName === 'opacity') el.style.opacity = startVal;
+                                    else if (propName === 'translateX' || propName === 'translateY') {
+                                        el.style.transform = (el.style.transform || '').replace(new RegExp(propName + '\\([^)]*\\)', 'g'), '') + ` ${propName}(${startVal})`;
+                                    }
+                                }
+                            });
+                        }
+
+                        if (propName === 'opacity' && isFill) endVal = 1;
                         
-                        // Handle colors for Key/Fill mode (ensure even single values are transformed)
-                        if (['backgroundColor', 'color', 'borderColor'].includes(prop)) {
+                        if (['backgroundColor', 'color', 'borderColor'].includes(propName)) {
                             const transformColor = (v) => {
                                 const rgba = getRGBA(v);
                                 if (currentMode === 'key') return `rgba(255, 255, 255, ${rgba.a})`;
                                 if (currentMode === 'fill') return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
                                 return v;
                             };
-
-                            if (Array.isArray(val)) {
-                                val = val.map(transformColor);
-                            } else {
-                                val = transformColor(val);
-                            }
+                            endVal = transformColor(endVal);
                         }
-                        params[prop] = val;
+
+                        params[propName] = endVal;
                     });
 
-                    // Line Draw Effect (Simulated via clip-path for Rects)
+                    // Line Draw Effect
                     if (step.lineDraw) {
-                        params.clipPath = ['inset(0 100% 100% 0)', 'inset(0 0 0 0)'];
+                        params.clipPath = 'inset(0 0 0 0)';
+                        targets.forEach(el => { if(el.style) el.style.clipPath = 'inset(0 100% 100% 0)'; });
                     }
                     
-                    // Staggering for split text
-                    if (step.split) {
-                        params.delay = anime.stagger(step.delay || 50, { from: step.staggerFrom || 'first' });
+                    if (step.split && typeof stagger === 'function') {
+                        params.delay = stagger(step.delay || 50, { from: step.staggerFrom || 'first' });
                     }
                     
-                    console.log("[ENGINE] Animate Params:", JSON.parse(JSON.stringify(params))); // Debug Log
-                    animate(params.targets, params);
+                    // Add targets to params
+                    params.targets = targets;
+
+                    // Log detailed info to server
+                    if (ipc) {
+                        const debugInfo = {
+                            action: 'animate',
+                            selector: step.selector,
+                            targetCount: targets.length,
+                            params: JSON.parse(JSON.stringify(params, (key, value) => {
+                                if (value instanceof HTMLElement) return `<${value.tagName.toLowerCase()} class="${value.className}">`;
+                                if (value instanceof NodeList || Array.isArray(value)) return value;
+                                return value;
+                            }))
+                        };
+                        ipc.send('log-debug', debugInfo);
+                    }
+                    
+                    if (typeof animate === 'function') {
+                        try {
+                            // Anime.js 4.x API: animate(targets, props, settings)
+                            const { targets: animTargets, duration: animDuration, delay: animDelay, easing: animEasing, ...animProps } = params;
+                            animate(animTargets, animProps, {
+                                duration: animDuration,
+                                delay: animDelay,
+                                easing: animEasing
+                            });
+                        } catch (animErr) {
+                            console.error("[ENGINE] animate() failed:", animErr);
+                            if (ipc) ipc.send('log-debug', { error: animErr.message, stack: animErr.stack });
+                        }
+                    } else {
+                        console.error("[ENGINE] animate is not a function!");
+                    }
                 }
             });
         } else {
-            // ... Legacy/Simple Animations ...
-            // (Same error handling needed here?)
-            // ...
-            switch(type) {
-                // ...
-            }
-        }
+                                                switch(type) {
+                                                    case 'slideleft': 
+                                                        div.style.transform = 'translateX(-100vw)';
+                                                        div.style.opacity = isFill ? 1 : 0;
+                                                        animate(div, { translateX: '0vw', opacity: 1 }, { duration, easing }); 
+                                                        break;
+                                                    case 'slideright': 
+                                                        div.style.transform = 'translateX(100vw)';
+                                                        div.style.opacity = isFill ? 1 : 0;
+                                                        animate(div, { translateX: '0vw', opacity: 1 }, { duration, easing }); 
+                                                        break;
+                                                    case 'slideup': 
+                                                        div.style.transform = 'translateY(100vh)';
+                                                        div.style.opacity = isFill ? 1 : 0;
+                                                        animate(div, { translateY: '0vh', opacity: 1 }, { duration, easing }); 
+                                                        break;
+                                                    case 'slideup_textdelay':
+                                                        div.style.transform = 'translateY(100vh)';
+                                                        div.style.opacity = isFill ? 1 : 0;
+                                                        animate(div, { translateY: '0vh', opacity: 1 }, { duration, easing }); 
+                                                        $text[0].style.transform = 'translateY(5vh)';
+                                                        $text[0].style.opacity = isFill ? 1 : 0;
+                                                        animate($text[0], { translateY: '0vh', opacity: 1 }, { duration: duration * 0.8, easing, delay: 300 });
+                                                        break;
+                                                    case 'fade':
+                                                    default: 
+                                                        $white[0].style.opacity = isFill ? 1 : 0;
+                                                        animate($white[0], { opacity: 1 }, { duration, easing }); 
+                                                        break;
+                                                }        }
     } catch (e) {
         console.error("[ENGINE] Animation Play Error:", e);
     }
@@ -368,6 +467,16 @@ function play(msg, immediate = false) {
 function stopAll() {
     if (activeLowerthirds.length === 0) { isStopping = false; return; };
     isStopping = true;
+
+    // Safety timeout: Reset isStopping after 2 seconds no matter what
+    const safetyTimeout = setTimeout(() => {
+        if (isStopping) {
+            console.warn("[ENGINE] stopAll safety timeout fired. Forcing state reset.");
+            activeLowerthirds.forEach(item => $(item.div).remove());
+            activeLowerthirds = [];
+            isStopping = false;
+        }
+    }, 2000);
 
     let itemsProcessed = 0;
     const itemsToStop = [...activeLowerthirds];
@@ -382,6 +491,7 @@ function stopAll() {
             $(item.div).remove();
             itemsProcessed++;
             if (itemsProcessed === totalItems) {
+                clearTimeout(safetyTimeout);
                 activeLowerthirds = [];
                 isStopping = false;
                 if (nextQueuedPlayout) {
@@ -392,7 +502,7 @@ function stopAll() {
             }
         };
 
-        const opacityParams = isFill ? ['1', '1'] : ['1', '0'];
+        const opacityParams = isFill ? 1 : 0;
 
         try {
             if (item.type === 'structured' && currentAnimation.hide) {
@@ -400,9 +510,6 @@ function stopAll() {
                 currentAnimation.hide.forEach((step, index) => {
                     let targets = Array.from(item.div.querySelectorAll(step.selector));
 
-                    // SplitText handling for hide (only if not already split, but usually we just target what's there)
-                    // If it was already split during show, querySelectorAll('span') would be needed.
-                    // To keep it simple, we check if spans exist inside the target.
                     let subTargets = [];
                     targets.forEach(t => {
                         const spans = t.querySelectorAll('span');
@@ -414,98 +521,62 @@ function stopAll() {
                     if (targets.length > 0) {
                         const stepDuration = step.duration || duration;
                         const stepDelay = step.delay || 0;
-                        
-                        // For stagger, the total duration increases
                         const totalStepDuration = step.split ? (stepDuration + (targets.length * (step.delay || 50))) : (stepDuration + stepDelay);
                         maxDuration = Math.max(maxDuration, totalStepDuration);
 
-                        const params = {
-                            targets: targets,
-                            duration: stepDuration,
-                            easing: step.easing || easing,
-                            delay: stepDelay
-                        };
-
+                        const params = {};
                         Object.keys(step.properties).forEach(prop => {
-                            let val = JSON.parse(JSON.stringify(step.properties[prop]));
-                            
-                            // Enforce design value as start value
-                            const designVal = getDesignValue(step.selector, prop);
-                            if (designVal !== null) {
-                                if (Array.isArray(val)) {
-                                    val[0] = designVal;
-                                } else {
-                                    val = [designVal, val];
-                                }
+                            const rawVal = step.properties[prop];
+                            const propName = typeof prop === 'string' ? prop : String(prop);
+                            const sanitize = (v) => (v === null || v === undefined) ? '' : String(v);
+                            let endVal = Array.isArray(rawVal) ? sanitize(rawVal[1]) : sanitize(rawVal);
+                            if (propName === 'opacity' && isFill) endVal = 1;
+                            if (propName === 'backgroundColor' || propName === 'color') {
+                                const rgba = getRGBA(endVal);
+                                if (currentMode === 'key') endVal = `rgba(255, 255, 255, ${rgba.a})`;
+                                if (currentMode === 'fill') endVal = `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
                             }
-
-                            if (prop === 'opacity' && isFill) {
-                                val = ['1', '1'];
-                            }
-                            
-                            // Handle colors for Key/Fill mode
-                            if (prop === 'backgroundColor' || prop === 'color') {
-                                if (Array.isArray(val)) {
-                                    val = val.map(v => {
-                                        const rgba = getRGBA(v);
-                                        if (currentMode === 'key') return `rgba(255, 255, 255, ${rgba.a})`;
-                                        if (currentMode === 'fill') return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
-                                        return v;
-                                    });
-                                }
-                            }
-                            
-                            params[prop] = val;
+                            params[propName] = endVal;
                         });
 
-                        if (step.split) {
-                            params.delay = anime.stagger(step.delay || 50, { from: 'last' });
+                        if (typeof animate === 'function') {
+                            animate(targets, params, {
+                                duration: stepDuration,
+                                delay: step.split && typeof stagger === 'function' ? stagger(step.delay || 50, { from: 'last' }) : stepDelay,
+                                easing: step.easing || easing
+                            });
                         }
-
-                        animate(params.targets, params);
                     }
                 });
                 setTimeout(finalize, maxDuration + 50);
             } else {
-                switch(item.type) {
-                    case 'slideleft': 
-                        animate(item.div, { left: ['0vw', '-100vw'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
-                        break;
-                    case 'slideright': 
-                        animate(item.div, { left: ['0vw', '100vw'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
-                        break;
-                    case 'slideup': 
-                        animate(item.div, { marginBottom: ['0vh', '-100vh'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
-                        break;
-                    case 'slideup_textdelay':
-                        animate(item.text, { 
-                            bottom: ['0vh', '-4vh'], 
-                            opacity: isFill ? ['1', '1'] : ['1', '0'], 
-                            duration: duration * 0.8, 
-                            easing 
-                        });
-                        animate(item.div, { 
-                            marginBottom: ['0vh', '-100vh'], 
-                            opacity: opacityParams, 
-                            duration, 
-                            easing, 
-                            delay: 200, 
-                            onComplete: finalize 
-                        });
-                        break;
-                    case 'fade':
-                    default: 
-                        if (!isFill) {
-                            animate(item.white, { opacity: ['1', '0'], duration, easing, onComplete: finalize }); 
-                        } else {
-                            // Fill wartet die Zeit ab (deckend), bis Key fertig ist
-                            animate(item.white, { opacity: ['1', '1'], duration, easing, onComplete: finalize });
-                        }
-                        break;
+                if (typeof animate === 'function') {
+                    switch(item.type) {
+                        case 'slideleft': 
+                            animate(item.div, { translateX: '-100vw', opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize }); 
+                            break;
+                        case 'slideright': 
+                            animate(item.div, { translateX: '100vw', opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize }); 
+                            break;
+                        case 'slideup': 
+                            animate(item.div, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize }); 
+                            break;
+                        case 'slideup_textdelay':
+                            animate(item.text, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { duration: duration * 0.8, easing });
+                            animate(item.div, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { duration, easing, delay: 200, onComplete: finalize });
+                            break;
+                        case 'fade':
+                        default: 
+                            animate(item.white, { opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize });
+                            break;
+                    }
+                } else {
+                    finalize();
                 }
             }
         } catch (e) {
             console.error("[ENGINE] Animation Stop Error:", e);
+            if (ipc) ipc.send('log-debug', { error: e.message, stack: e.stack });
             finalize();
         }
     });

@@ -2,7 +2,7 @@
 // INIT
 // --------------------------------------
 function initAnimationDefaults() {
-    $(".bauchbinde .white").css('opacity','0');
+    $(".bauchbinde .bb-box").css('opacity','0');
 }
 
 // --------------------------------------
@@ -27,7 +27,7 @@ function showAnimationH5(tl, msg) {
     // Add children
     tl
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1
     });
 }
@@ -44,7 +44,7 @@ function hideAnimationH5(tl) {
 
     tl
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 0
     });
 }
@@ -69,7 +69,7 @@ function showAnimationKEY(tl, msg) {
     // Add children
     tl
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1
     });
 }
@@ -86,7 +86,7 @@ function hideAnimationKEY(tl) {
 
     tl   
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1
     });
 }
@@ -111,7 +111,7 @@ function showAnimationFILL(tl, msg) {
     // Add children
     tl
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1
     });
 }
@@ -128,7 +128,7 @@ function hideAnimationFILL(tl) {
 
     tl   
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1
     });
 }

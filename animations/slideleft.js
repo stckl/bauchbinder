@@ -3,7 +3,7 @@
 // --------------------------------------
 function initAnimationDefaults() {
     $(".bauchbinde").css('left','-100vw');
-    $(".bauchbinde .white").css('opacity','1');
+    $(".bauchbinde .bb-box").css('opacity','1');
 }
 
 // --------------------------------------
@@ -33,7 +33,7 @@ function showAnimationH5(tl, msg) {
         duration: 1
     })
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1,
         duration: 1
     })
@@ -85,7 +85,7 @@ function showAnimationKEY(tl, msg) {
         duration: 1
     })
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1,
         duration: 1
     })
@@ -137,7 +137,7 @@ function showAnimationFILL(tl, msg) {
         duration: 1
     })
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1,
         duration: 1
     })

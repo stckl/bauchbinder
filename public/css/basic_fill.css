@@ -2,22 +2,14 @@ html, body {
     background: #000;
 }
 
-div.bauchbinde {
+.bauchbinde {
     opacity: 1;
 }
 
-div.bauchbinde > div {
+.bb-box {
     opacity: 1;
 }
 
-div.bauchbinde > .color {
-    opacity: 1;
-}
-
-div.bauchbinde > .white {
-    opacity: 1;
-}
-
-div.bauchbinde > .white > .text {
+.text {
     opacity: 1;
 }

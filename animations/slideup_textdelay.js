@@ -3,9 +3,9 @@
 // --------------------------------------
 function initAnimationDefaults() {
     $(".bauchbinde").css('margin-bottom','-100vh');
-    $(".bauchbinde .white").css('opacity','1');
-    $(".bauchbinde .white .text").css('position','relative');
-    $(".bauchbinde .white .text").css('bottom','-4vh');
+    $(".bauchbinde .bb-box").css('opacity','1');
+    $(".bauchbinde .bb-box .text").css('position','relative');
+    $(".bauchbinde .bb-box .text").css('bottom','-4vh');
 }
 
 // --------------------------------------
@@ -30,7 +30,7 @@ function showAnimationH5(tl, msg) {
     // Add children
     tl
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '-4vh',
         duration: 1
     })
@@ -40,7 +40,7 @@ function showAnimationH5(tl, msg) {
         duration: 1
     })
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1,
         duration: 1
     })
@@ -49,7 +49,7 @@ function showAnimationH5(tl, msg) {
         'margin-bottom': '0vh'
     })
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '0vh'
     }, '-=400');
 }
@@ -66,7 +66,7 @@ function hideAnimationH5(tl) {
 
     tl
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '-4vh'
     })
     .add({
@@ -95,7 +95,7 @@ function showAnimationKEY(tl, msg) {
     // Add children
     tl
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '-4vh',
         duration: 1
     })
@@ -105,7 +105,7 @@ function showAnimationKEY(tl, msg) {
         duration: 1
     })
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1,
         duration: 1
     })
@@ -114,7 +114,7 @@ function showAnimationKEY(tl, msg) {
         'margin-bottom': '0vh'
     })
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '0vh'
     }, '-=400');
 }
@@ -131,7 +131,7 @@ function hideAnimationKEY(tl) {
 
     tl
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '-4vh'
     })
     .add({
@@ -160,7 +160,7 @@ function showAnimationFILL(tl, msg) {
     // Add children
     tl
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '-4vh',
         duration: 1
     })
@@ -170,7 +170,7 @@ function showAnimationFILL(tl, msg) {
         duration: 1
     })
     .add({
-        targets: '.bauchbinde .white',
+        targets: '.bauchbinde .bb-box',
         opacity: 1,
         duration: 1
     })
@@ -179,7 +179,7 @@ function showAnimationFILL(tl, msg) {
         'margin-bottom': '0vh'
     })
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '0vh'
     }, '-=400');
 }
@@ -196,7 +196,7 @@ function hideAnimationFILL(tl) {
 
     tl
     .add({
-        targets: '.bauchbinde .white .text',
+        targets: '.bauchbinde .bb-box .text',
         'bottom': '-4vh'
     })
     .add({

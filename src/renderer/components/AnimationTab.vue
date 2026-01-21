@@ -3,6 +3,18 @@
     <div class="col">
       <h2>Animation Editor</h2>
     </div>
+
+    <!-- Preview / Test Buttons -->
+    <div class="col" style="text-align: right;">
+      <div class="ui buttons small">
+        <button class="ui blue labeled icon button" @click="playTest">
+          <i class="play icon"></i> Test: Anzeigen
+        </button>
+        <button class="ui red labeled icon button" @click="stopTest">
+          <i class="eye slash icon"></i> Test: Ausblenden
+        </button>
+      </div>
+    </div>
     
     <!-- Presets / Templates -->
     <div class="col" style="margin-top:20px;">
@@ -29,7 +41,12 @@
             <i class="trash alternate outline red icon delete-btn" @click.stop="removeAnimationStep('show', index)"></i>
           </div>
           <div class="card-body">
-            <div class="info-line"><i class="clock outline icon"></i> {{step.duration}}ms</div>
+            <div class="info-line">
+              <i class="clock outline icon"></i> {{step.duration}}ms
+              <span v-if="step.delay" style="margin-left: 10px; color: #aaa;">
+                <i class="hourglass half icon"></i> {{step.delay}}ms
+              </span>
+            </div>
             <div class="effects-line">
               <i class="eye icon" v-if="step.properties.opacity !== undefined" title="Deckkraft"></i>
               <i class="arrows alternate icon" v-if="getMotionXType(step) !== 'none' || getMotionYType(step) !== 'none'" title="Bewegung"></i>
@@ -53,7 +70,12 @@
             <i class="trash alternate outline red icon delete-btn" @click.stop="removeAnimationStep('hide', index)"></i>
           </div>
           <div class="card-body">
-            <div class="info-line"><i class="clock outline icon"></i> {{step.duration}}ms</div>
+            <div class="info-line">
+              <i class="clock outline icon"></i> {{step.duration}}ms
+              <span v-if="step.delay" style="margin-left: 10px; color: #aaa;">
+                <i class="hourglass half icon"></i> {{step.delay}}ms
+              </span>
+            </div>
             <div class="effects-line">
               <i class="eye icon" v-if="step.properties.opacity !== undefined" title="Deckkraft"></i>
               <i class="arrows alternate icon" v-if="getMotionXType(step) !== 'none' || getMotionYType(step) !== 'none'" title="Bewegung"></i>
@@ -411,25 +433,25 @@ const PRESETS = {
         hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideleft: {
-        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['-100vw', '0vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '-100vw'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bb-box', properties: { translateX: ['-100vw', '0vw'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bb-box', properties: { translateX: ['0vw', '-100vw'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideright: {
-        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['100vw', '0vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '100vw'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bb-box', properties: { translateX: ['100vw', '0vw'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bb-box', properties: { translateX: ['0vw', '100vw'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideup: {
-        show: [{ selector: '.bauchbinde-instance', properties: { translateY: ['100vh', '0vh'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '100vh'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bb-box', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bb-box', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideup_textdelay: {
         show: [
-            { selector: '.bauchbinde-instance', properties: { translateY: ['100vh', '0vh'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' },
-            { selector: '.text', properties: { translateY: ['5vh', '0vh'] }, duration: 600, delay: 300, easing: 'easeInOutCirc' }
+            { selector: '.bb-box', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' },
+            { selector: '.text', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 600, delay: 300, easing: 'easeInOutCirc' }
         ],
         hide: [
-            { selector: '.text', properties: { translateY: ['0vh', '5vh'] }, duration: 400, delay: 0, easing: 'easeInOutCirc' },
-            { selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '100vh'] }, duration: 500, delay: 200, easing: 'easeInOutCirc' }
+            { selector: '.text', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 400, delay: 0, easing: 'easeInOutCirc' },
+            { selector: '.bb-box', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 500, delay: 200, easing: 'easeInOutCirc' }
         ]
     }
 };
@@ -552,6 +574,18 @@ const removeAnimationStep = (phase, index) => {
     state.animation[phase].splice(index, 1);
 };
 
+const playTest = () => {
+    ipc.send('show-lowerthird', { 
+        name: 'Max Mustermann', 
+        title: 'Bauchbinder Test Vorschau', 
+        image: null 
+    });
+};
+
+const stopTest = () => {
+    ipc.send('hide-lowerthird');
+};
+
 const loadPreset = (name) => {
     if (PRESETS[name]) {
         state.animation.show = JSON.parse(JSON.stringify(PRESETS[name].show));
@@ -564,7 +598,10 @@ const loadPreset = (name) => {
 watch(() => state.animation, (na) => { ipc.send('update-js', JSON.parse(JSON.stringify(na))); }, { deep: true });
 
 onMounted(() => {
-    ipc.send('update-js', JSON.parse(JSON.stringify(state.animation)));
+    if (!state.animation.show || state.animation.show.length === 0) {
+        console.log("[AnimationTab] Initializing with fade preset...");
+        loadPreset('fade');
+    }
     $('#step-modal').modal();
     $('.ui.dropdown').dropdown();
 });

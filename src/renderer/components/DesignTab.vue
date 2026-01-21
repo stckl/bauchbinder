@@ -548,23 +548,30 @@ const buildCss = () => {
     css += `.bb-box {
 `;
     css += line(state.design.white, 'width', state.design.white.fixedWidth ? 'width' : 'min-width', `${state.design.white.width}vw`);
-    if (state.design.white.height > 0) {
-        css += line(state.design.white, 'height', state.design.white.fixedHeight ? 'height' : 'min-height', `${state.design.white.height}vh`);
+    
+    // Improved height logic: Only apply if > 0, otherwise default to min 0vh
+    const hVal = state.design.white.height;
+    if (hVal > 0) {
+        css += line(state.design.white, 'height', state.design.white.fixedHeight ? 'height' : 'min-height', `${hVal}vh`);
+    } else {
+        css += `  min-height: 0vh;
+`;
     }
+    
     css += line(state.design.white, 'left', 'margin', `0 ${state.design.white.left}vw`);
     css += line(state.design.white, 'color', 'background', state.design.white.color);
     css += line(state.design.white, 'borderradius', 'border-radius', `${state.design.white.borderradius}px`);
     css += `  padding: ${state.design.white.paddingv}vh ${state.design.white.paddingh}vh;
   text-align: ${['left', 'center', 'right'][state.design.white.textalign]};
   overflow: ${state.design.white.overflow || 'hidden'};
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   align-items: ${state.design.white.flexAlign || 'center'};
   justify-content: ${state.design.white.flexJustify || 'center'};
   gap: ${state.design.white.flexGap || 0}vh;
 }
 
-.bb-box > img {
+.bb-box img {
   object-fit: contain;
 }
 
@@ -618,9 +625,19 @@ const buildCss = () => {
 `;
 
     const textBlock = (sel, obj) => {
+        let family = obj.fontfamily || 'Helvetica, Arial, sans-serif';
+        // Deep clean: remove quotes and any accidental !important suffixes
+        family = String(family).replace(/!important/g, '').replace(/['"]/g, '').trim();
+        
+        // Properly format font stack
+        const formattedFamily = family.split(',').map(f => {
+            f = f.trim();
+            return (f.includes(' ') && !f.startsWith('"')) ? `"${f}"` : f;
+        }).join(', ');
+        
         let s = `${sel} {
 `;
-        s += line(obj, 'fontfamily', 'font-family', `'${obj.fontfamily}'`);
+        s += line(obj, 'fontfamily', 'font-family', `${formattedFamily} !important`);
         s += line(obj, 'fontsize', 'font-size', `${obj.fontsize}vh`);
         s += `  line-height: ${obj.fontsize}vh;
 `;
@@ -738,17 +755,31 @@ const auditCSS = (cssText) => {
     const guiCss = parts[0];
     const customCss = parts[1] || '';
 
+    // Helper to normalize selectors for comparison
+    const normalizeSelector = (s) => {
+        return s.trim()
+            .replace(/\.bauchbinde-instance\s+/, '')
+            .replace(/\.bauchbinde\s+/, '')
+            .replace(/div\.white/, '.bb-box')
+            .replace(/\.white/, '.bb-box')
+            .replace(/>\s*/, '')
+            .trim();
+    };
+
     const parseToMap = (text) => {
         const map = {};
         const lines = text.split('\n');
         let currentSel = null;
         lines.forEach(l => {
             const s = l.match(/^([^{]+)\s*{/);
-            if (s) { currentSel = s[1].trim(); if (!map[currentSel]) map[currentSel] = {}; } 
+            if (s) { 
+                currentSel = normalizeSelector(s[1]); 
+                if (!map[currentSel]) map[currentSel] = {}; 
+            } 
             else if (l.includes('}')) currentSel = null;
             else if (currentSel && l.includes(':')) {
                 const p = l.match(/^\s*([^:]+):\s*([^;]+);?/);
-                if (p) map[currentSel][p[1].trim()] = p[2].trim();
+                if (p) map[currentSel][p[1].trim()] = p[2].trim().replace(/!important/g, '').trim();
             }
         });
         return map;
@@ -783,46 +814,88 @@ const auditCSS = (cssText) => {
 
 const resolveConflict = (index, source) => {
     const conflict = cssConflicts.value[index];
-    if (source === 'custom') parseCssToProperties(`${conflict.selector} { ${conflict.property}: ${conflict.customValue}; }`);
+    if (source === 'custom') {
+        // Apply custom value to GUI
+        const fakeCss = `${conflict.selector} { ${conflict.property}: ${conflict.customValue}; }`;
+        parseCssToProperties(fakeCss);
+    }
+    
     const parts = state.design.unifiedCss.split('/* CUSTOM */');
     let customPart = parts[1] || '';
-    const selRegex = new RegExp(`(${conflict.selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*{[\\s\\S]*?)${conflict.property}:\\s*[^;]+;?([\\s\\S]*?})`, 'i');
-    customPart = customPart.replace(selRegex, (match, start, end) => {
-        const inner = (start.split('{')[1] + end.split('}')[0]).trim();
-        return inner.length === 0 ? '' : `${start.split('{')[0]} {
-  ${inner}
-}`;
+    
+    // Create a fuzzy regex that handles normalized selectors in custom CSS
+    // This is a bit complex, so we'll look for the property within the custom block
+    const lines = customPart.split('\n');
+    let inTargetSelector = false;
+    let newLines = lines.filter(line => {
+        const selMatch = line.match(/^([^{]+)\s*{/);
+        if (selMatch) {
+            if (normalizeSelector(selMatch[1]) === conflict.selector) inTargetSelector = true;
+        }
+        if (inTargetSelector && line.includes(`${conflict.property}:`)) {
+            return false; // Remove this property line
+        }
+        if (line.includes('}')) inTargetSelector = false;
+        return true;
     });
-    state.design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + customPart.trim();
+
+    // Cleanup: Remove empty rulesets like ".bb-box { }"
+    let cleanedPart = newLines.join('\n');
+    cleanedPart = cleanedPart.replace(/[^{}\n]+\s*{\s*}/g, '').trim();
+
+    state.design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + cleanedPart;
     cssConflicts.value.splice(index, 1);
     if (cssConflicts.value.length === 0) $('#conflict-modal').modal('hide');
 };
 
 let isSyncing = false;
-watch(() => [state.design.white, state.design.h1, state.design.h2, state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle], () => {
-    if (!isSyncing) {
-        isSyncing = true;
-        const parts = state.design.unifiedCss.split('/* CUSTOM */');
-        const customPart = parts.length > 1 ? parts[1].trim() : '';
-        state.design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
-        nextTick(() => { isSyncing = false; });
+
+// Function to sync everything to server
+const syncToMain = () => {
+    if (isSyncing) return;
+    isSyncing = true;
+    ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
+    nextTick(() => { isSyncing = false; });
+};
+
+// Watch GUI changes -> Rebuild CSS
+watch(() => [
+    state.design.white, state.design.h1, state.design.h2, 
+    state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle
+], () => {
+    const parts = state.design.unifiedCss.split('/* CUSTOM */');
+    const customPart = parts.length > 1 ? parts[1].trim() : '';
+    const newCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
+    
+    if (state.design.unifiedCss !== newCss) {
+        state.design.unifiedCss = newCss;
+        // The watch on unifiedCss will handle the IPC send
     }
 }, { deep: true });
 
-watch(() => state.design.unifiedCss, (nv) => {
-    if (!isSyncing) {
-        isSyncing = true;
-        parseCssToProperties(nv); 
-        auditCSS(nv);
-        ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
-        nextTick(() => { isSyncing = false; });
-    }
+// Watch unifiedCss -> Parse back to properties (if changed manually) and Sync
+watch(() => state.design.unifiedCss, (nv, ov) => {
+    if (isSyncing) return;
+    
+    // If it was a manual edit in the CSS editor (not from buildCss)
+    // we might need to parse it back to properties
+    const parts = nv.split('/* CUSTOM */');
+    const guiPart = parts[0];
+    
+    // We only parse back if the GUI part changed (indicating manual edit or initial load)
+    // This is tricky. Let's simplify: Always parse if not syncing.
+    parseCssToProperties(nv); 
+    auditCSS(nv);
+    
+    syncToMain();
 });
 
 onMounted(() => {
-    if (!state.design.unifiedCss) {
+    // Force initial build if missing
+    if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
+        console.log("[DesignTab] Building initial CSS...");
         state.design.unifiedCss = buildCss();
-        ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
+        syncToMain();
     }
 });
 </script>
