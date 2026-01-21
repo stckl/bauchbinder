@@ -98,7 +98,3 @@ git push && git push --tags
 
 GitHub baut automatisch die Windows- und macOS-Versionen und erstellt ein Release.
 
-## 📄 Lizenz
-
-ISC License
-Copyright (c) 2026 Michael Stoeckle

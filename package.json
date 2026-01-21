@@ -14,7 +14,6 @@
     "pack-macarm": "electron-packager . bauchbinder --overwrite --asar --icon=assets/icons/icon.icns --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\""
   },
   "author": "Michael Stoeckle",
-  "license": "ISC",
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.0",
     "@codemirror/lang-css": "^6.3.1",
