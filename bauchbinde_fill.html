@@ -2,62 +2,15 @@
 <html lang="de">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://127.0.0.1:5001 http://localhost:5001; style-src 'self' 'unsafe-inline' http://127.0.0.1:5001 http://localhost:5001; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws://localhost:3000 http://localhost:5001 ws://localhost:5001 http://127.0.0.1:5001 ws://127.0.0.1:5001; worker-src 'self' blob:;">
     <title>Fill</title>
-    <link rel="stylesheet" type="text/css" href="./public/css/basic.css">
-    <link rel="stylesheet" type="text/css" href="./public/css/basic_fill.css">
-    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:5000/custom.css">
+    <link rel="stylesheet" type="text/css" href="/css/basic.css">
+    <link rel="stylesheet" type="text/css" href="/css/basic_fill.css">
   </head>
-  
   <body class="fill">
-    <script>window.$ = window.jQuery = require('./public/jquery-3.5.1.min.js');</script>
-    <script src="public/anime.min.js"></script>
-    <script src="http://127.0.0.1:5000/animate.js"></script>
-
-    <div class="bauchbinde">
-        <div class="color"></div>
-        <div class="white">
-            <div class="text">
-                <h1></h1>
-                <h2></h2>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        initAnimationDefaults();
-
-        var tl;
-        var ipc = require('electron').ipcRenderer;
-
-        ipc.on('show-lowerthird', function (event, msg) {
-          showAnimationFILL(tl, msg)
-        });
-
-        ipc.on('hide-lowerthird', function (event, msg) {
-          hideAnimationFILL(tl)
-        });
-
-        const myBody = document.querySelector('body');
-
-        myBody.addEventListener('dblclick', function (e) {
-          toggleFullscreen(e);
-        });
-
-        function toggleFullscreen(event) {
-          var element = document.body;
-
-          if (event instanceof HTMLElement) {
-            element = event;
-          }
-
-          var isFullscreen = document.webkitIsFullScreen || document.mozFullScreen || false;
-
-          element.requestFullScreen = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || function () { return false; };
-          document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || function () { return false; };
-
-          isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
-        }
+    <script type="module">
+        import { initEngine } from './src/renderer/playout-engine.js';
+        initEngine('fill');
     </script>
   </body>
 </html>

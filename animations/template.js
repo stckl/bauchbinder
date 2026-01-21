@@ -50,7 +50,7 @@ function hideAnimationFILL(tl) {
 // HELPERS
 // --------------------------------------
 function cancelAnimation (animation) {
-    let activeInstances = anime.running;
-    let index = activeInstances.indexOf(animation);
-    activeInstances.splice(index, 1);
+    if (!animation) return;
+    // anime.running exists no longer in v4 - handle instance cancellation manually if needed
+    if (typeof animation.pause === "function") animation.pause();
 }

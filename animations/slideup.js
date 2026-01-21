@@ -18,7 +18,7 @@ function showAnimationH5(tl, msg) {
     $(".text h2").html(msg.title || "")
 
     // Create a timeline with default parameters
-    tl = anime.timeline({
+    tl = anime.createTimeline({
         easing: FX_EASING,
         duration: FX_DURATION,
         loop: false,
@@ -46,7 +46,7 @@ function showAnimationH5(tl, msg) {
 function hideAnimationH5(tl) {
     cancelAnimation(tl)
 
-    tl = anime.timeline({
+    tl = anime.createTimeline({
         easing: FX_EASING,
         duration: FX_DURATION,
         loop: false,
@@ -70,7 +70,7 @@ function showAnimationKEY(tl, msg) {
     $(".text h2").html(msg.title || "")
 
     // Create a timeline with default parameters
-    tl = anime.timeline({
+    tl = anime.createTimeline({
         easing: FX_EASING,
         duration: FX_DURATION,
         loop: false,
@@ -98,7 +98,7 @@ function showAnimationKEY(tl, msg) {
 function hideAnimationKEY(tl) {
     cancelAnimation(tl)
 
-    tl = anime.timeline({
+    tl = anime.createTimeline({
         easing: FX_EASING,
         duration: FX_DURATION,
         loop: false,
@@ -122,7 +122,7 @@ function showAnimationFILL(tl, msg) {
     $(".text h2").html(msg.title || "")
 
     // Create a timeline with default parameters
-    tl = anime.timeline({
+    tl = anime.createTimeline({
         easing: FX_EASING,
         duration: FX_DURATION,
         loop: false,
@@ -150,7 +150,7 @@ function showAnimationFILL(tl, msg) {
 function hideAnimationFILL(tl) {
     cancelAnimation(tl)
 
-    tl = anime.timeline({
+    tl = anime.createTimeline({
         easing: FX_EASING,
         duration: FX_DURATION,
         loop: false,
@@ -168,7 +168,7 @@ function hideAnimationFILL(tl) {
 // HELPERS
 // --------------------------------------
 function cancelAnimation (animation) {
-    let activeInstances = anime.running;
-    let index = activeInstances.indexOf(animation);
-    activeInstances.splice(index, 1);
+    if (!animation) return;
+    // anime.running exists no longer in v4 - handle instance cancellation manually if needed
+    if (typeof animation.pause === "function") animation.pause();
 }

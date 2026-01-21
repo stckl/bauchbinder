@@ -1,9 +1,13 @@
 {
   "name": "bauchbinder",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "",
   "main": "main.js",
   "scripts": {
+    "dev": "vite",
+    "dev:exe": "concurrently \"npm run dev\" \"npm start\" --kill-others",
+    "build": "vite build",
+    "preview": "vite preview",
     "start": "electron .",
     "pack-win": "electron-packager . bauchbinder --overwrite --asar --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\"",
     "pack-macarm": "electron-packager . bauchbinder --overwrite --asar --prune=true --out=release-builds --version-string.CompanyName=mstoeckle --version-string.FileDescription=mstoeckle --version-string.ProductName=\"mstoeckle bauchbinder\""
@@ -11,13 +15,32 @@
   "author": "Michael Stoeckle",
   "license": "ISC",
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.0",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/state": "^6.5.4",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.39.11",
+    "@electron/remote": "^2.1.3",
+    "animejs": "^4.3.0",
+    "codemirror": "^6.0.2",
+    "electron-is-dev": "^3.0.1",
     "express": "^4.17.1",
+    "fomantic-ui-css": "^2.9.4",
     "font-list": "^1.2.11",
     "handlebars": "^4.7.6",
-    "socket.io": "^2.3.0"
+    "jquery": "^4.0.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "vue": "^3.5.27",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
-    "electron": "^9.0.0",
-    "electron-packager": "^14.2.1"
+    "@rollup/plugin-inject": "^5.0.5",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "concurrently": "^9.2.1",
+    "electron": "^40.0.0",
+    "electron-packager": "^14.2.1",
+    "vite": "^7.3.1",
+    "vite-plugin-electron-renderer": "^0.14.6"
   }
 }

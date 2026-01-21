@@ -2,108 +2,9 @@
 <html lang="de">
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ws://localhost:3000 http://localhost:5001 ws://localhost:5001 http://127.0.0.1:5001 ws://127.0.0.1:5001; worker-src 'self' blob:;">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>mstoeckle bauchbinder</title>
-    <link rel="stylesheet" type="text/css" href="semantic.min.css">
-    <style>
-      body {
-        padding: 20px;
-        background: #333;
-        color: #fff;
-      }
-
-      .ui.inverted.form input:not([type]), .ui.inverted.form input[type=date], .ui.inverted.form input[type=datetime-local], .ui.inverted.form input[type=email], .ui.inverted.form input[type=file], .ui.inverted.form input[type=number], .ui.inverted.form input[type=password], .ui.inverted.form input[type=search], .ui.inverted.form input[type=tel], .ui.inverted.form input[type=text], .ui.inverted.form input[type=time], .ui.inverted.form input[type=url] {
-        background: #222;
-        color: #fff;
-      }
-
-      .ui.inverted.form .dropdown input.search, .ui.default.dropdown:not(.button)>.text, .ui.dropdown:not(.button)>.default.text {
-        color: #222;
-      }
-
-      .copy {
-        position: fixed;
-        bottom: 5px;
-        right: 5px;
-        text-align: right;
-        font-size: 10px;
-      }
-
-      .tab.segment {
-        background: none;
-        color: #ccc;
-      }
-      
-      .ui.cards>.card.inverted {
-        background: #333;
-        -webkit-box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(255,255,255,.68);
-        box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(255,255,255,.68);
-        overflow: hidden;
-      }
-
-      .ui.card.inverted>.content>.description, .ui.cards>.card.inverted>.content>.description {
-        color: rgba(255,255,255,.68);
-      }
-
-      .ui.card.inverted>.content>.header, .ui.cards>.card.inverted>.content>.header {
-        color: rgba(255,255,255,.85);
-      }
-
-      .ui.cards>.card.inverted.active {
-        -webkit-box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(33,186,69,.68);
-        box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(33,186,69,.68);
-      }
-
-      .ui.card.inverted.active>.content>.description, .ui.cards>.card.inverted.active>.content>.description {
-        color: rgba(33,186,69,.68);
-      }
-
-      .ui.card.inverted.active>.content>.header, .ui.cards>.card.inverted.active>.content>.header {
-        color: rgba(33,186,69,.85);
-      }
-
-      
-      .card.inverted.active>.ui.attached.bottom.button {
-        background-color: #21ba45;
-        color: #fff;
-        -webkit-box-shadow: 0 0 0 1px rgba(34,36,38,.15)!important;
-        box-shadow: 0 0 0 1px rgba(34,36,38,.15)!important;
-      }
-
-      .ui.modal {
-        background: transparent;
-      }
-
-      .ui.modal>.header, .ui.modal>.content {
-        background: #333;
-        color: #fff;
-        border-color: #555;
-      }
-
-      .ui.modal>.actions {
-        background: #323232;
-        border-color: #555;
-      }
-
-      .ui.modal>.close {
-        top: 1rem;
-        right: 1rem;
-      }
-
-      .inverted > select.ui.dropdown {
-        background: #222;
-        color: #fff;
-      }
-
-      .ui.secondary.inverted.pointing.menu {
-        border: none;
-      }
-
-      .ui.tab.active {
-        border: none;
-        box-shadow: none;
-      }
-    </style>
   </head>
   
   <body>
@@ -139,21 +40,23 @@
 
         <div class="row" style="margin-top:20px;">
           <div class="col">
-            <draggable v-model="lowerthirds" draggable=".card" class="ui cards" @end="onDragEnd">
-              <div class="card inverted" v-bind:class="{ active: (active == index) }" v-for="(lowerthird, index) in lowerthirds" :key="index">
-                <div class="content">
-                  <span class="right floated"><i class="edit icon" v-on:click="showModal(index)"></i> {{index+1}}</span>
-                  
-                  <div class="header">{{lowerthird.name}}</div>
-                  <div class="description">
-                    {{lowerthird.title}}
+            <draggable v-model="lowerthirds" item-key="name" draggable=".card" class="ui cards" @end="onDragEnd">
+              <template #item="{element, index}">
+                <div class="card inverted" v-bind:class="{ active: (active == index) }">
+                  <div class="content">
+                    <span class="right floated"><i class="edit icon" v-on:click="showModal(index)"></i> {{index+1}}</span>
+                    
+                    <div class="header">{{element.name}}</div>
+                    <div class="description">
+                      {{element.title}}
+                    </div>
+                  </div>
+                  <div class="ui bottom attached button" v-on:click="playLowerthird(index)">
+                    <i class="play icon"></i>
+                    anzeigen
                   </div>
                 </div>
-                <div class="ui bottom attached button" v-on:click="playLowerthird(index)">
-                  <i class="play icon"></i>
-                  anzeigen
-                </div>
-              </div>
+              </template>
             </draggable>
           </div>        
         </div>
@@ -164,35 +67,32 @@
           <div class="col">
             <h2>style</h2>
             <form class="ui form inverted" v-on:submit.prevent>
+              
               <h4 class="ui dividing header inverted">Bauchbinde</h4>
               <div class="fields">
                 <div class="four wide field inverted">
                   <label>Breite (min in %)</label>
                   <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="0" max="100" name="design[whitewidth]" v-model="design.white.width" maxlength="3" placeholder="Breite">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.width" placeholder="Breite">
                     <i class="arrows alternate horizontal icon inverted"></i>
                   </div>
                 </div>
                 <div class="four wide field inverted">
                   <label>Abstand links/rechts (in %)</label>
                   <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="-100" max="100" name="design[whiteleft]" v-model="design.white.left" maxlength="3" placeholder="Abstand seite">
+                    <input type="number" step="0.01" min="-100" max="100" v-model="design.white.left" placeholder="Abstand seite">
                     <i class="arrow right icon inverted"></i>
                   </div>
                 </div>
                 <div class="four wide field inverted">
                   <label>Abstand unten (in %)</label>
                   <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="-100" max="100" name="design[whitebottom]" v-model="design.white.bottom" maxlength="3" placeholder="Abstand unten">
+                    <input type="number" step="0.01" min="-100" max="100" v-model="design.white.bottom" placeholder="Abstand unten">
                     <i class="arrow up icon inverted"></i>
                   </div>
                 </div>
                 <div class="four wide field inverted">
-                  <label>Farbe (CSS konform)</label>
-                  <div class="ui left icon input inverted">
-                    <input type="text" step="0.01" name="design[whitecolor]" v-model="design.white.color" placeholder="rgba(R,G,B,A)">
-                    <i class="paint brush icon inverted"></i>
-                  </div>
+                  <color-picker v-model="design.white.color" label="Hintergrundfarbe"></color-picker>
                 </div>
               </div>
               <div class="fields">
@@ -228,14 +128,14 @@
                 <div class="four wide field inverted">
                   <label>Text Abstand horizontal</label>
                   <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" maxlength="3" placeholder="Abstand seite">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" placeholder="Abstand seite">
                     <i class="arrow right icon inverted"></i>
                   </div>
                 </div>
                 <div class="four wide field inverted">
                   <label>Text Abstand vertikal</label>
                   <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" maxlength="3" placeholder="Abstand unten">
+                    <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" placeholder="Abstand unten">
                     <i class="arrow up icon inverted"></i>
                   </div>
                 </div>
@@ -244,31 +144,18 @@
                 <div class="four wide field inverted">
                   <label>Ecken Rundung</label>
                   <div class="ui left icon input inverted">
-                    <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" maxlength="4" placeholder="Ecken Rundung">
+                    <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" placeholder="Ecken Rundung">
                     <i class="square outline icon inverted"></i>
                   </div>
                 </div>
               </div>
+              
               <h4 class="ui dividing header inverted">Schrift Name</h4>
               <div class="field">
                 <label>Schriftart</label>
-                <div class="ui fluid search selection dropdown" ref="fontdropdownH1">
-                  <input type="hidden" name="fontfamily" v-model="design.h1.fontfamily">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">{{ design.h1.fontfamily }}</div>
-                  <div class="menu">
-                    <div v-for="font in fonts" class="item">{{font}}</div>
-                  </div>
-                </div>
+                <fomantic-dropdown v-model="design.h1.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
               </div>
               <div class="fields">
-                <div class="field">
-                  <label>Schriftgröße</label>
-                  <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.h1.fontsize" maxlength="3" placeholder="Abstand unten">
-                    <i class="text height icon inverted"></i>
-                  </div>
-                </div>
                 <div class="field">
                   <label>Stil</label>
                   <div class="ui icon buttons">
@@ -278,36 +165,39 @@
                     <button class="ui button" :class="{ blue: design.h1.italic }"  v-on:click.prevent="toggleH1Italic()">
                       <i class="italic icon"></i>
                     </button>
+                    <button class="ui button" :class="{ blue: design.h1.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH1Variant()" title="Kapitälchen">
+                      <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
+                    </button>
                   </div>
+                </div>
+                <div class="field">
+                  <label>Umwandlung</label>
+                  <div class="ui small basic inverted icon buttons">
+                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'none' }" v-on:click.prevent="design.h1.texttransform = 'none'" title="Normal">Aa</button>
+                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'uppercase' }" v-on:click.prevent="design.h1.texttransform = 'uppercase'" title="GROSS">AA</button>
+                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'lowercase' }" v-on:click.prevent="design.h1.texttransform = 'lowercase'" title="klein">aa</button>
+                    <button class="ui button" :class="{ blue: design.h1.texttransform === 'capitalize' }" v-on:click.prevent="design.h1.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Dicke</label>
+                  <input type="text" v-model="design.h1.fontweight" placeholder="800" style="width: 80px;">
+                </div>
+                <div class="field">
+                  <label>Größe (vh)</label>
+                  <input type="number" step="0.1" v-model="design.h1.fontsize" style="width: 80px;">
                 </div>
                 <div class="four wide field inverted">
-                  <label>Farbe (CSS konform)</label>
-                  <div class="ui left icon input inverted">
-                    <input type="text" step="0.01" v-model="design.h1.color" placeholder="rgb(R,G,B)">
-                    <i class="paint brush icon inverted"></i>
-                  </div>
+                  <color-picker v-model="design.h1.color" label="Schriftfarbe Name"></color-picker>
                 </div>
               </div>
+
               <h4 class="ui dividing header inverted">Schrift Titel</h4>
               <div class="field">
                 <label>Schriftart</label>
-                <div class="ui fluid search selection dropdown" ref="fontdropdownH2">
-                  <input type="hidden" name="fontfamily" v-model="design.h2.fontfamily">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">{{ design.h2.fontfamily }}</div>
-                  <div class="menu">
-                    <div v-for="font in fonts" class="item">{{font}}</div>
-                  </div>
-                </div>
+                <fomantic-dropdown v-model="design.h2.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
               </div>
               <div class="fields">
-                <div class="field">
-                  <label>Schriftgröße</label>
-                  <div class="ui left icon input inverted">
-                    <input type="number" step="0.01" min="0" max="100" v-model="design.h2.fontsize" maxlength="3" placeholder="Abstand unten">
-                    <i class="text height icon inverted"></i>
-                  </div>
-                </div>
                 <div class="field">
                   <label>Stil</label>
                   <div class="ui icon buttons">
@@ -317,26 +207,62 @@
                     <button class="ui button" :class="{ blue: design.h2.italic }"  v-on:click.prevent="toggleH2Italic()">
                       <i class="italic icon"></i>
                     </button>
+                    <button class="ui button" :class="{ blue: design.h2.fontvariant === 'small-caps' }" v-on:click.prevent="toggleH2Variant()" title="Kapitälchen">
+                      <span style="font-variant: small-caps; font-weight: bold;">Aa</span>
+                    </button>
                   </div>
+                </div>
+                <div class="field">
+                  <label>Umwandlung</label>
+                  <div class="ui small basic inverted icon buttons">
+                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'none' }" v-on:click.prevent="design.h2.texttransform = 'none'" title="Normal">Aa</button>
+                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'uppercase' }" v-on:click.prevent="design.h2.texttransform = 'uppercase'" title="GROSS">AA</button>
+                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'lowercase' }" v-on:click.prevent="design.h2.texttransform = 'lowercase'" title="klein">aa</button>
+                    <button class="ui button" :class="{ blue: design.h2.texttransform === 'capitalize' }" v-on:click.prevent="design.h2.texttransform = 'capitalize'" title="Erster Groß">Ab</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Dicke</label>
+                  <input type="text" v-model="design.h2.fontweight" placeholder="800" style="width: 80px;">
+                </div>
+                <div class="field">
+                  <label>Größe (vh)</label>
+                  <input type="number" step="0.1" v-model="design.h2.fontsize" style="width: 80px;">
                 </div>
                 <div class="four wide field inverted">
-                  <label>Farbe (CSS konform)</label>
-                  <div class="ui left icon input inverted">
-                    <input type="text" step="0.01" v-model="design.h2.color" placeholder="rgb(R,G,B)">
-                    <i class="paint brush icon inverted"></i>
+                  <color-picker v-model="design.h2.color" label="Schriftfarbe Titel"></color-picker>
+                </div>
+              </div>
+
+              <h4 class="ui dividing header inverted">Eigene Schriftarten (Base64)</h4>
+              <div class="field">
+                <div class="ui inverted segment" 
+                     style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;"
+                     @dragover.prevent @drop.prevent="handleFontDrop"
+                     @click="addCustomFont">
+                  <i class="huge upload icon" style="color: #555;"></i>
+                  <p style="margin-top: 10px; color: #888;">Schriftarten hierher ziehen oder klicken (.ttf, .otf, .woff)</p>
+                </div>
+                
+                <div class="ui middle aligned divided list inverted" style="margin-top: 10px;">
+                  <div v-for="(font, index) in design.customFonts" :key="index" class="item" style="padding: 10px 0;">
+                    <div class="right floated content">
+                      <div class="ui mini basic blue button" @click="applyFontToH1(font.name)">Name</div>
+                      <div class="ui mini basic green button" @click="applyFontToH2(font.name)">Titel</div>
+                      <div class="ui mini red icon button" @click="removeCustomFont(index)"><i class="trash icon"></i></div>
+                    </div>
+                    <i class="font icon"></i>
+                    <div class="content">
+                      <div class="header" :style="{ fontFamily: font.name }">{{ font.name }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              <h4 class="ui dividing header inverted">Unified CSS Editor</h4>
               <div class="field">
-                <h4 class="ui dividing header inverted">Custom CSS</h4>
-                <textarea v-model="design.customcss"></textarea>  
+                <css-editor v-model="design.unifiedCss"></css-editor>
               </div>
-
-              <button class="ui right floated labeled icon button" v-on:click="updateCSS">
-                <i class="sync icon"></i>
-                Update Styles
-              </button>
             </form>
           </div>
         </div>
@@ -433,11 +359,6 @@
                 </div>
               </div>
             </div>
-
-            <button class="ui right floated labeled icon button" v-on:click="updateJS">
-              <i class="sync icon"></i>
-              Update Animation
-            </button>
           </form>
         </div>
       </div>
@@ -453,7 +374,7 @@
               <p>Vollbild für Key und Fill Fenster: Doppelclick ins Fenster</p>
               <h3>Shortcuts und Compagnion Einbindung</h3>
               <p>Shortcuts: [STRG/CTRL]+[ALT/OPTION]+[0-9] wobei 0 ausblenden, und 1-9 einblenden nach ID ist</p>
-              <p>Compagnion Anbindung über "Generic HTTP Modul":<br>BaseURL: http://localhost:5000/v1/<br>Button Action anzeigen: [POST] "show/X" wobei X die ID des Eintrags ist z.B. "show/1"<br>Button Action ausblenden: [POST] "hide"</p>
+              <p>Compagnion Anbindung über "Generic HTTP Modul":<br>BaseURL: http://localhost:5001/v1/<br>Button Action anzeigen: [POST] "show/X" wobei X die ID des Eintrags ist z.B. "show/1"<br>Button Action ausblenden: [POST] "hide"</p>
               <p></p>
               <h3>Bleibe auf dem neuesten Stand</h3>
               <p>Bauchbinder auf GitHub:  <a v-on:click.prevent="require('electron').shell.openExternal('https://github.com/stckl/bauchbinder');">https://github.com/stckl/bauchbinder</a></p>
@@ -533,14 +454,43 @@
         </div>
       </div>
 
-      <div class="copy">&copy; 2021 - mstoeckle.de version: {{ appversion }}</div>
+      <div class="copy">2026 - with ❤️ from mstockle.de version: {{ appversion }}</div>
+
+      <!-- conflict resolution modal -->
+      <div class="ui inverted modal" id="conflict-modal">
+        <div class="header inverted">CSS Duplikate gefunden</div>
+        <div class="content inverted" style="background: #1b1c1d;">
+          <p>Die geladene Datei enthält Design-Einstellungen, die sowohl in der GUI als auch im Custom-CSS definiert sind. Bitte wähle für jeden Konflikt, welcher Wert behalten werden soll:</p>
+          <div class="ui middle aligned divided list inverted">
+            <div v-for="(c, index) in cssConflicts" :key="index" class="item" style="padding: 15px 0;">
+              <div class="content">
+                <div class="header" style="color: #adff2f;">Selektor: {{ c.selector }} &raquo; Eigenschaft: {{ c.property }}</div>
+                <div class="description" style="margin-top: 10px;">
+                  <div class="ui two column grid">
+                    <div class="column">
+                      <div class="ui segment inverted">
+                        <div class="ui top attached label">GUI Standard</div>
+                        <code>{{ c.guiValue }}</code>
+                        <button class="ui fluid basic inverted button" style="margin-top: 10px;" @click="resolveConflict(index, 'gui')">Behalten</button>
+                      </div>
+                    </div>
+                    <div class="column">
+                      <div class="ui segment inverted secondary">
+                        <div class="ui top attached label teal">Custom CSS (Empfohlen)</div>
+                        <code>{{ c.customValue }}</code>
+                        <button class="ui fluid teal button" style="margin-top: 10px;" @click="resolveConflict(index, 'custom')">Behalten</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <script>window.$ = window.jQuery = require('./public/jquery-3.5.1.min.js');</script>
-    <script src="vue.js"></script>
-    <script src="./semantic.min.js"></script>
-    <script src="./Sortable.min.js"></script>
-    <script src="./vuedraggable.umd.min.js"></script>
-    <script src="window.js"></script>
+    <script type="module" src="src/renderer/main.js"></script>
   </body>
 </html>

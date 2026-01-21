@@ -1,11 +1,26 @@
 const { app, BrowserWindow, globalShortcut } = require('electron')
+const isDev = require('electron-is-dev')
+require('@electron/remote/main').initialize()
 const path = require('path')
 const url = require('url')
 const ipc = require('electron').ipcMain
 const express = require('express');
 const expressapp = express();
+
+// CORS Middleware für Express
+expressapp.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 const http = require('http').Server(expressapp);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 const fs = require('fs');
 const { dialog } = require('electron')
 
@@ -17,17 +32,25 @@ let animationParams = {
 };
 let customCSS = '';
 
-fs.readFile('animations/fade.js', 'utf8', function(err, data) {
+fs.readFile(path.join(__dirname, 'animations/fade.js'), 'utf8', function(err, data) {
   if (err) console.log("Error", err);
     animationParams.code = data;
 });
 
 expressapp.set('port', process.env.PORT || 5001);
-expressapp.use(express.static(path.join(__dirname, 'public/')));
+expressapp.use(express.static(isDev ? path.join(__dirname, 'public/') : path.join(__dirname, 'dist/')));
 
 expressapp.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname, 'bauchbinde_h5.html'));
+    if (isDev) {
+      res.redirect('http://localhost:3000/bauchbinde_h5.html');
+    } else {
+      res.sendFile(path.join(__dirname, 'dist/bauchbinde_h5.html'));
+    }
 });
+
+// Wir müssen sicherstellen, dass die src/renderer/playout-engine.js erreichbar ist
+expressapp.use('/src', express.static(path.join(__dirname, 'src/')));
+expressapp.use('/node_modules', express.static(path.join(__dirname, 'node_modules/')));
 
 expressapp.get('/animate.js', function(req, res) {
   res.header("Content-Type", "application/javascript");
@@ -44,7 +67,7 @@ expressapp.get('/animate.js', function(req, res) {
     res.write('const FX_DURATION = ' + animationParams.duration + '\n');
     res.write('const FX_EASING = \'' + animationParams.easing + '\'\n');
     res.write('\n\n');
-    fs.createReadStream(__dirname + '/animations/' + animationStyle + '.js').pipe(res);
+    fs.createReadStream(path.join(__dirname, 'animations/' + animationStyle + '.js')).pipe(res);
     //res.sendFile(path.join(__dirname, 'animations/' + animationStyle + '.js'));
   }
 });
@@ -68,6 +91,10 @@ expressapp.post('/v1/hide', function(req, res) {
 
 io.on('connection', (socket) => {
     console.log('a user connected');
+    socket.on('request-state', () => {
+      socket.emit('update-css', lastDesign);
+      socket.emit('update-js', lastAnimation);
+    });
 });
 
 http.listen(expressapp.get('port'), function() {
@@ -78,15 +105,29 @@ let win
 let winKey
 let winFill
 let data
+let lastDesign = {
+  white: { width: 0, left: 0, bottom: 7, color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, divalign: 0, textalign: 0 },
+  h1: { fontfamily: 'Helvetica, Arial, sans-serif', fontsize: 5, bold: false, italic: false, color: '#000000' },
+  h2: { fontfamily: 'Helvetica, Arial, sans-serif', fontsize: 3.7, bold: false, italic: false, color: '#000000' },
+  customcss: ''
+};
+let lastAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
 
 function createWindow () {
-  win = new BrowserWindow({width: 800, height: 680, webPreferences: { nodeIntegration: true }})
+  const width = isDev ? 1400 : 800;
+  win = new BrowserWindow({width: width, height: 680, webPreferences: { nodeIntegration: true, contextIsolation: false }})
+  require("@electron/remote/main").enable(win.webContents)
 
-  win.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
-    protocol: 'file:',
-    slashes: true
-  }))
+  if (isDev) {
+    win.loadURL('http://localhost:3000/index.html')
+    win.webContents.openDevTools()
+  } else {
+    win.loadURL(url.format({
+      pathname: path.join(__dirname, 'dist/index.html'),
+      protocol: 'file:',
+      slashes: true
+    }))
+  }
 
   // Open the DevTools.
   //win.webContents.openDevTools()
@@ -112,19 +153,26 @@ function createWindow () {
 function createKeyWin() {
   console.log("create key window");
   if(!winKey) {
-    winKey = new BrowserWindow({width: 800, height: 630, webPreferences: { nodeIntegration: true }})
+    winKey = new BrowserWindow({width: 800, height: 630, webPreferences: { nodeIntegration: true, contextIsolation: false }})
+    require("@electron/remote/main").enable(winKey.webContents)
 
-    winKey.loadURL(url.format({
-      pathname: path.join(__dirname, 'bauchbinde_key.html'),
-      protocol: 'file:',
-      slashes: true
-    }))
+    if (isDev) {
+      winKey.loadURL('http://localhost:3000/bauchbinde_key.html')
+    } else {
+      winKey.loadURL(url.format({
+        pathname: path.join(__dirname, 'dist/bauchbinde_key.html'),
+        protocol: 'file:',
+        slashes: true
+      }))
+    }
 
     winKey.removeMenu()         
     winKey.setMenu(null) 
 
-    // Open the DevTools.
-    //winKey.webContents.openDevTools()
+    winKey.webContents.on('did-finish-load', () => {
+      if (lastDesign) winKey.webContents.send('update-css', lastDesign);
+      if (lastAnimation) winKey.webContents.send('update-js', lastAnimation);
+    });
 
     winKey.on('closed', () => {
       winKey = null
@@ -135,19 +183,26 @@ function createKeyWin() {
 function createFillWin() {
   console.log("create fill window");
   if(!winFill) {
-    winFill = new BrowserWindow({width: 800, height: 630, webPreferences: { nodeIntegration: true }})
+    winFill = new BrowserWindow({width: 800, height: 630, webPreferences: { nodeIntegration: true, contextIsolation: false }})
+    require("@electron/remote/main").enable(winFill.webContents)
 
-    winFill.loadURL(url.format({
-      pathname: path.join(__dirname, 'bauchbinde_fill.html'),
-      protocol: 'file:',
-      slashes: true
-    }))
+    if (isDev) {
+      winFill.loadURL('http://localhost:3000/bauchbinde_fill.html')
+    } else {
+      winFill.loadURL(url.format({
+        pathname: path.join(__dirname, 'dist/bauchbinde_fill.html'),
+        protocol: 'file:',
+        slashes: true
+      }))
+    }
 
     winFill.removeMenu()         
     winFill.setMenu(null) 
 
-    // Open the DevTools.
-    //winFill.webContents.openDevTools()
+    winFill.webContents.on('did-finish-load', () => {
+      if (lastDesign) winFill.webContents.send('update-css', lastDesign);
+      if (lastAnimation) winFill.webContents.send('update-js', lastAnimation);
+    });
 
     winFill.on('closed', () => {
       winFill = null
@@ -183,6 +238,11 @@ function hideLowerThird() {
   io.emit('hide-lowerthird', arg)
   console.log('hide lowerthird', arg)
 }
+
+ipc.on('request-state', (event) => {
+  if (lastDesign) event.reply('update-css', lastDesign);
+  if (lastAnimation) event.reply('update-js', lastAnimation);
+});
 
 ipc.on('update-data', function (event, arg) {
   console.log("update data", arg)
@@ -224,17 +284,19 @@ ipc.on('update-js', function(event, arg) {
   animationParams.duration = arg.duration;
   animationParams.easing = arg.easing;
   animationParams.code = arg.code;
+  lastAnimation = arg;
 
-  if(winKey)
-    winKey.reload();
-
-  if(winFill)
-    winFill.reload();
+  if(winKey) winKey.webContents.send('update-js', lastAnimation);
+  if(winFill) winFill.webContents.send('update-js', lastAnimation);
 
   io.emit('reload');
 })
 
 ipc.on('update-css', function (event, arg) {
+  lastDesign = arg;
+  if(winKey) winKey.webContents.send('update-css', lastDesign);
+  if(winFill) winFill.webContents.send('update-css', lastDesign);
+  
   let newCSS = '.bauchbinde {';
   if(arg.white.bottom)
     newCSS += 'bottom: ' + arg.white.bottom + 'vh;';

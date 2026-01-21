@@ -2,74 +2,15 @@
 <html lang="de">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>HTML5 Bauchbinde</title>
-    <link rel="stylesheet" type="text/css" href="./css/basic.css">
-    <link rel="stylesheet" type="text/css" href="./css/basic_h5.css">
-    <link rel="stylesheet" type="text/css" href="/custom.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws://localhost:3000 http://localhost:5001 ws://localhost:5001; worker-src 'self' blob:;">
+    <title>HTML5 Playout</title>
+    <link rel="stylesheet" type="text/css" href="/css/basic.css">
+    <link rel="stylesheet" type="text/css" href="/css/basic_h5.css">
   </head>
-  
   <body>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="jquery-3.5.1.min.js"></script>
-    <script src="anime.min.js"></script>
-    <script src="/animate.js"></script>
-
-    <div class="bauchbinde">
-        <div class="color"></div>
-        <div class="white">
-            <div class="text">
-                <h1></h1>
-                <h2></h2>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        initAnimationDefaults();
-
-        var socket = io();
-
-        var tl;
-
-        socket.on('show-lowerthird', function (msg) {
-          showAnimationH5(tl, msg)
-        });
-
-        socket.on('hide-lowerthird', function (msg) {
-          hideAnimationH5(tl)
-        });
-
-        socket.on('reload', function () {
-          var links = document.getElementsByTagName("link");
-          for (var cl in links)
-          {
-              var link = links[cl];
-              if (link.rel === "stylesheet")
-                  link.href += "";
-          }
-        });
-
-        const myBody = document.querySelector('body');
-
-        myBody.addEventListener('dblclick', function (e) {
-          toggleFullscreen(e);
-        });
-
-        function toggleFullscreen(event) {
-          var element = document.body;
-
-          if (event instanceof HTMLElement) {
-            element = event;
-          }
-
-          var isFullscreen = document.webkitIsFullScreen || document.mozFullScreen || false;
-
-          element.requestFullScreen = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || function () { return false; };
-          document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || function () { return false; };
-
-          isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
-        }
+    <script type="module">
+        import { initEngine } from './src/renderer/playout-engine.js';
+        initEngine('h5');
     </script>
   </body>
 </html>

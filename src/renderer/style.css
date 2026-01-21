@@ -1,0 +1,72 @@
+/* Custom Styles for bauchbinder */
+html, body {
+  background-color: #333 !important; /* Erzwinge Hintergrund auf Root-Ebene */
+  color: #fff !important;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  padding: 20px !important;
+}
+
+#app {
+  background-color: #333 !important;
+}
+
+.ui.inverted.form input:not([type]), 
+.ui.inverted.form input[type=date], 
+.ui.inverted.form input[type=datetime-local], 
+.ui.inverted.form input[type=email], 
+.ui.inverted.form input[type=file], 
+.ui.inverted.form input[type=number], 
+.ui.inverted.form input[type=password], 
+.ui.inverted.form input[type=search], 
+.ui.inverted.form input[type=tel], 
+.ui.inverted.form input[type=text], 
+.ui.inverted.form input[type=time], 
+.ui.inverted.form input[type=url] {
+  background: #222 !important;
+  color: #fff !important;
+}
+
+.copy {
+  position: fixed;
+  bottom: 5px;
+  right: 5px;
+  text-align: right;
+  font-size: 10px;
+}
+
+.tab.segment {
+  background: none !important;
+  color: #ccc !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ui.cards>.card.inverted {
+  background: #333 !important;
+  box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(255,255,255,.68) !important;
+}
+
+.ui.cards>.card.inverted.active {
+  box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(33,186,69,.68) !important;
+}
+
+/* Fix für unsichtbare Menü-Items */
+.ui.secondary.inverted.pointing.menu {
+  border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+}
+
+.ui.secondary.inverted.pointing.menu .item {
+  color: rgba(255,255,255,0.7) !important;
+  background: transparent !important;
+}
+
+.ui.secondary.inverted.pointing.menu .item.active {
+  color: #fff !important;
+  border-color: #fff !important;
+  background: rgba(255,255,255,0.1) !important;
+}
