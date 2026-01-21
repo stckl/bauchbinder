@@ -138,8 +138,9 @@ const addLowerthird = (close = true) => {
 };
 
 const playLowerthird = (i) => { 
-    // activeIndex.value = i; // Will be set by status update
-    ipc.send('show-lowerthird', JSON.parse(JSON.stringify(state.lowerthirds[i]))); 
+    const item = JSON.parse(JSON.stringify(state.lowerthirds[i]));
+    item.id = i + 1; // 1-based index for status tracking
+    ipc.send('show-lowerthird', item); 
 };
 
 const deleteLowerthird = (id) => { 

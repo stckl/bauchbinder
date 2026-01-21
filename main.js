@@ -170,19 +170,27 @@ function sendToWindows(type, msg) {
 }
 
 function showLowerThird(arg) {
-  sendToWindows('show-lowerthird', arg);
-  io.emit('show-lowerthird', arg);
+  activeLowerThirdData = JSON.parse(JSON.stringify(arg));
+  activeLowerThirdId = arg.id || null;
+  
+  const status = { activeId: activeLowerThirdId, activeItem: activeLowerThirdData };
+  sendToWindows('show-lowerthird', activeLowerThirdData);
+  io.emit('show-lowerthird', activeLowerThirdData);
+  
+  // Broadcast status to keep all controllers and playouts in sync
+  sendToWindows('status-update', status);
+  io.emit('status-update', status);
+  
+  console.log('show lowerthird', activeLowerThirdId);
 }
 
 function showLowerThirdByID(arg) {
   let id = Number.parseInt(arg);
+  console.log('show lowerthird by id', arg);
   if(id >= 1 && data && data.length >= id) {
-    activeLowerThirdId = id;
-    activeLowerThirdData = JSON.parse(JSON.stringify(data[id-1]));
-    activeLowerThirdData.id = id;
-    showLowerThird(activeLowerThirdData);
-    io.emit('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
-    sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
+    const item = JSON.parse(JSON.stringify(data[id-1]));
+    item.id = id; // Ensure ID is present
+    showLowerThird(item);
   }
 }
 
@@ -242,6 +250,13 @@ ipc.handle('download-to-base64', async (event, url) => {
 
 ipc.on('show-lowerthird', (event, arg) => showLowerThird(arg));
 ipc.on('hide-lowerthird', () => hideLowerThird());
+ipc.on('kill-playout', () => {
+  logger.info('IPC: kill-playout command triggered');
+  sendToWindows('kill-playout', null);
+  io.emit('kill-playout', null);
+  activeLowerThirdId = null;
+  activeLowerThirdData = null;
+});
 ipc.on('openwinkey', () => createKeyWin());
 ipc.on('openwinfill', () => createFillWin());
 

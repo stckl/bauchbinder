@@ -13,6 +13,9 @@
         <button class="ui red labeled icon button" @click="stopTest">
           <i class="eye slash icon"></i> Test: Ausblenden
         </button>
+        <button class="ui black labeled icon button" @click="killAll" title="Sofortiger Reset des Playouts">
+          <i class="bomb icon"></i> Playout leeren (KILL)
+        </button>
       </div>
     </div>
     
@@ -109,13 +112,13 @@
               <div class="field">
                 <label>Ziel-Element</label>
                 <select v-model="editingStep.step.selector" class="ui dropdown inverted selection">
-                  <option value=".bauchbinde-instance">Ganze Bauchbinde</option>
-                  <option value=".bb-box">Box</option>
-                  <option value=".text">Text-Bereich</option>
-                  <option value="h1">Name (H1)</option>
-                  <option value="h2">Titel (H2)</option>
-                  <option value=".logo">Bild (Global)</option>
-                  <option value=".image">Bild (Bauchbinde)</option>
+                  <option value=".bauchbinde-instance">Ganze Bauchbinde (.bauchbinde-instance)</option>
+                  <option value=".bb-box">Box (.bb-box)</option>
+                  <option value=".text">Text-Bereich (.text)</option>
+                  <option value="h1">Name (h1)</option>
+                  <option value="h2">Titel (h2)</option>
+                  <option value=".logo">Bild Global (.logo)</option>
+                  <option value=".image">Bild Bauchbinde (.image)</option>
                 </select>
               </div>
               <div v-if="editingStep.step.selector === 'h1' || editingStep.step.selector === 'h2'" class="field">
@@ -429,29 +432,29 @@ import $ from 'jquery';
 // PRESETS Definition
 const PRESETS = {
     fade: {
-        show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideleft: {
-        show: [{ selector: '.bb-box', properties: { translateX: ['-100vw', '0vw'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bb-box', properties: { translateX: ['0vw', '-100vw'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['-100vw', '0vw'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '-100vw'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideright: {
-        show: [{ selector: '.bb-box', properties: { translateX: ['100vw', '0vw'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bb-box', properties: { translateX: ['0vw', '100vw'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['100vw', '0vw'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '100vw'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideup: {
-        show: [{ selector: '.bb-box', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bb-box', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideup_textdelay: {
         show: [
-            { selector: '.bb-box', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' },
+            { selector: '.bauchbinde-instance', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' },
             { selector: '.text', properties: { translateY: ['10vh', '0vh'], opacity: [0, 1] }, duration: 600, delay: 300, easing: 'easeInOutCirc' }
         ],
         hide: [
             { selector: '.text', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 400, delay: 0, easing: 'easeInOutCirc' },
-            { selector: '.bb-box', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 500, delay: 200, easing: 'easeInOutCirc' }
+            { selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '10vh'], opacity: [1, 0] }, duration: 500, delay: 200, easing: 'easeInOutCirc' }
         ]
     }
 };
@@ -549,10 +552,14 @@ const getMotionYType = (step) => {
 const openStepEditor = (phase, index) => {
     editingStep.value = { phase, index, step: state.animation[phase][index] };
     nextTick(() => {
-        $('#step-modal').modal({
-            onHide: () => { editingStep.value = null; },
-            allowMultiple: true
-        }).modal('show');
+        $('#step-modal')
+            .modal({
+                onHide: () => { editingStep.value = null; },
+                allowMultiple: true,
+                detachable: false
+            })
+            .modal('refresh')
+            .modal('show');
         $('.ui.accordion.structured-editor-acc').accordion({ exclusive: false });
         $('.ui.checkbox').checkbox();
         $('.ui.dropdown').dropdown();
@@ -584,6 +591,10 @@ const playTest = () => {
 
 const stopTest = () => {
     ipc.send('hide-lowerthird');
+};
+
+const killAll = () => {
+    ipc.send('kill-playout');
 };
 
 const loadPreset = (name) => {

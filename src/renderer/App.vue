@@ -102,15 +102,26 @@ const pendingMigrationUrls = ref([]);
 const isMigrating = ref(false);
 
 const migrateExternalFonts = async () => {
-    isMigrating.ref = true;
+    isMigrating.value = true;
+    let css = state.design.unifiedCss;
+    
     for (const item of pendingMigrationUrls.value) {
         const result = await ipc.invoke('download-to-base64', item.url);
         if (result) {
-            // Add to custom fonts
-            const ext = item.url.split('.').pop().split('?')[0];
-            const name = item.name || `Migrated Font ${state.design.customFonts.length + 1}`;
+            // 1. In-place CSS replacement
+            const escapedUrl = item.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const urlRegex = new RegExp(escapedUrl, 'g');
+            css = css.replace(urlRegex, `data:${result.type};base64,${result.data}`);
             
+            // 2. Register in customFonts list for Dropdown/UI
+            const name = item.name || `Migrated Font ${state.design.customFonts.length + 1}`;
             if (!state.design.customFonts.some(f => f.name === name)) {
+                // Determine extension from URL or Content-Type
+                let ext = 'woff2';
+                if (result.type.includes('ttf')) ext = 'ttf';
+                else if (result.type.includes('otf')) ext = 'otf';
+                else if (item.url.includes('.ttf')) ext = 'ttf';
+                
                 state.design.customFonts.push({
                     name: name,
                     data: result.data,
@@ -120,19 +131,11 @@ const migrateExternalFonts = async () => {
         }
     }
     
-    // Clean up CSS: Remove @font-face blocks that had these URLs
-    let css = state.design.unifiedCss;
-    // Simple regex to remove the @font-face rules that we migrated
-    // (This is a bit broad but safe since we now have the fonts in the store)
-    css = css.replace(/@font-face\s*{[\s\S]*?}/g, (match) => {
-        return match.includes('http') ? '/* Migrated to embedded font */' : match;
-    });
-    
     state.design.unifiedCss = css;
     pendingMigrationUrls.value = [];
     isMigrating.value = false;
     ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
-    alert("Migration abgeschlossen! Alle Schriften sind nun eingebettet.");
+    alert("Migration abgeschlossen! Schriften wurden eingebettet und zur Liste hinzugefügt.");
 };
 
 const stopLowerthird = () => { 

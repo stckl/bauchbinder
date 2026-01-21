@@ -381,19 +381,18 @@
             <div class="description" style="margin-top: 10px;">
               <div class="ui two column grid">
                 <div class="column">
-                  <div class="ui segment inverted">
-                    <div class="ui top attached label">GUI Standard</div>
-                    <code>{{ c.guiValue }}</code>
-                    <button class="ui fluid basic inverted button" style="margin-top: 10px;" @click="resolveConflict(index, 'gui')">Behalten</button>
-                  </div>
-                </div>
-                <div class="column">
-                  <div class="ui segment inverted secondary">
-                    <div class="ui top attached label teal">Custom CSS (Empfohlen)</div>
-                    <code>{{ c.customValue }}</code>
-                    <button class="ui fluid teal button" style="margin-top: 10px;" @click="resolveConflict(index, 'custom')">Behalten</button>
-                  </div>
-                </div>
+                                      <div class="ui segment inverted">
+                                          <div class="ui top attached label">GUI Standard</div>
+                                          <code>{{ c.guiValue }}</code>
+                                          <button class="ui fluid basic inverted button" :class="{ loading: isResolving }" style="margin-top: 10px;" @click="resolveConflict(index, 'gui')">Behalten</button>
+                                        </div>
+                                      </div>
+                                      <div class="column">
+                                        <div class="ui segment inverted secondary">
+                                          <div class="ui top attached label teal">Custom CSS (Empfohlen)</div>
+                                          <code>{{ c.customValue }}</code>
+                                          <button class="ui fluid teal button" :class="{ loading: isResolving }" style="margin-top: 10px;" @click="resolveConflict(index, 'custom')">Behalten</button>
+                                        </div>                </div>
               </div>
             </div>
           </div>
@@ -429,6 +428,7 @@ const WEB_FONTS = [
 ];
 
 const cssConflicts = ref([]);
+const isResolving = ref(false);
 
 const allFonts = computed(() => {
     const combined = [...state.design.customFonts.map(f => f.name), ...WEB_FONTS, ...systemFonts.value, ...manualFonts.value, state.design.h1.fontfamily, state.design.h2.fontfamily].filter(f => f && f !== '');
@@ -704,10 +704,17 @@ const parseCssToProperties = (css) => {
     if (gap) state.design.white.flexGap = parseFloat(gap);
 
     const parseText = (sel, obj) => {
-        const family = extractValue(sel, 'font-family');
-        if (family) { obj.fontfamily = family; if (!allFonts.value.includes(family)) manualFonts.value.push(family); }
+        let family = extractValue(sel, 'font-family');
+        if (family) { 
+            family = family.replace(/!important/g, '').replace(/['"]/g, '').trim();
+            obj.fontfamily = family; 
+            if (!allFonts.value.includes(family)) manualFonts.value.push(family); 
+        }
         const size = extractValue(sel, 'font-size');
-        if (size) obj.fontsize = parseFloat(size);
+        if (size) {
+            const parsedSize = parseFloat(size);
+            obj.fontsize = isNaN(parsedSize) ? (sel === 'h1' ? 5 : 3.7) : parsedSize;
+        }
         const color = extractValue(sel, 'color');
         if (color) obj.color = color;
         const weight = extractValue(sel, 'font-weight');
@@ -749,32 +756,36 @@ const parseCssToProperties = (css) => {
     parseImg('.image', state.design.imageStyle);
 };
 
+// Helper to normalize selectors for comparison
+const normalizeSelector = (s) => {
+    return s.trim()
+        .replace(/\.bauchbinde-instance\s+/, '')
+        .replace(/^div\.bauchbinde/, '.bauchbinde')
+        .replace(/^div\.white/, '.bb-box')
+        .replace(/^div\.bb-box/, '.bb-box')
+        .replace(/^\.white/, '.bb-box')
+        .replace(/^h1/, 'h1') // Keep tags but ensure consistent
+        .replace(/^h2/, 'h2')
+        .replace(/>\s*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
 const auditCSS = (cssText) => {
     if (!cssText) return;
     const parts = cssText.split('/* CUSTOM */');
     const guiCss = parts[0];
     const customCss = parts[1] || '';
 
-    // Helper to normalize selectors for comparison
-    const normalizeSelector = (s) => {
-        return s.trim()
-            .replace(/\.bauchbinde-instance\s+/, '')
-            .replace(/^div\.bauchbinde/, '.bauchbinde')
-            .replace(/^div\.white/, '.bb-box')
-            .replace(/^div\.bb-box/, '.bb-box')
-            .replace(/^\.white/, '.bb-box')
-            .replace(/^h1/, 'h1') // Keep tags but ensure consistent
-            .replace(/^h2/, 'h2')
-            .replace(/>\s*/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-    };
+    // Optimization: Remove huge base64 data URIs before parsing to keep it fast
+    const cleanCustomCss = customCss.replace(/url\s*\(\s*['"]?data:[\s\S]*?['"]?\s*\)/g, 'url("data:embedded")');
 
     const parseToMap = (text) => {
         const map = {};
         const lines = text.split('\n');
         let currentSel = null;
         lines.forEach(l => {
+            if (l.length > 1000) return; // Skip potential large data lines
             const s = l.match(/^([^{]+)\s*{/);
             if (s) { 
                 currentSel = normalizeSelector(s[1]); 
@@ -794,7 +805,7 @@ const auditCSS = (cssText) => {
     };
 
     const guiMap = parseToMap(guiCss);
-    const customMap = parseToMap(customCss);
+    const customMap = parseToMap(cleanCustomCss);
     const foundConflicts = [];
 
     Object.keys(guiMap).forEach(sel => {
@@ -813,15 +824,20 @@ const auditCSS = (cssText) => {
     if (foundConflicts.length > 0) {
         nextTick(() => {
             const $m = $('#conflict-modal');
-            if (!$m.modal('is active')) $m.modal({ closable: false }).modal('show');
+            if (!$m.modal('is active')) $m.modal({ closable: false, detachable: false }).modal('show');
         });
     } else {
         $('#conflict-modal').modal('hide');
     }
 };
 
-const resolveConflict = (index, source) => {
+const resolveConflict = async (index, source) => {
+    isResolving.value = true;
     const conflict = cssConflicts.value[index];
+    
+    // Small delay to allow UI to show loader if needed
+    await new Promise(r => setTimeout(r, 10));
+
     if (source === 'custom') {
         // Apply custom value to GUI
         const fakeCss = `${conflict.selector} { ${conflict.property}: ${conflict.customValue}; }`;
@@ -831,28 +847,21 @@ const resolveConflict = (index, source) => {
     const parts = state.design.unifiedCss.split('/* CUSTOM */');
     let customPart = parts[1] || '';
     
-    // Create a fuzzy regex that handles normalized selectors in custom CSS
-    // This is a bit complex, so we'll look for the property within the custom block
-    const lines = customPart.split('\n');
-    let inTargetSelector = false;
-    let newLines = lines.filter(line => {
-        const selMatch = line.match(/^([^{]+)\s*{/);
-        if (selMatch) {
-            if (normalizeSelector(selMatch[1]) === conflict.selector) inTargetSelector = true;
-        }
-        if (inTargetSelector && line.includes(`${conflict.property}:`)) {
-            return false; // Remove this property line
-        }
-        if (line.includes('}')) inTargetSelector = false;
-        return true;
+    // Efficient targeted replacement for huge strings
+    const escapedSelector = conflict.selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const propRegex = new RegExp(`(${escapedSelector}\\s*{[\\s\\S]*?)${conflict.property}:\\s*[^;]+;?([\\s\\S]*?})`, 'i');
+    
+    customPart = customPart.replace(propRegex, (match, start, end) => {
+        const inner = (start.split('{')[1] + end.split('}')[0]).trim();
+        return inner.length === 0 ? '' : `${start.split('{')[0]} {\n  ${inner}\n}`;
     });
 
-    // Cleanup: Remove empty rulesets like ".bb-box { }"
-    let cleanedPart = newLines.join('\n');
-    cleanedPart = cleanedPart.replace(/[^{}\n]+\s*{\s*}/g, '').trim();
+    // Cleanup empty rulesets
+    customPart = customPart.replace(/[^{}\n]+\s*{\s*}/g, '').trim();
 
-    state.design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + cleanedPart;
+    state.design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
     cssConflicts.value.splice(index, 1);
+    isResolving.value = false;
     if (cssConflicts.value.length === 0) $('#conflict-modal').modal('hide');
 };
 

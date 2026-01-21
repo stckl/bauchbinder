@@ -104,9 +104,19 @@ export function initEngine(mode) {
         }
     };
 
+    const handleKill = () => {
+        console.warn("[ENGINE] KILL command received. Hard reset of playout container.");
+        const container = document.getElementById('bb-container');
+        if (container) container.innerHTML = '';
+        activeLowerthirds = [];
+        isStopping = false;
+        nextQueuedPlayout = null;
+    };
+
     if (ipc) {
         ipc.on('show-lowerthird', (e, msg) => handleShow(msg, 'ipc'));
         ipc.on('hide-lowerthird', () => stopAll());
+        ipc.on('kill-playout', () => handleKill());
         ipc.on('status-update', (e, msg) => handleStatusUpdate(msg));
         ipc.on('update-css', (e, d) => { 
             console.log("[ENGINE] IPC update-css received:", d); 
@@ -123,6 +133,7 @@ export function initEngine(mode) {
     const socket = io('http://localhost:5001');
     socket.on('show-lowerthird', (msg) => handleShow(msg, 'socket'));
     socket.on('hide-lowerthird', () => stopAll());
+    socket.on('kill-playout', () => handleKill());
     socket.on('status-update', (msg) => handleStatusUpdate(msg));
     socket.on('update-css', (d) => { 
         console.log("[ENGINE] Socket update-css received:", d); 
@@ -168,7 +179,8 @@ function applyUnifiedStyles(design) {
         return;
     }
     let fontCss = '';
-    if (design.customFonts) {
+    if (design.customFonts && design.customFonts.length > 0) {
+        console.log(`[ENGINE] Registering ${design.customFonts.length} custom fonts...`);
         design.customFonts.forEach(font => {
             if (font.data && font.name) {
                 let format = font.type === 'ttf' ? 'truetype' : (font.type === 'otf' ? 'opentype' : font.type);
@@ -177,7 +189,7 @@ function applyUnifiedStyles(design) {
         });
     }
     const transformedCss = transformCssColors(design.unifiedCss);
-    console.log("[ENGINE] Applying CSS (first 100 chars):", transformedCss.substring(0, 100) + "...");
+    console.log("[ENGINE] Applying CSS...");
     
     $('#unified-styles').remove();
     $('head').append(`<style id="unified-styles">
@@ -298,7 +310,9 @@ function play(msg, immediate = false) {
     try {
         if (type === 'structured' && currentAnimation.show) {
             currentAnimation.show.forEach(step => {
+                // Improved target selection: check children AND the root element itself
                 let targets = Array.from(div.querySelectorAll(step.selector));
+                if (div.matches(step.selector)) targets.push(div);
                 
                 // SplitText handling - only if targets are valid text elements
                 if (step.split && (step.selector === 'h1' || step.selector === 'h2' || step.selector === '.text')) {
@@ -358,7 +372,12 @@ function play(msg, immediate = false) {
                                 if (el && el.style) {
                                     if (propName === 'opacity') el.style.opacity = startVal;
                                     else if (propName === 'translateX' || propName === 'translateY') {
-                                        el.style.transform = (el.style.transform || '').replace(new RegExp(propName + '\\([^)]*\\)', 'g'), '') + ` ${propName}(${startVal})`;
+                                        const unit = propName === 'translateX' ? 'vw' : 'vh';
+                                        const cleanVal = String(startVal).replace(/[a-z%]/g, '');
+                                        el.style.transform = (el.style.transform || '').replace(new RegExp(propName + '\\([^)]*\\)', 'g'), '') + ` ${propName}(${cleanVal}${unit})`;
+                                    } else {
+                                        // Handle other properties like font-family
+                                        try { el.style[propName] = startVal; } catch(e) {}
                                     }
                                 }
                             });
@@ -508,7 +527,9 @@ function stopAll() {
             if (item.type === 'structured' && currentAnimation.hide) {
                 let maxDuration = 0;
                 currentAnimation.hide.forEach((step, index) => {
+                    // Improved target selection: check children AND the root element itself
                     let targets = Array.from(item.div.querySelectorAll(step.selector));
+                    if (item.div.matches(step.selector)) targets.push(item.div);
 
                     let subTargets = [];
                     targets.forEach(t => {
