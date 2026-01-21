@@ -1,0 +1,100 @@
+originalfile:
+{"lowerthirds":[{"name":"Anita Schneider","title":"Moderatorin & Better Orange IR & HV AG"}],"design":{"white":{"width":0,"left":0,"bottom":7,"color":"rgba(255,255,255,0.1)","paddingh":"2.3","paddingv":2.6,"divalign":0,"textalign":2},"h1":{"fontfamily":"Roboto","fontsize":"7","bold":true,"italic":false,"color":"#ffffff"},"h2":{"fontfamily":"Roboto","fontsize":"3.3","bold":false,"italic":false,"color":"#ffffff"},"css":"","customcss":"div.bauchbinde > .white {\n  border-top: .1vw #ffffff solid;\n  border-right: .1vw #ffffff solid;\n  border-bottom: .1vw #ffffff solid;\n  padding-top: 5vh;\n  padding-left: 5vw;\n}\n\nh1, h2 {\nfont-family: \"Roboto Condensed\";\n}\n\nh1 {\n  font-weight: 500;\n}\n\nh2 {\n  font-weight: 100;\n}"},"animation":{"type":"slideleft","duration":"1000","easing":"easeInOutCirc"}}
+output css nach öffnen:
+.bauchbinde {
+  bottom: 7vh;
+  text-align: left;
+  overflow: visible;
+}
+
+.bb-box {
+  min-width: 0vw;
+  min-height: 0vh;
+  margin: 0 0vw;
+  background: rgba(255,255,255,0.1);
+  border-radius: undefinedpx;
+  padding: 2.6vh 2.3vh;
+  text-align: right;
+  overflow: hidden;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0vh;
+}
+
+.bb-box img {
+  object-fit: contain;
+}
+
+.logo {
+  height: 100%;
+  width: auto;
+  border-radius: 0px;
+  opacity: 1;
+  margin: 0 0px;
+  position: static;
+}
+
+.image {
+  height: 100%;
+  width: auto;
+  border-radius: 0px;
+  opacity: 1;
+  margin: 0 0px;
+  position: static;
+}
+
+.logo { order: 1; align-self: auto; }
+.image { order: 2; align-self: auto; }
+.text { order: 3; align-self: auto; }
+
+.text {
+  overflow: visible;
+}
+
+h1 {
+  font-family: Roboto !important;
+  font-size: 7vh;
+  line-height: 7vh;
+  color: #ffffff;
+  font-weight: 500;
+  font-style: normal;
+  text-transform: none;
+  font-variant: normal;
+}
+
+h2 {
+  font-family: "Roboto Condensed" !important;
+  font-size: 3.3vh;
+  line-height: 3.3vh;
+  color: #ffffff;
+  font-weight: 500;
+  font-style: normal;
+  text-transform: none;
+  font-variant: normal;
+}
+
+
+/* CUSTOM */
+div.bauchbinde > .bb-box {
+  border-top: .1vw #ffffff solid;
+  border-right: .1vw #ffffff solid;
+  border-bottom: .1vw #ffffff solid;
+  padding-top: 5vh;
+  padding-left: 5vw;
+}
+
+h1, h2 {
+font-family: "Roboto Condensed";
+}
+
+h1 {
+  font-weight: 500;
+}
+
+h2 {
+  font-weight: 100;
+}
+fehler:
+bauchbinde links oben im eck statt originalposition. 

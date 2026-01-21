@@ -179,30 +179,57 @@ const openFile = () => {
                 
                 if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
                 
-                if (ld.design) {
-                    // Migration for older files: Convert customcss/css to unifiedCss
-                    if (!ld.design.unifiedCss) {
-                        let legacyCss = ld.design.customcss || ld.design.css || '';
-                        if (legacyCss) {
-                            // Globally replace .white with .bb-box for old custom styles
-                            legacyCss = legacyCss.replace(/\.white/g, '.bb-box');
-                            ld.design.unifiedCss = "/* GUI */\n/* CUSTOM */\n" + legacyCss;
+            // 5. Migrate design (white box and fonts)
+            if (ld.design) {
+                const migrateObject = (target, source) => {
+                    if (!source) return;
+                    Object.keys(source).forEach(key => {
+                        // Map legacy properties
+                        let targetKey = key;
+                        if (key === 'bold') {
+                            target.fontweight = source[key] ? 'bold' : 'normal';
+                            return;
                         }
-                    }
-                    Object.assign(state.design, ld.design);
-                    
-                    // Scan for external font URLs for migration
-                    const urlRegex = /url\(['"]?(https?:\/\/[^'")]*)['"]?\)/g;
-                    const urls = [];
-                    let match;
-                    while ((match = urlRegex.exec(state.design.unifiedCss)) !== null) {
-                        // Try to find the font name in the surrounding block
-                        const block = state.design.unifiedCss.substring(Math.max(0, match.index - 200), match.index);
-                        const nameMatch = block.match(/font-family:\s*['"]?([^'"]*)['"]?/i);
-                        urls.push({ url: match[1], name: nameMatch ? nameMatch[1] : null });
-                    }
-                    if (urls.length > 0) pendingMigrationUrls.value = urls;
+                        
+                        // Copy property if it exists in v4 target or if it's a known property
+                        if (source[key] !== undefined && source[key] !== null) {
+                            target[targetKey] = source[key];
+                        }
+                    });
+                };
+
+                if (ld.design.white) migrateObject(state.design.white, ld.design.white);
+                if (ld.design.h1) migrateObject(state.design.h1, ld.design.h1);
+                if (ld.design.h2) migrateObject(state.design.h2, ld.design.h2);
+
+                // Handle legacy CSS migration
+                let legacyCss = ld.design.unifiedCss || '';
+                // v3 used .white, v4 uses .bb-box
+                legacyCss = legacyCss.replace(/\.white/g, '.bb-box');
+                
+                // If it's very old v3, it might not have unifiedCss but customCss
+                if (!legacyCss && ld.design.customCss) {
+                    legacyCss = ld.design.customCss.replace(/\.white/g, '.bb-box');
                 }
+                
+                if (legacyCss) {
+                    // We keep the custom part, buildCss will regenerate the GUI part
+                    const parts = legacyCss.split('/* CUSTOM */');
+                    let customPart = '';
+                    
+                    if (parts.length > 1) {
+                        customPart = parts[1].trim();
+                    } else if (ld.design.customcss || ld.design.customCss) {
+                        // If it came from a dedicated custom CSS field, it's all custom
+                        customPart = parts[0].trim();
+                    } else {
+                        // Heuristic for old unifiedCss: if it has GUI markers or common GUI patterns, try to extract custom
+                        customPart = parts[0].includes('.bauchbinde {') ? '' : parts[0].trim();
+                    }
+                    
+                    state.design.unifiedCss = "/* CUSTOM */\n" + customPart;
+                }
+            }
                 
                 if (ld.animation) {
                     // Handle legacy simple animation strings

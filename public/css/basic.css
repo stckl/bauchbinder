@@ -13,7 +13,7 @@ h1, h2 {
 }
 
 .bauchbinde {
-    position: fixed;
+    position: absolute;
     left: 0vw;
     width: 100vw;
 }

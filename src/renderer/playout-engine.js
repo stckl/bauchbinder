@@ -164,8 +164,15 @@ function getRGBA(color) {
 
 function transformCssColors(css) {
     if (!css) return '';
-    const colorRegex = /(?:rgba?\s*\(.*\)|#[0-9a-fA-F]{3,8})/gi;
+    
+    // Improved regex to find colors but ignore things inside data: URLs
+    // It looks for rgba(), rgb(), or hex colors
+    const colorRegex = /(?:rgba?\s*\([^)]*\)|#[0-9a-fA-F]{3,8})/gi;
+    
     return css.replace(colorRegex, (match) => {
+        // Simple heuristic: if it looks like it's part of a data URI (very long, no spaces), skip it
+        if (match.length > 50) return match; 
+        
         const rgba = getRGBA(match);
         if (currentMode === 'key') return `rgba(255, 255, 255, ${rgba.a})`;
         if (currentMode === 'fill') return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
@@ -484,18 +491,23 @@ function play(msg, immediate = false) {
 }
 
 function stopAll() {
-    if (activeLowerthirds.length === 0) { isStopping = false; return; };
+    if (activeLowerthirds.length === 0 || isStopping) { 
+        if (activeLowerthirds.length === 0) isStopping = false;
+        return; 
+    }
     isStopping = true;
 
-    // Safety timeout: Reset isStopping after 2 seconds no matter what
+    // Safety timeout: Hard reset after 2.5 seconds if animations get stuck
     const safetyTimeout = setTimeout(() => {
         if (isStopping) {
-            console.warn("[ENGINE] stopAll safety timeout fired. Forcing state reset.");
-            activeLowerthirds.forEach(item => $(item.div).remove());
+            console.warn("[ENGINE] stopAll safety timeout fired. Hard reset of playout.");
+            const container = document.getElementById('bb-container');
+            if (container) container.innerHTML = '';
             activeLowerthirds = [];
             isStopping = false;
+            nextQueuedPlayout = null;
         }
-    }, 2000);
+    }, 2500);
 
     let itemsProcessed = 0;
     const itemsToStop = [...activeLowerthirds];
@@ -507,27 +519,28 @@ function stopAll() {
         const isFill = currentMode === 'fill';
 
         const finalize = () => {
-            $(item.div).remove();
-            itemsProcessed++;
-            if (itemsProcessed === totalItems) {
-                clearTimeout(safetyTimeout);
-                activeLowerthirds = [];
-                isStopping = false;
-                if (nextQueuedPlayout) {
-                    const msg = nextQueuedPlayout;
-                    nextQueuedPlayout = null;
-                    play(msg);
+            if (!item.finalized) {
+                item.finalized = true;
+                $(item.div).remove();
+                itemsProcessed++;
+                
+                if (itemsProcessed >= totalItems) {
+                    clearTimeout(safetyTimeout);
+                    activeLowerthirds = [];
+                    isStopping = false;
+                    if (nextQueuedPlayout) {
+                        const msg = nextQueuedPlayout;
+                        nextQueuedPlayout = null;
+                        play(msg);
+                    }
                 }
             }
         };
-
-        const opacityParams = isFill ? 1 : 0;
 
         try {
             if (item.type === 'structured' && currentAnimation.hide) {
                 let maxDuration = 0;
                 currentAnimation.hide.forEach((step, index) => {
-                    // Improved target selection: check children AND the root element itself
                     let targets = Array.from(item.div.querySelectorAll(step.selector));
                     if (item.div.matches(step.selector)) targets.push(item.div);
 
@@ -552,11 +565,6 @@ function stopAll() {
                             const sanitize = (v) => (v === null || v === undefined) ? '' : String(v);
                             let endVal = Array.isArray(rawVal) ? sanitize(rawVal[1]) : sanitize(rawVal);
                             if (propName === 'opacity' && isFill) endVal = 1;
-                            if (propName === 'backgroundColor' || propName === 'color') {
-                                const rgba = getRGBA(endVal);
-                                if (currentMode === 'key') endVal = `rgba(255, 255, 255, ${rgba.a})`;
-                                if (currentMode === 'fill') endVal = `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
-                            }
                             params[propName] = endVal;
                         });
 
@@ -569,26 +577,28 @@ function stopAll() {
                         }
                     }
                 });
+                // Structured animations use a timer for finalize as they consist of multiple steps
                 setTimeout(finalize, maxDuration + 50);
             } else {
                 if (typeof animate === 'function') {
+                    const options = { duration, easing, complete: finalize, onComplete: finalize };
                     switch(item.type) {
                         case 'slideleft': 
-                            animate(item.div, { translateX: '-100vw', opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize }); 
+                            animate(item.div, { translateX: '-100vw', opacity: isFill ? 1 : 0 }, options); 
                             break;
                         case 'slideright': 
-                            animate(item.div, { translateX: '100vw', opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize }); 
+                            animate(item.div, { translateX: '100vw', opacity: isFill ? 1 : 0 }, options); 
                             break;
                         case 'slideup': 
-                            animate(item.div, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize }); 
+                            animate(item.div, { translateY: '10vh', opacity: isFill ? 1 : 0 }, options); 
                             break;
                         case 'slideup_textdelay':
                             animate(item.text, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { duration: duration * 0.8, easing });
-                            animate(item.div, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { duration, easing, delay: 200, onComplete: finalize });
+                            animate(item.div, { translateY: '10vh', opacity: isFill ? 1 : 0 }, { ...options, delay: 200 });
                             break;
                         case 'fade':
                         default: 
-                            animate(item.white, { opacity: isFill ? 1 : 0 }, { duration, easing, onComplete: finalize });
+                            animate(item.white, { opacity: isFill ? 1 : 0 }, options);
                             break;
                     }
                 } else {
@@ -597,7 +607,6 @@ function stopAll() {
             }
         } catch (e) {
             console.error("[ENGINE] Animation Stop Error:", e);
-            if (ipc) ipc.send('log-debug', { error: e.message, stack: e.stack });
             finalize();
         }
     });

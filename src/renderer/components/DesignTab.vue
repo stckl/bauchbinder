@@ -536,40 +536,53 @@ const buildCss = () => {
 `;
     };
 
-    let css = `.bauchbinde {
-`;
-    css += line(state.design.white, 'bottom', 'bottom', `${state.design.white.bottom}vh`);
-    css += `  text-align: ${['left', 'center', 'right'][state.design.white.divalign]};
-  overflow: visible;
-}
+        let css = `.bauchbinde {
 
-`;
+      position: absolute;
 
-    css += `.bb-box {
-`;
-    css += line(state.design.white, 'width', state.design.white.fixedWidth ? 'width' : 'min-width', `${state.design.white.width}vw`);
-    
-    // Improved height logic: Only apply if > 0, otherwise default to min 0vh
-    const hVal = state.design.white.height;
-    if (hVal > 0) {
-        css += line(state.design.white, 'height', state.design.white.fixedHeight ? 'height' : 'min-height', `${hVal}vh`);
-    } else {
-        css += `  min-height: 0vh;
-`;
+    `;
+
+        css += line(state.design.white, 'bottom', 'bottom', `${state.design.white.bottom || 0}vh`);
+
+        css += `  text-align: ${['left', 'center', 'right'][state.design.white.divalign || 0]};
+
+      overflow: visible;
+
     }
+
     
-    css += line(state.design.white, 'left', 'margin', `0 ${state.design.white.left}vw`);
-    css += line(state.design.white, 'color', 'background', state.design.white.color);
-    css += line(state.design.white, 'borderradius', 'border-radius', `${state.design.white.borderradius}px`);
-    css += `  padding: ${state.design.white.paddingv}vh ${state.design.white.paddingh}vh;
-  text-align: ${['left', 'center', 'right'][state.design.white.textalign]};
-  overflow: ${state.design.white.overflow || 'hidden'};
-  display: inline-flex;
-  flex-direction: row;
-  align-items: ${state.design.white.flexAlign || 'center'};
-  justify-content: ${state.design.white.flexJustify || 'center'};
-  gap: ${state.design.white.flexGap || 0}vh;
-}
+
+    .bb-box {
+
+      display: inline-block;
+
+    `;
+
+        css += line(state.design.white, 'width', 'min-width', `${state.design.white.width || 0}vw`);
+
+        css += line(state.design.white, 'height', 'min-height', `${state.design.white.height || 0}vh`);
+
+        css += line(state.design.white, 'left', 'margin', `0 ${state.design.white.left || 0}vw`);
+
+        css += line(state.design.white, 'color', 'background-color', state.design.white.color || 'transparent');
+
+        css += line(state.design.white, 'paddingh', 'padding-left', `${state.design.white.paddingh || 0}vw`);
+
+        css += `  padding-right: ${state.design.white.paddingh || 0}vw;
+
+    `;
+
+        css += line(state.design.white, 'paddingv', 'padding-top', `${state.design.white.paddingv || 0}vh`);
+
+        css += `  padding-bottom: ${state.design.white.paddingv || 0}vh;
+
+    `;
+
+        css += line(state.design.white, 'borderradius', 'border-radius', `${state.design.white.borderradius || 0}px`);
+
+        css += `}
+
+    
 
 .bb-box img {
   object-fit: contain;
@@ -637,9 +650,9 @@ const buildCss = () => {
         
         let s = `${sel} {
 `;
-        s += line(obj, 'fontfamily', 'font-family', `${formattedFamily} !important`);
-        s += line(obj, 'fontsize', 'font-size', `${obj.fontsize}vh`);
-        s += `  line-height: ${obj.fontsize}vh;
+        s += line(obj, 'fontfamily', 'font-family', `${formattedFamily}`);
+        s += line(obj, 'fontsize', 'font-size', `${obj.fontsize || (sel === 'h1' ? 5 : 3.7)}vh`);
+        s += `  line-height: ${obj.fontsize || (sel === 'h1' ? 5 : 3.7)}vh;
 `;
         s += line(obj, 'color', 'color', obj.color);
         s += line(obj, 'fontweight', 'font-weight', obj.fontweight || 'normal');
