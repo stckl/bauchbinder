@@ -31,7 +31,7 @@
       <div class="ui tab segment active" data-tab="items">
         <div class="row">
           <div class="col" style="text-align: right;">
-            <button class="ui green labeled icon button" v-on:click="showModal">
+            <button class="ui inverted green labeled icon button" v-on:click="showModal">
               <i class="plus icon"></i>
               neue Bauchbinde
             </button>
@@ -51,7 +51,7 @@
                       {{element.title}}
                     </div>
                   </div>
-                  <div class="ui bottom attached button" v-on:click="playLowerthird(index)">
+                  <div class="ui bottom attached green button" v-on:click="playLowerthird(index)">
                     <i class="play icon"></i>
                     anzeigen
                   </div>
@@ -68,37 +68,37 @@
             <h2>style</h2>
             <form class="ui form inverted" v-on:submit.prevent>
               
-              <h4 class="ui dividing header inverted">Bauchbinde</h4>
+              <h4 class="ui dividing header">Bauchbinde</h4>
               <div class="fields">
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <label>Breite (min in %)</label>
-                  <div class="ui left icon input inverted">
+                  <div class="ui left icon input">
                     <input type="number" step="0.01" min="0" max="100" v-model="design.white.width" placeholder="Breite">
-                    <i class="arrows alternate horizontal icon inverted"></i>
+                    <i class="arrows alternate horizontal icon"></i>
                   </div>
                 </div>
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <label>Abstand links/rechts (in %)</label>
-                  <div class="ui left icon input inverted">
+                  <div class="ui left icon input">
                     <input type="number" step="0.01" min="-100" max="100" v-model="design.white.left" placeholder="Abstand seite">
-                    <i class="arrow right icon inverted"></i>
+                    <i class="arrow right icon"></i>
                   </div>
                 </div>
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <label>Abstand unten (in %)</label>
-                  <div class="ui left icon input inverted">
+                  <div class="ui left icon input">
                     <input type="number" step="0.01" min="-100" max="100" v-model="design.white.bottom" placeholder="Abstand unten">
-                    <i class="arrow up icon inverted"></i>
+                    <i class="arrow up icon"></i>
                   </div>
                 </div>
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <color-picker v-model="design.white.color" label="Hintergrundfarbe"></color-picker>
                 </div>
               </div>
               <div class="fields">
                 <div class="four wide field">
                   <label>Position</label>
-                  <div class="ui icon buttons">
+                  <div class="ui icon inverted buttons">
                     <button class="ui button" :class="{ blue: (design.white.divalign == 0) }"  v-on:click.prevent="design.white.divalign = 0">
                       <i class="align left icon"></i>
                     </button>
@@ -112,7 +112,7 @@
                 </div>
                 <div class="four wide field">
                   <label>Text Ausrichtung</label>
-                  <div class="ui icon buttons">
+                  <div class="ui icon inverted buttons">
                     <button class="ui button" :class="{ blue: (design.white.textalign == 0) }"  v-on:click.prevent="design.white.textalign = 0">
                       <i class="align left icon"></i>
                     </button>
@@ -125,32 +125,32 @@
                   </div>
                 </div>
   
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <label>Text Abstand horizontal</label>
-                  <div class="ui left icon input inverted">
+                  <div class="ui left icon input">
                     <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingh" placeholder="Abstand seite">
-                    <i class="arrow right icon inverted"></i>
+                    <i class="arrow right icon"></i>
                   </div>
                 </div>
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <label>Text Abstand vertikal</label>
-                  <div class="ui left icon input inverted">
+                  <div class="ui left icon input">
                     <input type="number" step="0.01" min="0" max="100" v-model="design.white.paddingv" placeholder="Abstand unten">
-                    <i class="arrow up icon inverted"></i>
+                    <i class="arrow up icon"></i>
                   </div>
                 </div>
               </div>
               <div class="fields">
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <label>Ecken Rundung</label>
-                  <div class="ui left icon input inverted">
+                  <div class="ui left icon input">
                     <input type="number" step="1" min="0" max="1000" v-model="design.white.borderradius" placeholder="Ecken Rundung">
-                    <i class="square outline icon inverted"></i>
+                    <i class="square outline icon"></i>
                   </div>
                 </div>
               </div>
               
-              <h4 class="ui dividing header inverted">Schrift Name</h4>
+              <h4 class="ui dividing header">Schrift Name</h4>
               <div class="field">
                 <label>Schriftart</label>
                 <fomantic-dropdown v-model="design.h1.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
@@ -158,7 +158,7 @@
               <div class="fields">
                 <div class="field">
                   <label>Stil</label>
-                  <div class="ui icon buttons">
+                  <div class="ui icon inverted buttons">
                     <button class="ui button" :class="{ blue: design.h1.bold }"  v-on:click.prevent="toggleH1Bold()">
                       <i class="bold icon"></i>
                     </button>
@@ -187,12 +187,12 @@
                   <label>Größe (vh)</label>
                   <input type="number" step="0.1" v-model="design.h1.fontsize" style="width: 80px;">
                 </div>
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <color-picker v-model="design.h1.color" label="Schriftfarbe Name"></color-picker>
                 </div>
               </div>
 
-              <h4 class="ui dividing header inverted">Schrift Titel</h4>
+              <h4 class="ui dividing header">Schrift Titel</h4>
               <div class="field">
                 <label>Schriftart</label>
                 <fomantic-dropdown v-model="design.h2.fontfamily" :options="allFonts" :custom-fonts="design.customFonts" :manual-fonts="manualFonts" :system-fonts="systemFonts"></fomantic-dropdown>
@@ -200,7 +200,7 @@
               <div class="fields">
                 <div class="field">
                   <label>Stil</label>
-                  <div class="ui icon buttons">
+                  <div class="ui icon inverted buttons">
                     <button class="ui button" :class="{ blue: design.h2.bold }"  v-on:click.prevent="toggleH2Bold()">
                       <i class="bold icon"></i>
                     </button>
@@ -229,17 +229,22 @@
                   <label>Größe (vh)</label>
                   <input type="number" step="0.1" v-model="design.h2.fontsize" style="width: 80px;">
                 </div>
-                <div class="four wide field inverted">
+                <div class="four wide field">
                   <color-picker v-model="design.h2.color" label="Schriftfarbe Titel"></color-picker>
                 </div>
               </div>
 
-              <h4 class="ui dividing header inverted">Eigene Schriftarten (Base64)</h4>
-              <div class="field">
-                <div class="ui inverted segment" 
-                     style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;"
-                     @dragover.prevent @drop.prevent="handleFontDrop"
-                     @click="addCustomFont">
+                            <h4 class="ui dividing header">Eigene Schriftarten (Base64)</h4>
+
+                            <div class="field">
+
+                              <div class="ui segment" 
+
+                                   style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;"
+
+                                   @dragover.prevent @drop.prevent="handleFontDrop"
+
+                                   @click="addCustomFont">
                   <i class="huge upload icon" style="color: #555;"></i>
                   <p style="margin-top: 10px; color: #888;">Schriftarten hierher ziehen oder klicken (.ttf, .otf, .woff)</p>
                 </div>
@@ -247,9 +252,9 @@
                 <div class="ui middle aligned divided list inverted" style="margin-top: 10px;">
                   <div v-for="(font, index) in design.customFonts" :key="index" class="item" style="padding: 10px 0;">
                     <div class="right floated content">
-                      <div class="ui mini basic blue button" @click="applyFontToH1(font.name)">Name</div>
-                      <div class="ui mini basic green button" @click="applyFontToH2(font.name)">Titel</div>
-                      <div class="ui mini red icon button" @click="removeCustomFont(index)"><i class="trash icon"></i></div>
+                      <div class="ui mini inverted basic blue button" @click="applyFontToH1(font.name)">Name</div>
+                      <div class="ui mini inverted basic green button" @click="applyFontToH2(font.name)">Titel</div>
+                      <div class="ui mini inverted red icon button" @click="removeCustomFont(index)"><i class="trash icon"></i></div>
                     </div>
                     <i class="font icon"></i>
                     <div class="content">
@@ -274,7 +279,7 @@
             <h2>animation</h2>
           </div>
           <div class="col" style="margin-top:20px;">
-            <div class="ui buttons">
+            <div class="ui inverted buttons">
               <button class="ui labeled icon button" v-bind:class="[animation.type == 'fade' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('fade')">
                 <i class="adjust icon"></i>
                 fade
@@ -298,7 +303,7 @@
             </div>
           </div>
           <div class="col" style="margin-top:20px;">
-            <button class="ui labeled icon button" v-bind:class="[animation.type == 'custom' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('custom')">
+            <button class="ui inverted labeled icon button" v-bind:class="[animation.type == 'custom' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('custom')">
               <i class="random icon"></i>
               custom
             </button>
@@ -393,20 +398,20 @@
         <div class="col" style="clear: both; margin-top:20px;">
           <div class="ui divider"></div>
 
-          <button class="ui right floated labeled icon button" v-on:click="openFile">
+          <button class="ui right floated labeled icon inverted button" v-on:click="openFile">
             <i class="folder open icon"></i>
             öffnen
           </button>
-          <button class="ui right floated labeled icon button" v-on:click="saveFile">
+          <button class="ui right floated labeled icon inverted button" v-on:click="saveFile">
             <i class="save icon"></i>
             speichern
           </button>
       
-          <button class="ui floated labeled icon teal button" v-on:click="openWinKey">
+          <button class="ui floated labeled icon inverted teal button" v-on:click="openWinKey">
             <i class="window maximize outline icon"></i>
             key
           </button>
-          <button class="ui floated labeled icon teal button" v-on:click="openWinFill">
+          <button class="ui floated labeled icon inverted teal button" v-on:click="openWinFill">
             <i class="window maximize outline icon"></i>
             fill
           </button>
@@ -417,24 +422,24 @@
       <!-- app end -->
 
       <!-- lower third modal -->
-      <div class="ui modal">
+      <div class="ui inverted modal" id="entry-modal">
         <i class="close icon"></i>
-        <div v-if="newentryid == null" class="header">
+        <div v-if="newentryid == null" class="header inverted">
           Neue Bauchbinde
         </div>
-        <div v-else class="header">
+        <div v-else class="header inverted">
           Bauchbinde Nr. {{newentryid}}
         </div>
-        <div class="content">
+        <div class="content inverted" style="background: #1b1c1d;">
           <div class="row">
             <div class="col">
               <div style="margin-top: 10px;">
               <form class="ui inverted form" v-on:submit.prevent="addLowerthird">
-                <div class="field inverted">
-                  <label class="inverted">Name</label>
+                <div class="field">
+                  <label>Name</label>
                   <input type="text" name="name" placeholder="Name" v-model="newname">
                 </div>
-                <div class="field inverted">
+                <div class="field">
                   <label>Titel</label>
                   <input type="text" name="title" placeholder="Titel" v-model="newtitle">
                 </div>
@@ -443,11 +448,11 @@
             </div>        
           </div>
         </div>
-        <div class="actions">
+        <div class="actions inverted" style="background: #1b1c1d;">
           <div v-if="newentryid != null" class="ui icon inverted red deny button" v-on:click="deleteLowerthird(newentryid)"><i class="trash icon"></i></div>
-          <div class="ui black deny button">abbrechen</div>
-          <div v-if="newentryid == null" class="ui green right labeled icon button" v-on:click="addLowerthird">hinzufügen <i class="plus icon"></i></div>
-          <div class="ui positive right labeled icon button" v-on:click="addLowerthird">
+          <div class="ui inverted black deny button">abbrechen</div>
+          <div v-if="newentryid == null" class="ui inverted green right labeled icon button" v-on:click="addLowerthird">hinzufügen <i class="plus icon"></i></div>
+          <div class="ui inverted positive right labeled icon button" v-on:click="addLowerthird">
             speichern und beenden
             <i class="checkmark icon"></i>
           </div>

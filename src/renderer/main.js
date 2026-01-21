@@ -64,14 +64,14 @@ const ColorPicker = {
                 <div class="ui button" ref="pickerBtn" :style="{ background: modelValue, border: '1px solid rgba(255,255,255,0.2)', width: '40px', padding: 0 }"></div>
                 <input type="text" :value="modelValue" @change="updateFromText($event.target.value)" @keyup.enter="$event.target.blur()" style="font-family: monospace; font-size: 11px;">
             </div>
-            <div class="ui popup" ref="popupContent" style="min-width: 220px; background: #222; border: 1px solid #444; padding: 15px;">
-                <div class="ui form">
+            <div class="ui popup inverted" ref="popupContent" style="min-width: 220px; background: #1b1c1d; border: 1px solid #444; padding: 15px;">
+                <div class="ui inverted form">
                     <div class="field">
                         <div :style="{ background: previewRgba, height: '30px', borderRadius: '4px', marginBottom: '10px', border: '1px solid #555' }"></div>
                         <input type="color" :value="localHex" @input="updateColor($event.target.value)" style="width: 100%; height: 40px; background: none; border: none; cursor: pointer; padding: 0;">
                     </div>
                     <div class="field" style="margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; color: #ccc; font-size: 10px; margin-bottom: 5px;">
+                        <div style="display: flex; justify-content: space-between; color: rgba(255,255,255,0.7); font-size: 10px; margin-bottom: 5px;">
                             <span>Transparenz</span>
                             <span>{{ Math.round(localAlpha * 100) }}%</span>
                         </div>
@@ -115,7 +115,7 @@ const FomanticDropdown = {
     props: ['modelValue', 'options', 'customFonts', 'manualFonts', 'systemFonts'],
     emits: ['update:modelValue'],
     template: `
-        <select class="ui fluid search dropdown" :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
+        <select class="ui fluid search inverted dropdown" :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
             <option value="">Schriftart wählen...</option>
             <option v-for="opt in options" :key="opt" :value="opt">
                 {{ getMarker(opt) }}{{ opt }}{{ getWarning(opt) }}
@@ -212,7 +212,14 @@ const App = {
 
             cssConflicts.value = foundConflicts;
             if (foundConflicts.length > 0) {
-                nextTick(() => $('#conflict-modal').modal({ closable: false }).modal('show'));
+                nextTick(() => {
+                    const $m = $('#conflict-modal');
+                    if (!$m.modal('is active')) {
+                        $m.modal({ closable: false }).modal('show');
+                    }
+                });
+            } else {
+                $('#conflict-modal').modal('hide');
             }
         };
 
@@ -358,12 +365,12 @@ const App = {
             if (newentryid.value !== null) { lowerthirds.value[newentryid.value] = { name: newname.value, title: newtitle.value }; }
             else { lowerthirds.value.push({ name: newname.value, title: newtitle.value }); }
             newname.value = ''; newtitle.value = ''; newentryid.value = null;
-            ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); $('.ui.modal').modal('hide');
+            ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); $('#entry-modal').modal('hide');
         };
 
         const playLowerthird = (i) => { active.value = i; ipc.send('show-lowerthird', JSON.parse(JSON.stringify(lowerthirds.value[i]))); };
         const stopLowerthird = () => { ipc.send('hide-lowerthird'); active.value = -1; };
-        const deleteLowerthird = (id) => { lowerthirds.value.splice(id, 1); ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); $('.ui.modal').modal('hide'); };
+        const deleteLowerthird = (id) => { lowerthirds.value.splice(id, 1); ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); $('#entry-modal').modal('hide'); };
 
         const saveFile = () => {
             const fd = { lowerthirds: lowerthirds.value, design: design, animation: animation };
@@ -377,6 +384,8 @@ const App = {
                 if (!res.canceled && res.filePaths.length > 0) {
                     fs.readFile(res.filePaths[0], 'utf8', (err, data) => {
                         const ld = JSON.parse(data);
+                        isSyncing = true; // Synchronisation blockieren während des Ladens
+
                         if (ld.lowerthirds) { lowerthirds.value = ld.lowerthirds; ipc.send('update-data', JSON.parse(JSON.stringify(ld.lowerthirds))); }
                         if (ld.design) {
                             if (!ld.design.customFonts) ld.design.customFonts = [];
@@ -394,6 +403,11 @@ const App = {
                         }
                         if (ld.animation) { Object.assign(animation, ld.animation); ipc.send('update-js', JSON.parse(JSON.stringify(animation))); }
                         updateFontCSS();
+
+                        nextTick(() => {
+                            isSyncing = false;
+                            auditCSS(design.unifiedCss);
+                        });
                     });
                 }
             });
@@ -460,7 +474,7 @@ const App = {
             let id = (typeof e === 'number') ? e : null;
             if (id !== null) { newname.value = lowerthirds.value[id].name; newtitle.value = lowerthirds.value[id].title; newentryid.value = id; }
             else { newname.value = ''; newtitle.value = ''; newentryid.value = null; }
-            $('.ui.modal').modal('show');
+            $('#entry-modal').modal('show');
         };
 
         let isSyncing = false;
@@ -470,7 +484,7 @@ const App = {
                 const parts = design.unifiedCss.split('/* CUSTOM */');
                 const customPart = parts.length > 1 ? parts[1].trim() : '';
                 design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
-                isSyncing = false;
+                nextTick(() => { isSyncing = false; });
             }
         }, { deep: true });
 
@@ -480,7 +494,7 @@ const App = {
                 parseCssToProperties(nv); 
                 auditCSS(nv);
                 ipc.send('update-css', JSON.parse(JSON.stringify(design)));
-                isSyncing = false;
+                nextTick(() => { isSyncing = false; });
             }
         });
 
@@ -490,7 +504,9 @@ const App = {
             if (!design.unifiedCss) design.unifiedCss = buildCss();
             ipc.send('update-css', JSON.parse(JSON.stringify(design)));
             ipc.send('update-js', JSON.parse(JSON.stringify(animation)));
-            $('.menu .item').tab(); $('.ui.modal').modal();
+            $('.menu .item').tab();
+            $('#entry-modal').modal();
+            $('#conflict-modal').modal({ closable: false });
             fontList.getFonts().then(ret => { systemFonts.value = ret; }).catch(err => console.log(err));
         });
 

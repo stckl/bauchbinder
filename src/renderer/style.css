@@ -1,20 +1,21 @@
 /* Custom Styles for bauchbinder */
 html, body {
-  background-color: #333 !important; /* Erzwinge Hintergrund auf Root-Ebene */
-  color: #fff !important;
+  background-color: #1b1c1d; /* Standard Fomantic Dark Background */
+  color: rgba(255, 255, 255, 0.9);
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
 body {
-  padding: 20px !important;
+  padding: 20px;
 }
 
 #app {
-  background-color: #333 !important;
+  background: transparent;
 }
 
+/* Base colors for dark mode inputs if Fomantic inverted doesn't cover all cases */
 .ui.inverted.form input:not([type]), 
 .ui.inverted.form input[type=date], 
 .ui.inverted.form input[type=datetime-local], 
@@ -27,8 +28,8 @@ body {
 .ui.inverted.form input[type=text], 
 .ui.inverted.form input[type=time], 
 .ui.inverted.form input[type=url] {
-  background: #222 !important;
-  color: #fff !important;
+  background: #222;
+  color: #fff;
 }
 
 .copy {
@@ -37,6 +38,7 @@ body {
   right: 5px;
   text-align: right;
   font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .tab.segment {
@@ -46,27 +48,76 @@ body {
   box-shadow: none !important;
 }
 
+/* Custom card styling with subtle borders */
 .ui.cards>.card.inverted {
-  background: #333 !important;
-  box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(255,255,255,.68) !important;
+  background: #242424 !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
 }
 
 .ui.cards>.card.inverted.active {
-  box-shadow: 0 1px 3px 0 rgba(255,255,255,.68), 0 0 0 1px rgba(33,186,69,.68) !important;
+  box-shadow: 0 0 0 2px #21ba45 !important;
 }
 
-/* Fix für unsichtbare Menü-Items */
+.ui.cards>.card.inverted .ui.bottom.attached.green.button {
+  border-top: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.ui.cards>.card.inverted .content .header {
+  color: #fff !important;
+}
+
+.ui.cards>.card.inverted .content .description {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Tab menu fixes */
 .ui.secondary.inverted.pointing.menu {
-  border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .ui.secondary.inverted.pointing.menu .item {
-  color: rgba(255,255,255,0.7) !important;
-  background: transparent !important;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .ui.secondary.inverted.pointing.menu .item.active {
+  color: #fff;
+  border-color: #fff;
+}
+
+/* Modal dark mode enhancements */
+.ui.inverted.modal, 
+.ui.inverted.modal > .header, 
+.ui.inverted.modal > .content, 
+.ui.inverted.modal > .actions {
+  background: #1b1c1d !important;
   color: #fff !important;
-  border-color: #fff !important;
-  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+.ui.inverted.modal > .header {
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.ui.inverted.modal > .actions {
+  border-top: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* Better contrast for unselected buttons in dark mode */
+.ui.inverted.buttons .button:not(.primary):not(.blue):not(.green):not(.red):not(.teal):not(.active),
+.ui.inverted.button:not(.primary):not(.blue):not(.green):not(.red):not(.teal):not(.active) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+}
+
+.ui.inverted.buttons .button:not(.primary):not(.blue):not(.green):not(.red):not(.teal):not(.active):hover,
+.ui.inverted.button:not(.primary):not(.blue):not(.green):not(.red):not(.teal):not(.active):hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+/* Secondary buttons should also have more contrast than the background */
+.ui.button.secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
