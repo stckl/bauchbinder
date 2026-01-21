@@ -50,7 +50,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 
 	initVariables(): void {
 		const variables = []
-		for (let i = 1; i <= 20; i++) { // Support up to 20 slots
+		for (let i = 1; i <= 99; i++) {
 			variables.push({ variableId: `name_${i}`, name: `Name ${i}` })
 			variables.push({ variableId: `title_${i}`, name: `Title ${i}` })
 		}
@@ -88,8 +88,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	updateVariables(data: LowerThird[]): void {
 		const values: { [variableId: string]: string | undefined } = {}
 		
-		// Clear/Set variables for 1-20
-		for (let i = 1; i <= 20; i++) {
+		// Clear/Set variables for 1-99
+		for (let i = 1; i <= 99; i++) {
 			const item = data.find(d => d.id === i)
 			values[`name_${i}`] = item ? item.name : '-'
 			values[`title_${i}`] = item ? item.title : '-'

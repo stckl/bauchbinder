@@ -37,7 +37,7 @@ class ModuleInstance extends base_1.InstanceBase {
     }
     initVariables() {
         const variables = [];
-        for (let i = 1; i <= 20; i++) { // Support up to 20 slots
+        for (let i = 1; i <= 99; i++) {
             variables.push({ variableId: `name_${i}`, name: `Name ${i}` });
             variables.push({ variableId: `title_${i}`, name: `Title ${i}` });
         }
@@ -73,8 +73,8 @@ class ModuleInstance extends base_1.InstanceBase {
     }
     updateVariables(data) {
         const values = {};
-        // Clear/Set variables for 1-20
-        for (let i = 1; i <= 20; i++) {
+        // Clear/Set variables for 1-99
+        for (let i = 1; i <= 99; i++) {
             const item = data.find(d => d.id === i);
             values[`name_${i}`] = item ? item.name : '-';
             values[`title_${i}`] = item ? item.title : '-';

@@ -4,8 +4,8 @@ import { ActionId } from './actions'
 export function GetPresets(): CompanionPresetDefinitions {
 	const presets: CompanionPresetDefinitions = {}
 
-	// Create presets for ID 1-10
-	for (let i = 1; i <= 10; i++) {
+	// Create presets for ID 1-20
+	for (let i = 1; i <= 20; i++) {
 		presets[`show_${i}`] = {
 			type: 'button',
 			category: 'Lower Thirds',
