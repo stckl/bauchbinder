@@ -140,17 +140,225 @@ const App = {
     setup() {
         const lowerthirds = ref([]);
         const design = reactive({
-            white: { width: 40, left: 5, bottom: 7, color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, divalign: 0, textalign: 0, _overrides: {} },
+            white: { width: 40, left: 5, bottom: 7, color: 'rgba(255,255,255,0.8)', paddingh: 5, paddingv: 2.6, borderradius: 0, divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible', _overrides: {} },
             h1: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 5, bold: false, italic: false, color: '#000000', _overrides: {} },
             h2: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 3.7, bold: false, italic: false, color: '#000000', _overrides: {} },
             unifiedCss: '',
             customFonts: [] 
         });
 
-        const animation = reactive({ type: 'fade', duration: 750, easing: 'easeInOutCirc', code: '' });
-        const newname = ref(''), newtitle = ref(''), newentryid = ref(null), active = ref(-1), appversion = ref('3.1.0');
+        const PRESETS = {
+            fade: {
+                show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+                hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+            },
+            slideleft: {
+                show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['-100vw', '0vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+                hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '-100vw'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+            },
+            slideright: {
+                show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['100vw', '0vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+                hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '100vw'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+            },
+            slideup: {
+                show: [{ selector: '.bauchbinde-instance', properties: { translateY: ['100vh', '0vh'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+                hide: [{ selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '100vh'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+            },
+            slideup_textdelay: {
+                show: [
+                    { selector: '.bauchbinde-instance', properties: { translateY: ['100vh', '0vh'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' },
+                    { selector: '.text', properties: { translateY: ['5vh', '0vh'] }, duration: 600, delay: 300, easing: 'easeInOutCirc' }
+                ],
+                hide: [
+                    { selector: '.text', properties: { translateY: ['0vh', '5vh'] }, duration: 400, delay: 0, easing: 'easeInOutCirc' },
+                    { selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '100vh'] }, duration: 500, delay: 200, easing: 'easeInOutCirc' }
+                ]
+            }
+        };
+
+        const animation = reactive({
+            type: 'structured', 
+            duration: 750, 
+            easing: 'easeInOutCirc', 
+            code: '',
+            show: JSON.parse(JSON.stringify(PRESETS.fade.show)),
+            hide: JSON.parse(JSON.stringify(PRESETS.fade.hide))
+        });
+
+        const editingStep = ref(null);
+
+        const getFriendlyName = (selector) => {
+            const names = {
+                '.bauchbinde-instance': 'Ganze Bauchbinde',
+                '.bb-box': 'Box',
+                '.white': 'Box',
+                '.text': 'Text-Bereich',
+                'h1': 'Name (H1)',
+                'h2': 'Titel (H2)'
+            };
+            return names[selector] || selector;
+        };
+
+        const getDesignValueForEditor = (selector, prop) => {
+            // 1. Native GUI mapping
+            if (selector === '.bb-box' || selector === '.white') {
+                if (prop === 'backgroundColor') return design.white.color;
+                if (prop === 'borderRadius') return design.white.borderradius;
+                if (prop === 'left') return design.white.left + 'vw';
+                if (prop === 'width') return design.white.width + 'vw';
+                if (prop === 'opacity') return 1;
+            }
+            if (selector === 'h1' || selector === 'h2') {
+                const obj = selector === 'h1' ? design.h1 : design.h2;
+                if (prop === 'color') return obj.color;
+                if (prop === 'fontSize') return obj.fontsize + 'vh';
+                if (prop === 'fontWeight') return obj.fontweight || (obj.bold ? '700' : '400');
+            }
+            if (selector === '.bauchbinde' || selector === '.bauchbinde-instance') {
+                if (prop === 'bottom') return design.white.bottom + 'vh';
+                if (prop === 'borderRadius') return 0;
+            }
+
+            // 2. Fallback: Search in Custom CSS part of unifiedCss
+            const parts = design.unifiedCss.split('/* CUSTOM */');
+            const customCss = parts[1] || '';
+            const escapedSelector = selector.replace(/[.*+?^${}()|[\\]/g, '\$&');
+            const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+            const regex = new RegExp(escapedSelector + '\s*{[\s\S]*?' + cssProp + ':\s*([^;]+);?', 'i');
+            const match = customCss.match(regex);
+            if (match) return match[1].trim();
+
+            // 3. Defaults for everything else
+            const defaults = { 
+                opacity: 1, scale: 1, rotate: 0, skewX: 0, translateX: '0vw', translateY: '0vh', 
+                left: '0vw', right: '0vw', top: '0vh', bottom: '0vh',
+                marginTop: '0px', marginRight: '0px', marginBottom: '0px', marginLeft: '0px',
+                paddingTop: '0px', paddingRight: '0px', paddingBottom: '0px', paddingLeft: '0px',
+                borderWidth: '0px', borderColor: '#ffffff', borderRadius: '0px', width: 'auto'
+            };
+            return defaults[prop] !== undefined ? defaults[prop] : 0;
+        };
+
+        const updateDesignValueFromAnimation = (selector, prop, value) => {
+            // Native Sync
+            if (selector === '.bb-box' || selector === '.white') {
+                if (prop === 'backgroundColor') { design.white.color = value; return; }
+                if (prop === 'borderRadius') { design.white.borderradius = parseFloat(value) || 0; return; }
+                if (prop === 'left') { design.white.left = parseFloat(value) || 0; return; }
+                if (prop === 'width') { design.white.width = parseFloat(value) || 0; return; }
+            }
+            if (selector === 'h1' || selector === 'h2') {
+                const obj = selector === 'h1' ? design.h1 : design.h2;
+                if (prop === 'color') { obj.color = value; return; }
+                if (prop === 'fontSize') { obj.fontsize = parseFloat(value) || 0; return; }
+                if (prop === 'fontWeight') { obj.fontweight = value; return; }
+            }
+            if (selector === '.bauchbinde' || selector === '.bauchbinde-instance') {
+                if (prop === 'bottom') { design.white.bottom = parseFloat(value) || 0; return; }
+            }
+
+            // Auto-Unit Intelligence
+            let valWithUnit = value;
+            if (value !== '' && !isNaN(value)) {
+                if (['translateX', 'left', 'right', 'width'].includes(prop)) valWithUnit += 'vw';
+                else if (['translateY', 'top', 'bottom', 'marginBottom', 'marginTop'].includes(prop)) valWithUnit += 'vh';
+                else if (['rotate', 'skewX'].includes(prop)) valWithUnit += 'deg';
+                else if (['borderWidth', 'borderRadius', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft'].includes(prop)) valWithUnit += 'px';
+            }
+
+            // Custom CSS Sync
+            const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+            const parts = design.unifiedCss.split('/* CUSTOM */');
+            let customPart = (parts[1] || '').trim();
+            const escapedSelector = selector.replace(/[.*+?^${}()|[\\]/g, '\$&');
+            const selRegex = new RegExp(`(${escapedSelector}\s*{[\s\S]*?})`, 'i');
+            const propRegex = new RegExp(`${cssProp}:\s*[^;]+;?`, 'i');
+
+            if (selRegex.test(customPart)) {
+                customPart = customPart.replace(selRegex, (match) => {
+                    return propRegex.test(match) ? match.replace(propRegex, `${cssProp}: ${valWithUnit};`) : match.replace(/}$/, `  ${cssProp}: ${valWithUnit};
+}`);
+                });
+            } else {
+                customPart += `
+
+${selector} {
+  ${cssProp}: ${valWithUnit};
+}`;
+            }
+            design.unifiedCss = parts[0].trim() + "\n\n/* CUSTOM */\n" + customPart.trim();
+        };
+
+        const setStepProperty = (step, prop, value) => {
+            if (prop === 'motion_x_type') {
+                ['translateX', 'left', 'right'].forEach(p => delete step.properties[p]);
+                if (value !== 'none') step.properties[value] = [editingStep.value?.phase==='show'?'100vw':'0vw', getDesignValueForEditor(step.selector, value)];
+                return;
+            }
+            if (prop === 'motion_y_type') {
+                ['translateY', 'top', 'bottom', 'marginBottom'].forEach(p => delete step.properties[p]);
+                if (value !== 'none') step.properties[value] = [editingStep.value?.phase==='show'?'100vh':'0vh', getDesignValueForEditor(step.selector, value)];
+                return;
+            }
+            step.properties[prop] = value;
+        };
+
+        const getMotionXType = (step) => {
+            if (step.properties.translateX !== undefined) return 'translateX';
+            if (step.properties.left !== undefined) return 'left';
+            return 'none';
+        };
+
+        const getMotionYType = (step) => {
+            if (step.properties.translateY !== undefined) return 'translateY';
+            if (step.properties.top !== undefined) return 'top';
+            return 'none';
+        };
+
+        const openStepEditor = (phase, index) => {
+            editingStep.value = { phase, index, step: animation[phase][index] };
+            nextTick(() => {
+                $('#step-modal').modal({
+                    onHide: () => { editingStep.value = null; },
+                    allowMultiple: true
+                }).modal('show');
+                initAccordions();
+            });
+        };
+
+        const initAccordions = () => {
+            nextTick(() => {
+                $('.ui.accordion.structured-editor-acc').accordion({ exclusive: false });
+            });
+        };
+
+        const addAnimationStep = (phase) => {
+            animation[phase].push({
+                selector: '.bb-box',
+                properties: { opacity: (phase==='show'?[0, 1]:[1, 0]) },
+                duration: 750,
+                delay: 0,
+                easing: 'easeInOutCirc'
+            });
+            initAccordions();
+        };
+
+        const removeAnimationStep = (phase, index) => {
+            animation[phase].splice(index, 1);
+        };
+
+        const loadPreset = (name) => {
+            if (PRESETS[name]) {
+                animation.show = JSON.parse(JSON.stringify(PRESETS[name].show));
+                animation.hide = JSON.parse(JSON.stringify(PRESETS[name].hide));
+                animation.type = 'structured';
+                initAccordions();
+            }
+        };
+
+        const newname = ref(''), newtitle = ref(''), newentryid = ref(null), active = ref(-1), appversion = ref('4.0.0');
         const systemFonts = ref([]), manualFonts = ref([]);
-        const cssConflicts = ref([]); // { selector, prop, guiVal, customVal }
+        const cssConflicts = ref([]);
 
         const allFonts = computed(() => {
             const combined = [...design.customFonts.map(f => f.name), ...WEB_FONTS, ...systemFonts.value, ...manualFonts.value, design.h1.fontfamily, design.h2.fontfamily].filter(f => f && f !== '');
@@ -160,12 +368,12 @@ const App = {
         const beautifyCSS = (text) => {
             if (!text) return "";
             return text
-                .replace(/\s*([{};:])\s*/g, '$1') // Leerzeichen um Sonderzeichen weg
-                .replace(/{/g, ' {\n  ') // Klammer auf -> Neue Zeile + Einrückung
-                .replace(/;/g, ';\n  ') // Semikolon -> Neue Zeile + Einrückung
-                .replace(/\s*}/g, '\n}\n\n') // Klammer zu -> Neue Zeile + Abstand
-                .replace(/\n\s*\n/g, '\n\n') // Doppelte Leerzeilen fixen
-                .replace(/  \n/g, '') // Leere eingerückte Zeilen fixen
+                .replace(/\s*([{};:])\s*/g, '$1') 
+                .replace(/{/g, ' {\n  ') 
+                .replace(/;/g, ':\n  ') 
+                .replace(/\s*}/g, '\n}\n\n') 
+                .replace(/\n\s*\n/g, '\n\n') 
+                .replace(/  \n/g, '') 
                 .trim();
         };
 
@@ -181,7 +389,7 @@ const App = {
                 let currentSel = null;
                 lines.forEach(l => {
                     const s = l.match(/^([^{]+)\s*{/);
-                    if (s) { currentSel = s[1].trim(); if (!map[currentSel]) map[currentSel] = {}; }
+                    if (s) { currentSel = s[1].trim(); if (!map[currentSel]) map[currentSel] = {}; } 
                     else if (l.includes('}')) currentSel = null;
                     else if (currentSel && l.includes(':')) {
                         const p = l.match(/^\s*([^:]+):\s*([^;]+);?/);
@@ -200,10 +408,7 @@ const App = {
                     Object.keys(guiMap[sel]).forEach(prop => {
                         if (customMap[sel][prop]) {
                             foundConflicts.push({
-                                selector: sel,
-                                property: prop,
-                                guiValue: guiMap[sel][prop],
-                                customValue: customMap[sel][prop]
+                                selector: sel, property: prop, guiValue: guiMap[sel][prop], customValue: customMap[sel][prop]
                             });
                         }
                     });
@@ -214,9 +419,7 @@ const App = {
             if (foundConflicts.length > 0) {
                 nextTick(() => {
                     const $m = $('#conflict-modal');
-                    if (!$m.modal('is active')) {
-                        $m.modal({ closable: false }).modal('show');
-                    }
+                    if (!$m.modal('is active')) $m.modal({ closable: false }).modal('show');
                 });
             } else {
                 $('#conflict-modal').modal('hide');
@@ -225,26 +428,15 @@ const App = {
 
         const resolveConflict = (index, source) => {
             const conflict = cssConflicts.value[index];
-            const isCustom = (source === 'custom');
-            
-            // GUI Update falls Custom gewählt wurde
-            if (isCustom) {
-                // Wir aktualisieren die GUI-Eigenschaft, damit buildCss() den richtigen Wert nimmt
-                parseCssToProperties(`${conflict.selector} { ${conflict.property}: ${conflict.customValue}; }`);
-            }
-
-            // In jedem Fall: Duplikat aus dem Custom-Bereich entfernen (da es jetzt im Master ist)
+            if (source === 'custom') parseCssToProperties(`${conflict.selector} { ${conflict.property}: ${conflict.customValue}; }`);
             const parts = design.unifiedCss.split('/* CUSTOM */');
             let customPart = parts[1] || '';
-            const selRegex = new RegExp(`(${conflict.selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*{[\\s\\S]*?)${conflict.property}:\\s*[^;]+;?([\\s\\S]*?})`, 'i');
-            
+            const selRegex = new RegExp(`(${conflict.selector.replace(/[.*+?^${}()|[\\]/g, '\$&')}\s*{[\s\S]*?)${conflict.property}:\s*[^;]+;?([\s\S]*?})`, 'i');
             customPart = customPart.replace(selRegex, (match, start, end) => {
                 const inner = (start.split('{')[1] + end.split('}')[0]).trim();
                 return inner.length === 0 ? '' : `${start.split('{')[0]} {\n  ${inner}\n}`;
             });
-
             design.unifiedCss = buildCss() + "\n/* CUSTOM */\n" + customPart.trim();
-            
             cssConflicts.value.splice(index, 1);
             if (cssConflicts.value.length === 0) $('#conflict-modal').modal('hide');
         };
@@ -258,6 +450,7 @@ const App = {
             let css = `.bauchbinde {\n`;
             css += line(design.white, 'bottom', 'bottom', `${design.white.bottom}vh`);
             css += `  text-align: ${['left', 'center', 'right'][design.white.divalign]};
+  overflow: visible;
 }
 
 `;
@@ -268,8 +461,12 @@ const App = {
             css += line(design.white, 'color', 'background', design.white.color);
             css += line(design.white, 'borderradius', 'border-radius', `${design.white.borderradius}px`);
             css += `  padding: ${design.white.paddingv}vh ${design.white.paddingh}vh;
-`;
-            css += `  text-align: ${['left', 'center', 'right'][design.white.textalign]};
+  text-align: ${['left', 'center', 'right'][design.white.textalign]};
+  overflow: ${design.white.overflow || 'hidden'};
+}
+
+.text {\n`;
+            css += `  overflow: ${design.white.textOverflow || 'visible'};
 }
 
 `;
@@ -299,8 +496,8 @@ const App = {
         const parseCssToProperties = (css) => {
             if (!css) return;
             const extractValue = (selector, prop) => {
-                const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(escapedSelector + '\\s*{[\\s\\S]*?' + prop + ':\\s*([^;]+);?', 'i');
+                const escapedSelector = selector.replace(/[.*+?^${}()|[\\]/g, '\$&');
+                const regex = new RegExp(escapedSelector + '\s*{[\s\S]*?' + prop + ':\s*([^;]+);?', 'i');
                 const match = css.match(regex);
                 return match ? match[1].trim().replace(/['"]/g, '') : null;
             };
@@ -316,6 +513,10 @@ const App = {
             if (bg) design.white.color = bg;
             const radius = extractValue('.bb-box', 'border-radius') || extractValue('.white', 'border-radius');
             if (radius) design.white.borderradius = parseFloat(radius);
+            const overflow = extractValue('.bb-box', 'overflow');
+            if (overflow) design.white.overflow = overflow;
+            const textOverflow = extractValue('.text', 'overflow');
+            if (textOverflow) design.white.textOverflow = textOverflow;
 
             const parseText = (sel, obj) => {
                 const family = extractValue(sel, 'font-family');
@@ -339,8 +540,6 @@ const App = {
         const migrateFontsAndStyles = (customcss) => {
             if (!customcss) return "";
             let remainingCss = customcss;
-
-            // 1. @font-face
             const fontFaceRegex = /@font-face\s*{([\s\S]*?)}/gi;
             let ffMatch;
             while ((ffMatch = fontFaceRegex.exec(customcss)) !== null) {
@@ -354,10 +553,7 @@ const App = {
                     remainingCss = remainingCss.replace(fullBlock, '');
                 }
             }
-
-            // Wir parsen jetzt nur die GUI-Werte aus dem custom-css, lassen den Rest aber stehen
             parseCssToProperties(customcss);
-            
             return beautifyCSS(remainingCss);
         };
 
@@ -384,13 +580,11 @@ const App = {
                 if (!res.canceled && res.filePaths.length > 0) {
                     fs.readFile(res.filePaths[0], 'utf8', (err, data) => {
                         const ld = JSON.parse(data);
-                        isSyncing = true; // Synchronisation blockieren während des Ladens
-
+                        isSyncing = true;
                         if (ld.lowerthirds) { lowerthirds.value = ld.lowerthirds; ipc.send('update-data', JSON.parse(JSON.stringify(ld.lowerthirds))); }
                         if (ld.design) {
                             if (!ld.design.customFonts) ld.design.customFonts = [];
                             design.h1._overrides = {}; design.h2._overrides = {}; design.white._overrides = {};
-                            
                             if (!ld.design.unifiedCss) {
                                 Object.assign(design, ld.design);
                                 const cleaned = migrateFontsAndStyles(ld.design.customcss || "");
@@ -401,13 +595,23 @@ const App = {
                             }
                             ipc.send('update-css', JSON.parse(JSON.stringify(design)));
                         }
-                        if (ld.animation) { Object.assign(animation, ld.animation); ipc.send('update-js', JSON.parse(JSON.stringify(animation))); }
+                        if (ld.animation) { 
+                            if (ld.animation.type !== 'structured' && PRESETS[ld.animation.type]) {
+                                const oldType = ld.animation.type;
+                                const oldDuration = parseInt(ld.animation.duration || 750);
+                                const oldEasing = ld.animation.easing || 'easeInOutCirc';
+                                loadPreset(oldType);
+                                animation.show.forEach(step => { step.duration = oldDuration; step.easing = oldEasing; });
+                                animation.hide.forEach(step => { step.duration = Math.round(oldDuration * 0.7); step.easing = oldEasing; });
+                                animation.type = 'structured';
+                            } else {
+                                Object.assign(animation, ld.animation);
+                                if (!animation.type) animation.type = 'structured';
+                            }
+                            ipc.send('update-js', JSON.parse(JSON.stringify(animation))); 
+                        }
                         updateFontCSS();
-
-                        nextTick(() => {
-                            isSyncing = false;
-                            auditCSS(design.unifiedCss);
-                        });
+                        nextTick(() => { isSyncing = false; auditCSS(design.unifiedCss); });
                     });
                 }
             });
@@ -441,20 +645,14 @@ const App = {
 
         const handleFontDrop = (e) => {
             const files = Array.from(e.dataTransfer.files);
-            const allowedExts = ['ttf', 'otf', 'woff', 'woff2'];
-            
             files.forEach(file => {
                 const ext = file.name.split('.').pop().toLowerCase();
-                if (allowedExts.includes(ext)) {
+                if (['ttf', 'otf', 'woff', 'woff2'].includes(ext)) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         const name = file.name.replace(`.${ext}`, '');
                         if (!design.customFonts.some(f => f.name === name)) {
-                            design.customFonts.push({
-                                name: name,
-                                data: event.target.result.split(',')[1],
-                                type: ext
-                            });
+                            design.customFonts.push({ name: name, data: event.target.result.split(',')[1], type: ext });
                             updateFontCSS();
                         }
                     };
@@ -469,6 +667,8 @@ const App = {
         const toggleH1Bold = () => { design.h1.bold = !design.h1.bold; }, toggleH1Italic = () => { design.h1.italic = !design.h1.italic; }, toggleH1Variant = () => { design.h1.fontvariant = design.h1.fontvariant === 'small-caps' ? 'normal' : 'small-caps'; };
         const toggleH2Bold = () => { design.h2.bold = !design.h2.bold; }, toggleH2Italic = () => { design.h2.italic = !design.h2.italic; }, toggleH2Variant = () => { design.h2.fontvariant = design.h2.fontvariant === 'small-caps' ? 'normal' : 'small-caps'; };
         const openWinKey = () => ipc.send('openwinkey'), openWinFill = () => ipc.send('openwinfill'), setAnimation = (t) => { animation.type = t; };
+        const toggleFullscreenKey = () => ipc.send('toggle-fullscreen-key');
+        const toggleFullscreenFill = () => ipc.send('toggle-fullscreen-fill');
         const onDragEnd = () => { active.value = -1; ipc.send('update-data', JSON.parse(JSON.stringify(lowerthirds.value))); };
         const showModal = (e) => {
             let id = (typeof e === 'number') ? e : null;
@@ -508,6 +708,7 @@ const App = {
             $('#entry-modal').modal();
             $('#conflict-modal').modal({ closable: false });
             $('.ui.dropdown').dropdown();
+            initAccordions();
             fontList.getFonts().then(ret => { systemFonts.value = ret; }).catch(err => console.log(err));
         });
 
@@ -516,8 +717,12 @@ const App = {
             cssConflicts, resolveConflict,
             addLowerthird, playLowerthird, stopLowerthird, deleteLowerthird, saveFile, openFile, openWinKey, openWinFill, setAnimation, onDragEnd, showModal,
             toggleH1Bold, toggleH1Italic, toggleH1Variant, toggleH2Bold, toggleH2Italic, toggleH2Variant, 
+            toggleFullscreenKey, toggleFullscreenFill,
             addCustomFont, removeCustomFont, applyFontToH1, applyFontToH2,
-            handleFontDrop
+            handleFontDrop,
+            addAnimationStep, removeAnimationStep, loadPreset, setStepProperty, getMotionXType, getMotionYType,
+            getDesignValueForEditor, updateDesignValueFromAnimation,
+            editingStep, openStepEditor, getFriendlyName
         };
     }
 };

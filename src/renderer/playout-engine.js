@@ -33,6 +33,38 @@ export function initEngine(mode) {
         document.body.appendChild(container);
     }
 
+    // Add Fullscreen Icon (visible on hover if not in fullscreen) - ONLY for Key/Fill windows
+    if ((mode === 'key' || mode === 'fill') && !document.getElementById('fullscreen-trigger')) {
+        const fsBtn = document.createElement('div');
+        fsBtn.id = 'fullscreen-trigger';
+        fsBtn.innerHTML = '⛶'; // Square symbol
+        fsBtn.style.cssText = `
+            position: fixed; top: 10px; right: 10px; width: 40px; height: 40px;
+            background: rgba(0,0,0,0.7); color: white; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10000; font-size: 24px; opacity: 0;
+            transition: opacity 0.3s; border: 1px solid rgba(255,255,255,0.3);
+            pointer-events: auto;
+        `;
+        document.body.appendChild(fsBtn);
+
+        document.addEventListener('mousemove', (e) => {
+            // Check if window is currently fullscreen
+            const isFS = window.innerHeight === screen.height || window.outerHeight === screen.height;
+            // Show button if mouse is in the top right corner (200px area)
+            if (e.clientX > window.innerWidth - 200 && e.clientY < 200 && !isFS) {
+                fsBtn.style.opacity = "1";
+            } else {
+                fsBtn.style.opacity = "0";
+            }
+        });
+
+        fsBtn.onclick = (e) => { 
+            e.stopPropagation();
+            if (ipc) ipc.send('toggle-fullscreen'); 
+        };
+    }
+
     document.body.style.backgroundColor = 'black';
     document.body.style.margin = '0';
 
@@ -105,6 +137,78 @@ function applyUnifiedStyles(design) {
     </style>`);
 }
 
+function getDesignValue(selector, prop) {
+    if (!currentDesign) return null;
+    
+    // Check in unifiedCss (Custom part) for non-native properties
+    const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+    const parts = currentDesign.unifiedCss.split('/* CUSTOM */');
+    const customCss = parts[1] || '';
+    const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedSelector + '\\s*{[\\s\\S]*?' + cssProp + ':\\s*([^;]+);?', 'i');
+    const match = customCss.match(regex);
+    if (match) {
+        let val = match[1].trim();
+        // Remove units if needed by animejs for some props, but animejs usually handles strings with units fine
+        return val;
+    }
+
+    // Default neutral values for motion/scale
+    const defaults = {
+        'opacity': 1,
+        'translateX': '0vw',
+        'translateY': '0vh',
+        'scale': 1,
+        'rotate': 0,
+        'skewX': 0,
+        'left': '0vw',
+        'marginBottom': '0vh'
+    };
+
+    // Color resolution from design
+    if (prop === 'backgroundColor') {
+        if (selector === '.bb-box' || selector === '.white') return currentDesign.white.color;
+    }
+    if (prop === 'color') {
+        if (selector === 'h1') return currentDesign.h1.color;
+        if (selector === 'h2') return currentDesign.h2.color;
+    }
+    
+    // Position/Layout resolution
+    if (selector === '.bb-box' || selector === '.white') {
+        if (prop === 'left' || prop === 'marginLeft') return currentDesign.white.left + 'vw';
+        if (prop === 'width' || prop === 'minWidth') return currentDesign.white.width + 'vw';
+        if (prop === 'borderRadius') return currentDesign.white.borderradius + 'px';
+    }
+
+    if (selector === 'h1') {
+        if (prop === 'fontSize') return currentDesign.h1.fontsize + 'vh';
+        if (prop === 'fontWeight') return currentDesign.h1.fontweight || (currentDesign.h1.bold ? '700' : '400');
+    }
+    if (selector === 'h2') {
+        if (prop === 'fontSize') return currentDesign.h2.fontsize + 'vh';
+        if (prop === 'fontWeight') return currentDesign.h2.fontweight || (currentDesign.h2.bold ? '700' : '400');
+    }
+
+    return defaults[prop] !== undefined ? defaults[prop] : null;
+}
+
+function splitText(element, type) {
+    if (!element) return [];
+    const text = element.innerText;
+    element.innerHTML = '';
+    const items = type === 'chars' ? text.split('') : text.split(' ');
+    const spans = items.map(item => {
+        const span = document.createElement('span');
+        span.style.display = 'inline-block';
+        span.style.whiteSpace = 'pre';
+        span.innerText = type === 'chars' ? item : item + ' ';
+        element.appendChild(span);
+        return span;
+    });
+    return spans;
+}
+
 function play(msg) {
     if (!currentDesign) return;
     const container = document.getElementById('bb-container');
@@ -124,40 +228,108 @@ function play(msg) {
     const isFill = currentMode === 'fill';
     $div.css({ 'opacity': '1', 'visibility': 'visible' });
 
-    // Anime.js 4 Params
-    const opacityParams = isFill ? ['1', '1'] : ['0', '1'];
-
     try {
-        switch(type) {
-            case 'slideleft':
-                animate(div, { left: ['-100vw', '0vw'], opacity: opacityParams, duration, easing });
-                break;
-            case 'slideright':
-                animate(div, { left: ['100vw', '0vw'], opacity: opacityParams, duration, easing });
-                break;
-            case 'slideup':
-                animate(div, { marginBottom: ['-100vh', '0vh'], opacity: opacityParams, duration, easing });
-                break;
-            case 'slideup_textdelay':
-                $text.css({ 'position': 'relative', 'bottom': '-4vh', 'opacity': isFill ? '1' : '0' });
-                animate(div, { marginBottom: ['-100vh', '0vh'], opacity: opacityParams, duration, easing });
-                animate($text[0], { 
-                    bottom: ['-4vh', '0vh'], 
-                    opacity: isFill ? ['1', '1'] : ['0', '1'], 
-                    duration: duration * 0.8, 
-                    easing,
-                    delay: 300 
-                });
-                break;
-            case 'fade':
-            default:
-                if (!isFill) {
-                    $white.css('opacity', '0');
-                    animate($white[0], { opacity: ['0', '1'], duration, easing });
-                } else {
-                    $white.css('opacity', '1');
+        if (type === 'structured' && currentAnimation.show) {
+            currentAnimation.show.forEach(step => {
+                let targets = Array.from(div.querySelectorAll(step.selector));
+                
+                // SplitText handling
+                if (step.split && (step.selector === 'h1' || step.selector === 'h2')) {
+                    let allSpans = [];
+                    targets.forEach(t => {
+                        allSpans = allSpans.concat(splitText(t, step.split));
+                    });
+                    targets = allSpans;
                 }
-                break;
+
+                if (targets.length > 0) {
+                    const params = {
+                        targets: targets,
+                        duration: step.duration || duration,
+                        easing: step.easing || easing,
+                        delay: step.delay || 0
+                    };
+                    
+                    // Add properties
+                    Object.keys(step.properties).forEach(prop => {
+                        let val = JSON.parse(JSON.stringify(step.properties[prop]));
+                        
+                        // Enforce design value as target (end value)
+                        const designVal = getDesignValue(step.selector, prop);
+                        if (designVal !== null) {
+                            if (Array.isArray(val)) {
+                                val[1] = designVal;
+                            } else {
+                                val = [val, designVal];
+                            }
+                        }
+
+                        // Special handling for opacity in FILL mode
+                        if (prop === 'opacity' && isFill) val = ['1', '1'];
+                        
+                        // Handle colors for Key/Fill mode (ensure even single values are transformed)
+                        if (['backgroundColor', 'color', 'borderColor'].includes(prop)) {
+                            const transformColor = (v) => {
+                                const rgba = getRGBA(v);
+                                if (currentMode === 'key') return `rgba(255, 255, 255, ${rgba.a})`;
+                                if (currentMode === 'fill') return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
+                                return v;
+                            };
+
+                            if (Array.isArray(val)) {
+                                val = val.map(transformColor);
+                            } else {
+                                val = transformColor(val);
+                            }
+                        }
+                        params[prop] = val;
+                    });
+
+                    // Line Draw Effect (Simulated via clip-path for Rects)
+                    if (step.lineDraw) {
+                        params.clipPath = ['inset(0 100% 100% 0)', 'inset(0 0 0 0)'];
+                    }
+                    
+                    // Staggering for split text
+                    if (step.split) {
+                        params.delay = anime.stagger(step.delay || 50, { from: step.staggerFrom || 'first' });
+                    }
+                    
+                    animate(params.targets, params);
+                }
+            });
+        } else {
+            switch(type) {
+                case 'slideleft':
+                    animate(div, { left: ['-100vw', '0vw'], opacity: opacityParams, duration, easing });
+                    break;
+                case 'slideright':
+                    animate(div, { left: ['100vw', '0vw'], opacity: opacityParams, duration, easing });
+                    break;
+                case 'slideup':
+                    animate(div, { marginBottom: ['-100vh', '0vh'], opacity: opacityParams, duration, easing });
+                    break;
+                case 'slideup_textdelay':
+                    $text.css({ 'position': 'relative', 'bottom': '-4vh', 'opacity': isFill ? '1' : '0' });
+                    animate(div, { marginBottom: ['-100vh', '0vh'], opacity: opacityParams, duration, easing });
+                    animate($text[0], { 
+                        bottom: ['-4vh', '0vh'], 
+                        opacity: isFill ? ['1', '1'] : ['0', '1'], 
+                        duration: duration * 0.8, 
+                        easing,
+                        delay: 300 
+                    });
+                    break;
+                case 'fade':
+                default:
+                    if (!isFill) {
+                        $white.css('opacity', '0');
+                        animate($white[0], { opacity: ['0', '1'], duration, easing });
+                    } else {
+                        $white.css('opacity', '1');
+                    }
+                    break;
+            }
         }
     } catch (e) {
         console.error("[ENGINE] Animation Play Error:", e);
@@ -167,7 +339,7 @@ function play(msg) {
 }
 
 function stopAll() {
-    if (activeLowerthirds.length === 0) { isStopping = false; return; }
+    if (activeLowerthirds.length === 0) { isStopping = false; return; };
     isStopping = true;
 
     let itemsProcessed = 0;
@@ -196,41 +368,114 @@ function stopAll() {
         const opacityParams = isFill ? ['1', '1'] : ['1', '0'];
 
         try {
-            switch(item.type) {
-                case 'slideleft': 
-                    animate(item.div, { left: ['0vw', '-100vw'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
-                    break;
-                case 'slideright': 
-                    animate(item.div, { left: ['0vw', '100vw'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
-                    break;
-                case 'slideup': 
-                    animate(item.div, { marginBottom: ['0vh', '-100vh'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
-                    break;
-                case 'slideup_textdelay':
-                    animate(item.text, { 
-                        bottom: ['0vh', '-4vh'], 
-                        opacity: isFill ? ['1', '1'] : ['1', '0'], 
-                        duration: duration * 0.8, 
-                        easing 
+            if (item.type === 'structured' && currentAnimation.hide) {
+                let maxDuration = 0;
+                currentAnimation.hide.forEach((step, index) => {
+                    let targets = Array.from(item.div.querySelectorAll(step.selector));
+
+                    // SplitText handling for hide (only if not already split, but usually we just target what's there)
+                    // If it was already split during show, querySelectorAll('span') would be needed.
+                    // To keep it simple, we check if spans exist inside the target.
+                    let subTargets = [];
+                    targets.forEach(t => {
+                        const spans = t.querySelectorAll('span');
+                        if (spans.length > 0) subTargets = subTargets.concat(Array.from(spans));
+                        else subTargets.push(t);
                     });
-                    animate(item.div, { 
-                        marginBottom: ['0vh', '-100vh'], 
-                        opacity: opacityParams, 
-                        duration, 
-                        easing, 
-                        delay: 200, 
-                        onComplete: finalize 
-                    });
-                    break;
-                case 'fade':
-                default: 
-                    if (!isFill) {
-                        animate(item.white, { opacity: ['1', '0'], duration, easing, onComplete: finalize }); 
-                    } else {
-                        // Fill wartet die Zeit ab (deckend), bis Key fertig ist
-                        animate(item.white, { opacity: ['1', '1'], duration, easing, onComplete: finalize });
+                    targets = subTargets;
+
+                    if (targets.length > 0) {
+                        const stepDuration = step.duration || duration;
+                        const stepDelay = step.delay || 0;
+                        
+                        // For stagger, the total duration increases
+                        const totalStepDuration = step.split ? (stepDuration + (targets.length * (step.delay || 50))) : (stepDuration + stepDelay);
+                        maxDuration = Math.max(maxDuration, totalStepDuration);
+
+                        const params = {
+                            targets: targets,
+                            duration: stepDuration,
+                            easing: step.easing || easing,
+                            delay: stepDelay
+                        };
+
+                        Object.keys(step.properties).forEach(prop => {
+                            let val = JSON.parse(JSON.stringify(step.properties[prop]));
+                            
+                            // Enforce design value as start value
+                            const designVal = getDesignValue(step.selector, prop);
+                            if (designVal !== null) {
+                                if (Array.isArray(val)) {
+                                    val[0] = designVal;
+                                } else {
+                                    val = [designVal, val];
+                                }
+                            }
+
+                            if (prop === 'opacity' && isFill) {
+                                val = ['1', '1'];
+                            }
+                            
+                            // Handle colors for Key/Fill mode
+                            if (prop === 'backgroundColor' || prop === 'color') {
+                                if (Array.isArray(val)) {
+                                    val = val.map(v => {
+                                        const rgba = getRGBA(v);
+                                        if (currentMode === 'key') return `rgba(255, 255, 255, ${rgba.a})`;
+                                        if (currentMode === 'fill') return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
+                                        return v;
+                                    });
+                                }
+                            }
+                            
+                            params[prop] = val;
+                        });
+
+                        if (step.split) {
+                            params.delay = anime.stagger(step.delay || 50, { from: 'last' });
+                        }
+
+                        animate(params.targets, params);
                     }
-                    break;
+                });
+                setTimeout(finalize, maxDuration + 50);
+            } else {
+                switch(item.type) {
+                    case 'slideleft': 
+                        animate(item.div, { left: ['0vw', '-100vw'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
+                        break;
+                    case 'slideright': 
+                        animate(item.div, { left: ['0vw', '100vw'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
+                        break;
+                    case 'slideup': 
+                        animate(item.div, { marginBottom: ['0vh', '-100vh'], opacity: opacityParams, duration, easing, onComplete: finalize }); 
+                        break;
+                    case 'slideup_textdelay':
+                        animate(item.text, { 
+                            bottom: ['0vh', '-4vh'], 
+                            opacity: isFill ? ['1', '1'] : ['1', '0'], 
+                            duration: duration * 0.8, 
+                            easing 
+                        });
+                        animate(item.div, { 
+                            marginBottom: ['0vh', '-100vh'], 
+                            opacity: opacityParams, 
+                            duration, 
+                            easing, 
+                            delay: 200, 
+                            onComplete: finalize 
+                        });
+                        break;
+                    case 'fade':
+                    default: 
+                        if (!isFill) {
+                            animate(item.white, { opacity: ['1', '0'], duration, easing, onComplete: finalize }); 
+                        } else {
+                            // Fill wartet die Zeit ab (deckend), bis Key fertig ist
+                            animate(item.white, { opacity: ['1', '1'], duration, easing, onComplete: finalize });
+                        }
+                        break;
+                }
             }
         } catch (e) {
             console.error("[ENGINE] Animation Stop Error:", e);

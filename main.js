@@ -265,6 +265,36 @@ ipc.on('openwinfill', function (event, arg) {
   createFillWin()
 })
 
+ipc.on('toggle-fullscreen-key', function() {
+  console.log('Toggle Fullscreen Key. winKey exists:', !!winKey);
+  if (winKey) {
+    winKey.focus();
+    const currentState = winKey.isFullScreen();
+    winKey.setFullScreen(!currentState);
+    console.log('winKey fullscreen set to:', !currentState);
+  }
+})
+
+ipc.on('toggle-fullscreen-fill', function() {
+  console.log('Toggle Fullscreen Fill. winFill exists:', !!winFill);
+  if (winFill) {
+    winFill.focus();
+    const currentState = winFill.isFullScreen();
+    winFill.setFullScreen(!currentState);
+    console.log('winFill fullscreen set to:', !currentState);
+  }
+})
+
+ipc.on('toggle-fullscreen', function(event) {
+  const sender = event.sender;
+  if (winKey && sender === winKey.webContents) {
+    winKey.setFullScreen(!winKey.isFullScreen());
+  }
+  if (winFill && sender === winFill.webContents) {
+    winFill.setFullScreen(!winFill.isFullScreen());
+  }
+})
+
 ipc.on('set-animation', function(event, arg) {
   console.log('set-animation', arg)
   animationStyle = arg;
@@ -279,7 +309,7 @@ ipc.on('set-animation', function(event, arg) {
 })
 
 ipc.on('update-js', function(event, arg) {
-  console.log('set-animation', arg)
+  console.log('update-js', arg)
   animationStyle = arg.type;
   animationParams.duration = arg.duration;
   animationParams.easing = arg.easing;
@@ -289,7 +319,8 @@ ipc.on('update-js', function(event, arg) {
   if(winKey) winKey.webContents.send('update-js', lastAnimation);
   if(winFill) winFill.webContents.send('update-js', lastAnimation);
 
-  io.emit('reload');
+  // WICHTIG: Daten auch an Sockets senden für HTML5/OBS
+  io.emit('update-js', lastAnimation);
 })
 
 ipc.on('update-css', function (event, arg) {

@@ -148,6 +148,20 @@
                                 <i class="square outline icon"></i>
                               </div>
                             </div>
+                            <div class="four wide field">
+                              <label>Box Überlauf (Box Overflow)</label>
+                              <select class="ui inverted dropdown" v-model="design.white.overflow">
+                                <option value="hidden">Verstecken (Hidden)</option>
+                                <option value="visible">Anzeigen (Visible)</option>
+                              </select>
+                            </div>
+                            <div class="four wide field">
+                              <label>Text Überlauf (Text Overflow)</label>
+                              <select class="ui inverted dropdown" v-model="design.white.textOverflow">
+                                <option value="hidden">Verstecken (Hidden)</option>
+                                <option value="visible">Anzeigen (Visible)</option>
+                              </select>
+                            </div>
                           </div>
                           
                           <h4 class="ui dividing header inverted">Schrift Name</h4>
@@ -275,95 +289,239 @@
       <div class="ui tab segment" data-tab="animation">
         <div class="row" style="margin-top: 20px;">
           <div class="col">
-            <h2>animation</h2>
+            <h2>Animation Editor</h2>
           </div>
+          
+          <!-- Presets / Templates -->
           <div class="col" style="margin-top:20px;">
-            <div class="ui inverted buttons">
-              <button class="ui labeled icon button" v-bind:class="[animation.type == 'fade' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('fade')">
-                <i class="adjust icon"></i>
-                fade
-              </button>
-              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideleft' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideleft')">
-                <i class="long arrow alternate right icon"></i>
-                slideleft
-              </button>
-              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideright' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideright')">
-                <i class="long arrow alternate left icon"></i>
-                slideright
-              </button>
-              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideup' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideup')">
-                <i class="long arrow alternate up icon"></i>
-                slideup
-              </button>
-              <button class="ui labeled icon button" v-bind:class="[animation.type == 'slideup_textdelay' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('slideup_textdelay')">
-                <i class="long arrow alternate up icon"></i>
-                slideup textdelay
-              </button>
+            <h4 class="ui dividing header inverted">Vorlagen laden</h4>
+            <div class="ui inverted buttons small">
+              <button class="ui button" v-on:click.prevent="loadPreset('fade')">fade</button>
+              <button class="ui button" v-on:click.prevent="loadPreset('slideleft')">slideleft</button>
+              <button class="ui button" v-on:click.prevent="loadPreset('slideright')">slideright</button>
+              <button class="ui button" v-on:click.prevent="loadPreset('slideup')">slideup</button>
+              <button class="ui button" v-on:click.prevent="loadPreset('slideup_textdelay')">slideup textdelay</button>
             </div>
           </div>
-          <div class="col" style="margin-top:20px;">
-            <button class="ui inverted labeled icon button" v-bind:class="[animation.type == 'custom' ? 'primary' : 'secondary']" v-on:click.prevent="setAnimation('custom')">
-              <i class="random icon"></i>
-              custom
-            </button>
+        </div>
+
+        <div v-if="animation.type == 'structured'" class="row" style="margin-top: 40px;">
+          <!-- SHOW TIMELINE -->
+          <div class="col">
+            <h3 class="ui header inverted"><i class="eye icon"></i> Anzeigen (Fade In)</h3>
+            <div class="ui segment inverted timeline-container">
+              <div v-for="(step, index) in animation.show" :key="'show'+index" class="animation-step-card inverted">
+                <div class="card-header">
+                  <span class="step-num">{{index + 1}}</span>
+                  <span class="step-title">{{ getFriendlyName(step.selector) }}</span>
+                  <i class="trash alternate outline red icon delete-btn" @click.stop="removeAnimationStep('show', index)"></i>
+                </div>
+                <div class="card-body">
+                  <div class="info-line"><i class="clock outline icon"></i> {{step.duration}}ms</div>
+                  <div class="effects-line">
+                    <i class="eye icon" v-if="step.properties.opacity !== undefined" title="Deckkraft"></i>
+                    <i class="arrows alternate icon" v-if="getMotionXType(step) !== 'none' || getMotionYType(step) !== 'none'" title="Bewegung"></i>
+                    <i class="expand icon" v-if="step.properties.scale !== undefined" title="Größe"></i>
+                    <i class="tint icon" v-if="step.properties.backgroundColor !== undefined || step.properties.color !== undefined" title="Farbe"></i>
+                    <i class="square outline icon" v-if="step.properties.borderRadius !== undefined || step.properties.borderWidth !== undefined" title="Ecken & Rahmen"></i>
+                    <i class="font icon" v-if="step.properties.fontSize !== undefined" title="Text"></i>
+                  </div>
+                </div>
+                <button class="ui mini fluid blue inverted button" @click="openStepEditor('show', index)"><i class="edit icon"></i> Edit</button>
+              </div>
+              <button class="ui circular icon green inverted big button add-step-btn" @click="addAnimationStep('show')"><i class="plus icon"></i></button>
+            </div>
+
+            <h3 class="ui header inverted" style="margin-top: 40px;"><i class="eye slash icon"></i> Ausblenden (Fade Out)</h3>
+            <div class="ui segment inverted timeline-container">
+              <div v-for="(step, index) in animation.hide" :key="'hide'+index" class="animation-step-card inverted">
+                <div class="card-header">
+                  <span class="step-num">{{index + 1}}</span>
+                  <span class="step-title">{{ getFriendlyName(step.selector) }}</span>
+                  <i class="trash alternate outline red icon delete-btn" @click.stop="removeAnimationStep('hide', index)"></i>
+                </div>
+                <div class="card-body">
+                  <div class="info-line"><i class="clock outline icon"></i> {{step.duration}}ms</div>
+                  <div class="effects-line">
+                    <i class="eye icon" v-if="step.properties.opacity !== undefined" title="Deckkraft"></i>
+                    <i class="arrows alternate icon" v-if="getMotionXType(step) !== 'none' || getMotionYType(step) !== 'none'" title="Bewegung"></i>
+                    <i class="expand icon" v-if="step.properties.scale !== undefined" title="Größe"></i>
+                    <i class="tint icon" v-if="step.properties.backgroundColor !== undefined || step.properties.color !== undefined" title="Farbe"></i>
+                    <i class="square outline icon" v-if="step.properties.borderRadius !== undefined || step.properties.borderWidth !== undefined" title="Ecken & Rahmen"></i>
+                    <i class="font icon" v-if="step.properties.fontSize !== undefined" title="Text"></i>
+                  </div>
+                </div>
+                <button class="ui mini fluid blue inverted button" @click="openStepEditor('hide', index)"><i class="edit icon"></i> Edit</button>
+              </div>
+              <button class="ui circular icon green inverted big button add-step-btn" @click="addAnimationStep('hide')"><i class="plus icon"></i></button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div v-if="animation.type == 'custom'" class="col" style="margin-top: 40px;">
-          <form class="ui form inverted" v-on:submit.prevent>
-            <h4 class="ui dividing header inverted">Custom Animation</h4>
-            <textarea v-model="animation.code" style="min-height: 80vh;"></textarea>  
-          </form>
+      <!-- STEP EDITOR MODAL -->
+      <div class="ui inverted modal" id="step-modal">
+        <div class="header inverted" style="background: #1b1c1d; border-bottom: 1px solid #333;">
+          <i class="magic icon"></i> Effekt bearbeiten: {{ editingStep ? getFriendlyName(editingStep.step.selector) : '' }}
         </div>
+        <div class="content inverted scrollable" style="background: #1b1c1d; max-height: 70vh; overflow-y: auto;">
+          <div v-if="editingStep" class="ui form inverted small">
+            
+            <div class="two fields">
+              <div class="field">
+                <label>Ziel-Element</label>
+                <select v-model="editingStep.step.selector" class="ui dropdown inverted selection">
+                  <option value=".bauchbinde-instance">Ganze Bauchbinde</option>
+                  <option value=".bb-box">Box</option>
+                  <option value=".text">Text-Bereich</option>
+                  <option value="h1">Name (H1)</option>
+                  <option value="h2">Titel (H2)</option>
+                </select>
+              </div>
+              <div v-if="editingStep.step.selector === 'h1' || editingStep.step.selector === 'h2'" class="field">
+                <label>Text-Aufteilung (Split)</label>
+                <select v-model="editingStep.step.split" class="ui dropdown inverted selection">
+                  <option :value="undefined">Ganze Zeile</option>
+                  <option value="chars">Buchstaben</option>
+                  <option value="words">Wörter</option>
+                </select>
+              </div>
+            </div>
 
-        <div class="col" style="margin-top: 40px;">
-          <form class="ui form inverted" v-on:submit.prevent>
-            <h4 class="ui dividing header inverted">Animationsparameter</h4>
-            <div class="fields">
-              <div class="four wide field inverted">
-                <label>Dauer (in Millisekunden)</label>
-                <div class="ui left icon input inverted">
-                  <input type="number" step="1" min="1" max="5000" name="fxduration" v-model="animation.duration" maxlength="4" placeholder="Dauer">
-                  <i class="hourglass end icon inverted"></i>
+            <div class="three fields">
+              <div class="field"><label>Dauer (ms)</label><input type="number" class="inverted" v-model="editingStep.step.duration"></div>
+              <div class="field"><label>Verzögerung (ms)</label><input type="number" class="inverted" v-model="editingStep.step.delay"></div>
+              <div class="field">
+                <label>Kurve</label>
+                <select v-model="editingStep.step.easing" class="ui dropdown inverted selection">
+                  <option value="linear">linear</option>
+                  <option value="easeInQuad">easeInQuad</option>
+                  <option value="easeOutQuad">easeOutQuad</option>
+                  <option value="easeInOutQuad">easeInOutQuad</option>
+                  <option value="easeInCirc">easeInCirc</option>
+                  <option value="easeOutCirc">easeOutCirc</option>
+                  <option value="easeInOutCirc">easeInOutCirc</option>
+                  <option value="easeInBack">easeInBack</option>
+                  <option value="easeOutBack">easeOutBack</option>
+                  <option value="easeOutBounce">easeOutBounce</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="ui accordion inverted structured-editor-acc" style="border: 1px solid #333; padding: 10px; border-radius: 4px;">
+              
+              <!-- VISIBILITY & SCALE -->
+              <div class="title active"><i class="dropdown icon"></i> Sichtbarkeit & Größe</div>
+              <div class="content active">
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.opacity !== undefined" @change="$event.target.checked ? editingStep.step.properties.opacity = (editingStep.phase==='show'?[0, getDesignValueForEditor(editingStep.step.selector, 'opacity')]:[getDesignValueForEditor(editingStep.step.selector, 'opacity'), 0]) : delete editingStep.step.properties.opacity"><label>Deckkraft</label></div></div>
+                <div v-if="editingStep.step.properties.opacity !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.opacity[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'opacity')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'opacity', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.opacity[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'opacity')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'opacity', $event.target.value)"></div>
+                </div>
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.scale !== undefined" @change="$event.target.checked ? editingStep.step.properties.scale = (editingStep.phase==='show'?[0, 1]:[1, 0]) : delete editingStep.step.properties.scale"><label>Größe (Scale)</label></div></div>
+                <div v-if="editingStep.step.properties.scale !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.scale[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'scale')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'scale', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="number" step="0.1" class="inverted" v-model="editingStep.step.properties.scale[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'scale')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'scale', $event.target.value)"></div>
                 </div>
               </div>
-              <div class="four wide field inverted">
-                <label>Bescheunigungskurve</label>
-                <div class="ui left icon input inverted">
-                  <select class="ui inverted dropdown" v-model="animation.easing">
-                    <option value="linear">linear</option>
-                    <option value="easeInQuad">easeInQuad</option>
-                    <option value="easeInCubic">easeInCubic</option>
-                    <option value="easeInQuart">easeInQuart</option>
-                    <option value="easeInQuint">easeInQuint</option>
-                    <option value="easeInSine">easeInSine</option>
-                    <option value="easeInExpo">easeInExpo</option>
-                    <option value="easeInCirc">easeInCirc</option>
-                    <option value="easeInBack">easeInBack</option>
-                    <option value="easeInBounce">easeInBounce</option>
-                    <option value="easeInOutQuad">easeInOutQuad</option>
-                    <option value="easeInOutCubic">easeInOutCubic</option>
-                    <option value="easeInOutQuart">easeInOutQuart</option>
-                    <option value="easeInOutQuint">easeInOutQuint</option>
-                    <option value="easeInOutSine">easeInOutSine</option>
-                    <option value="easeInOutExpo">easeInOutExpo</option>
-                    <option value="easeInOutCirc">easeInOutCirc (Standard)</option>
-                    <option value="easeInOutBack">easeInOutBack</option>
-                    <option value="easeInOutBounce">easeInOutBounce</option>
-                    <option value="easeOutQuad">easeOutQuad</option>
-                    <option value="easeOutCubic">easeOutCubic</option>
-                    <option value="easeOutQuart">easeOutQuart</option>
-                    <option value="easeOutQuint">easeOutQuint</option>
-                    <option value="easeOutSine">easeOutSine</option>
-                    <option value="easeOutExpo">easeOutExpo</option>
-                    <option value="easeOutCirc">easeOutCirc</option>
-                    <option value="easeOutBack">easeOutBack</option>
-                    <option value="easeOutBounce">easeOutBounce</option>
+
+              <!-- MOTION X & Y -->
+              <div class="title"><i class="dropdown icon"></i> Bewegung (X & Y)</div>
+              <div class="content">
+                <div class="field">
+                  <label>X-Achse</label>
+                  <select :value="getMotionXType(editingStep.step)" @change="setStepProperty(editingStep.step, 'motion_x_type', $event.target.value)" class="ui mini dropdown inverted selection">
+                    <option value="none">-- Keine --</option>
+                    <option value="translateX">Transform X (vw)</option>
+                    <option value="left">Position Links (vw)</option>
                   </select>
+                  <div v-if="getMotionXType(editingStep.step) !== 'none'" class="fields mini-fields inverted">
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionXType(editingStep.step)][0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionXType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionXType(editingStep.step), $event.target.value)"></div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionXType(editingStep.step)][1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionXType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionXType(editingStep.step), $event.target.value)"></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Y-Achse</label>
+                  <select :value="getMotionYType(editingStep.step)" @change="setStepProperty(editingStep.step, 'motion_y_type', $event.target.value)" class="ui mini dropdown inverted selection">
+                    <option value="none">-- Keine --</option>
+                    <option value="translateY">Transform Y (vh)</option>
+                    <option value="top">Position Oben (vh)</option>
+                  </select>
+                  <div v-if="getMotionYType(editingStep.step) !== 'none'" class="fields mini-fields inverted">
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionYType(editingStep.step)][0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionYType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionYType(editingStep.step), $event.target.value)"></div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties[getMotionYType(editingStep.step)][1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, getMotionYType(editingStep.step))" @input="updateDesignValueFromAnimation(editingStep.step.selector, getMotionYType(editingStep.step), $event.target.value)"></div>
+                  </div>
+                </div>
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.rotate !== undefined" @change="$event.target.checked ? editingStep.step.properties.rotate = [-45, 0] : delete editingStep.step.properties.rotate"><label>Rotation</label></div></div>
+                <div v-if="editingStep.step.properties.rotate !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="number" class="inverted" v-model="editingStep.step.properties.rotate[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'rotate')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'rotate', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="number" class="inverted" v-model="editingStep.step.properties.rotate[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'rotate')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'rotate', $event.target.value)"></div>
                 </div>
               </div>
+
+              <!-- SPACING (MARGIN/PADDING) -->
+              <div class="title"><i class="dropdown icon"></i> Abstände (Margin & Padding)</div>
+              <div class="content">
+                <div v-for="prop in ['marginTop','marginRight','marginBottom','marginLeft','paddingTop','paddingRight','paddingBottom','paddingLeft']" :key="prop" style="margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                  <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties[prop] !== undefined" @change="$event.target.checked ? editingStep.step.properties[prop] = ['0px', getDesignValueForEditor(editingStep.step.selector, prop)] : delete editingStep.step.properties[prop]"><label>{{prop}}</label></div></div>
+                  <div v-if="editingStep.step.properties[prop] !== undefined" class="fields mini-fields inverted">
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties[prop][0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, prop)" @input="updateDesignValueFromAnimation(editingStep.step.selector, prop, $event.target.value)"></div>
+                    <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties[prop][1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, prop)" @input="updateDesignValueFromAnimation(editingStep.step.selector, prop, $event.target.value)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- COLORS & BORDERS (DIV ONLY) -->
+              <div v-if="!['h1','h2'].includes(editingStep.step.selector)" class="title"><i class="dropdown icon"></i> Farben & Rahmen (Box)</div>
+              <div v-if="!['h1','h2'].includes(editingStep.step.selector)" class="content">
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.backgroundColor !== undefined" @change="$event.target.checked ? editingStep.step.properties.backgroundColor = ['#ffffff', getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')] : delete editingStep.step.properties.backgroundColor"><label>Hintergrundfarbe</label></div></div>
+                <div v-if="editingStep.step.properties.backgroundColor !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.backgroundColor[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'backgroundColor', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.backgroundColor[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'backgroundColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'backgroundColor', $event.target.value)"></div>
+                </div>
+                
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.borderColor !== undefined" @change="$event.target.checked ? editingStep.step.properties.borderColor = ['#ffffff', getDesignValueForEditor(editingStep.step.selector, 'borderColor')] : delete editingStep.step.properties.borderColor"><label>Rahmenfarbe</label></div></div>
+                <div v-if="editingStep.step.properties.borderColor !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.borderColor[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderColor', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.borderColor[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderColor')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderColor', $event.target.value)"></div>
+                </div>
+
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.borderWidth !== undefined" @change="$event.target.checked ? editingStep.step.properties.borderWidth = ['0px', getDesignValueForEditor(editingStep.step.selector, 'borderWidth')] : delete editingStep.step.properties.borderWidth"><label>Rahmendicke</label></div></div>
+                <div v-if="editingStep.step.properties.borderWidth !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.borderWidth[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderWidth')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderWidth', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.borderWidth[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'borderWidth')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'borderWidth', $event.target.value)"></div>
+                </div>
+
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" v-model="editingStep.step.lineDraw"><label>Border als Linie zeichnen</label></div></div>
+              </div>
+
+              <!-- TEXT STIL (H1/H2 ONLY) -->
+              <div v-if="['h1','h2'].includes(editingStep.step.selector)" class="title"><i class="dropdown icon"></i> Text-Stil & Farbe</div>
+              <div v-if="['h1','h2'].includes(editingStep.step.selector)" class="content">
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.color !== undefined" @change="$event.target.checked ? editingStep.step.properties.color = ['#ffffff', getDesignValueForEditor(editingStep.step.selector, 'color')] : delete editingStep.step.properties.color"><label>Schriftfarbe</label></div></div>
+                <div v-if="editingStep.step.properties.color !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.color[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'color')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'color', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.color[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'color')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'color', $event.target.value)"></div>
+                </div>
+
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.fontSize !== undefined" @change="$event.target.checked ? editingStep.step.properties.fontSize = ['1vh', getDesignValueForEditor(editingStep.step.selector, 'fontSize')] : delete editingStep.step.properties.fontSize"><label>Textgröße</label></div></div>
+                <div v-if="editingStep.step.properties.fontSize !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.fontSize[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'fontSize')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'fontSize', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.fontSize[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'fontSize')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'fontSize', $event.target.value)"></div>
+                </div>
+
+                <div class="inline field"><div class="ui checkbox inverted tiny"><input type="checkbox" :checked="editingStep.step.properties.width !== undefined" @change="$event.target.checked ? editingStep.step.properties.width = ['0vw', getDesignValueForEditor(editingStep.step.selector, 'width')] : delete editingStep.step.properties.width"><label>Textbreite</label></div></div>
+                <div v-if="editingStep.step.properties.width !== undefined" class="fields mini-fields inverted">
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'hide'}"><label>{{editingStep.phase==='show'?'Start':'Design'}}</label><input v-if="editingStep.phase==='show'" type="text" class="inverted" v-model="editingStep.step.properties.width[0]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'width')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'width', $event.target.value)"></div>
+                  <div class="field" :class="{'design-state-field': editingStep.phase === 'show'}"><label>{{editingStep.phase==='hide'?'Ziel':'Design'}}</label><input v-if="editingStep.phase==='hide'" type="text" class="inverted" v-model="editingStep.step.properties.width[1]"><input v-else type="text" class="inverted" :value="getDesignValueForEditor(editingStep.step.selector, 'width')" @input="updateDesignValueFromAnimation(editingStep.step.selector, 'width', $event.target.value)"></div>
+                </div>
+              </div>
+
             </div>
-          </form>
+          </div>
+        </div>
+        <div class="actions inverted" style="background: #1b1c1d; border-top: 1px solid #333;">
+          <div class="ui positive fluid button">Fertig</div>
         </div>
       </div>
 
@@ -406,14 +564,24 @@
             speichern
           </button>
       
-          <button class="ui floated labeled icon inverted teal button" v-on:click="openWinKey">
-            <i class="window maximize outline icon"></i>
-            key
-          </button>
-          <button class="ui floated labeled icon inverted teal button" v-on:click="openWinFill">
-            <i class="window maximize outline icon"></i>
-            fill
-          </button>
+          <div class="ui floated buttons">
+            <button class="ui labeled icon inverted teal button" v-on:click="openWinKey">
+              <i class="window maximize outline icon"></i>
+              key
+            </button>
+            <button class="ui icon inverted teal button" title="Fullscreen Key" v-on:click="toggleFullscreenKey">
+              <i class="expand arrows alternate icon"></i>
+            </button>
+          </div>
+          <div class="ui floated buttons" style="margin-left: 10px;">
+            <button class="ui labeled icon inverted teal button" v-on:click="openWinFill">
+              <i class="window maximize outline icon"></i>
+              fill
+            </button>
+            <button class="ui icon inverted teal button" title="Fullscreen Fill" v-on:click="toggleFullscreenFill">
+              <i class="expand arrows alternate icon"></i>
+            </button>
+          </div>
           <div style="clear:both; height: 30px;"></div>
         </div>
       </div>
