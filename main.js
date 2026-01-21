@@ -85,7 +85,10 @@ expressapp.get('/v1/list', function(req, res) {
     name: item.name,
     title: item.title
   })) : [];
-  res.json(list);
+  res.json({
+    activeId: activeLowerThirdId,
+    list: list
+  });
 });
 
 expressapp.post('/v1/show/:id', function(req, res) {
@@ -101,11 +104,14 @@ expressapp.post('/v1/hide', function(req, res) {
 
 io.on('connection', (socket) => {
     console.log('a user connected');
+    socket.emit('status-update', { activeId: activeLowerThirdId });
     socket.on('request-state', () => {
       socket.emit('update-css', lastDesign);
       socket.emit('update-js', lastAnimation);
+      socket.emit('status-update', { activeId: activeLowerThirdId });
     });
 });
+
 
 http.listen(expressapp.get('port'), function() {
     console.log('[express.js] listening on *:' + expressapp.get('port'));
@@ -122,6 +128,7 @@ let lastDesign = {
   customcss: ''
 };
 let lastAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
+let activeLowerThirdId = null;
 
 function createWindow () {
   const width = isDev ? 1400 : 800;
@@ -252,15 +259,21 @@ function showLowerThirdByID(arg) {
   let id = Number.parseInt(arg)
   console.log('show lowerthird by id', arg)
   if(id >= 1 && data && data.length >= id) {
+    activeLowerThirdId = id;
     var arg = data[id-1]
     showLowerThird(arg)
+    io.emit('status-update', { activeId: activeLowerThirdId });
+    sendToWindows('status-update', { activeId: activeLowerThirdId });
   }
 }
 
 function hideLowerThird() {
+  activeLowerThirdId = null;
   var arg = null;
   sendToWindows('hide-lowerthird', arg)
   io.emit('hide-lowerthird', arg)
+  io.emit('status-update', { activeId: activeLowerThirdId });
+  sendToWindows('status-update', { activeId: activeLowerThirdId });
   console.log('hide lowerthird', arg)
 }
 

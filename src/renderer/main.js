@@ -704,6 +704,17 @@ ${selector} {
             if (!design.unifiedCss) design.unifiedCss = buildCss();
             ipc.send('update-css', JSON.parse(JSON.stringify(design)));
             ipc.send('update-js', JSON.parse(JSON.stringify(animation)));
+            
+            // Listen for status updates from server
+            ipc.on('status-update', (event, arg) => {
+                if (arg && arg.activeId !== undefined) {
+                    active.value = arg.activeId !== null ? (arg.activeId - 1) : -1;
+                }
+            });
+            
+            // Request initial state
+            ipc.send('request-state');
+
             $('.menu .item').tab();
             $('#entry-modal').modal();
             $('#conflict-modal').modal({ closable: false });

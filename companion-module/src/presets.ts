@@ -29,7 +29,18 @@ export function GetPresets(): CompanionPresetDefinitions {
 					up: [],
 				},
 			],
-			feedbacks: [],
+			feedbacks: [
+				{
+					feedbackId: 'active_lower_third',
+					options: {
+						id: i,
+					},
+					style: {
+						bgcolor: 0x00aa00, // Green
+						color: 16777215,
+					},
+				},
+			],
 		}
 	}
 
@@ -42,7 +53,7 @@ export function GetPresets(): CompanionPresetDefinitions {
 			text: 'HIDE',
 			size: '18',
 			color: 16777215,
-			bgcolor: 12582912, // Red
+			bgcolor: 0, // Black/Neutral
 		},
 		steps: [
 			{
@@ -55,7 +66,16 @@ export function GetPresets(): CompanionPresetDefinitions {
 				up: [],
 			},
 		],
-		feedbacks: [],
+		feedbacks: [
+			{
+				feedbackId: 'hide_active',
+				options: {},
+				style: {
+					bgcolor: 12582912, // Red
+					color: 16777215,
+				},
+			},
+		],
 	}
 
 	return presets
