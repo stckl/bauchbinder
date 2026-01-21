@@ -1,0 +1,78 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Frontend
+        run: npm run build
+
+      - name: Build macOS App
+        run: npm run pack-macarm
+
+      - name: Zip Application
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          cd release-builds
+          zip -r bauchbinder-darwin-arm64-${VERSION}.zip bauchbinder-darwin-arm64
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-builds/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Frontend
+        run: npm run build
+
+      - name: Build Windows App
+        run: npm run pack-win
+
+      - name: Zip Application
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF -replace "refs/tags/", ""
+          $src = "release-builds/bauchbinder-win32-x64"
+          $dest = "release-builds/bauchbinder-win32-x64-$version.zip"
+          Compress-Archive -Path $src -DestinationPath $dest
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-builds/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -115,7 +115,12 @@ let lastAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
 
 function createWindow () {
   const width = isDev ? 1400 : 800;
-  win = new BrowserWindow({width: width, height: 680, webPreferences: { nodeIntegration: true, contextIsolation: false }})
+  win = new BrowserWindow({
+    width: width, 
+    height: 680, 
+    icon: path.join(__dirname, 'assets/icons/1024x1024.png'),
+    webPreferences: { nodeIntegration: true, contextIsolation: false }
+  })
   require("@electron/remote/main").enable(win.webContents)
 
   if (isDev) {
@@ -153,7 +158,12 @@ function createWindow () {
 function createKeyWin() {
   console.log("create key window");
   if(!winKey) {
-    winKey = new BrowserWindow({width: 800, height: 630, webPreferences: { nodeIntegration: true, contextIsolation: false }})
+    winKey = new BrowserWindow({
+      width: 800, 
+      height: 630, 
+      icon: path.join(__dirname, 'assets/icons/1024x1024.png'),
+      webPreferences: { nodeIntegration: true, contextIsolation: false }
+    })
     require("@electron/remote/main").enable(winKey.webContents)
 
     if (isDev) {
@@ -183,7 +193,12 @@ function createKeyWin() {
 function createFillWin() {
   console.log("create fill window");
   if(!winFill) {
-    winFill = new BrowserWindow({width: 800, height: 630, webPreferences: { nodeIntegration: true, contextIsolation: false }})
+    winFill = new BrowserWindow({
+      width: 800, 
+      height: 630, 
+      icon: path.join(__dirname, 'assets/icons/1024x1024.png'),
+      webPreferences: { nodeIntegration: true, contextIsolation: false }
+    })
     require("@electron/remote/main").enable(winFill.webContents)
 
     if (isDev) {
