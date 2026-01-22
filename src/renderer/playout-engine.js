@@ -230,12 +230,19 @@ function applyLocalStyles(el, s) {
         left: s.x + 'vw',
         bottom: s.y + 'vh',
         top: 'auto',
-        width: '100%',
-        display: 'flex',
-        justifyContent: s.justifyContent || 'center',
+        width: 'auto', // Default to auto width for individual styling
         margin: 0,
         textAlign: 'left' // Reset global text align
+
     });
+    // Apply horizontal positioning for the main container
+    if (s.position === 'center') {
+        el.css({ left: '50%', transform: `translateX(-50%)` });
+    } else if (s.position === 'right') {
+        el.css({ left: 'auto', right: s.x + 'vw' });
+    } else { // left
+        el.css({ left: s.x + 'vw', right: 'auto' });
+    }
 
     const box = el.find('.bauchbinde-box');
     box.css({
@@ -246,7 +253,8 @@ function applyLocalStyles(el, s) {
         flexDirection: 'column',
         justifyContent: s.justifyContent || 'center',
         alignItems: s.alignItems || 'center',
-        padding: (s.padding || 2) + 'vh'
+        padding: (s.padding || 2) + 'vh',
+        textAlign: s.textalign || 'center'
     });
 
     const h1 = el.find('h1');

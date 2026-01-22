@@ -58,6 +58,25 @@
 
         <div class="two fields" style="margin-top: 15px;">
           <div class="field">
+            <label>Horizontale Position</label>
+            <select class="ui inverted dropdown fluid" v-model="entry.localStyle.position">
+              <option value="left">Links</option>
+              <option value="center">Mitte</option>
+              <option value="right">Rechts</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Text Ausrichtung</label>
+            <select class="ui inverted dropdown fluid" v-model="entry.localStyle.textalign">
+              <option value="left">Links</option>
+              <option value="center">Mitte</option>
+              <option value="right">Rechts</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="two fields" style="margin-top: 15px;">
+          <div class="field">
             <label>Inhalt Ausrichtung (Horizontal)</label>
             <select class="ui inverted dropdown fluid" v-model="entry.localStyle.justifyContent">
               <option value="flex-start">Links</option>
@@ -190,9 +209,11 @@ const allFonts = computed(() => {
 });
 
 const createDefaultLocalStyle = (globalDesign = null) => ({
-    x: 20, y: 25, minWidth: 60, minHeight: 0, padding: 2,
+    x: 0, y: 25, minWidth: 60, minHeight: 0, padding: 2,
     yInverted: true, // Marker for new coordinate system
-    justifyContent: 'center', alignItems: 'center',
+    position: 'center', // horizontal positioning of the box itself
+    textalign: 'center', // text alignment inside the box
+    justifyContent: 'center', alignItems: 'center', // flex container alignment
     bgColor: 'rgba(0,0,0,0.7)',
     h1: { 
         fontfamily: globalDesign?.h1?.fontfamily || 'Helvetica, sans-serif', 
