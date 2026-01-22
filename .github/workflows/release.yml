@@ -26,7 +26,24 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
+      - name: Import Certificate
+        if: env.MACOS_CERTIFICATE != ''
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+
       - name: Build macOS App
+        env:
+          CSC_LINK: ${{ secrets.MACOS_CERTIFICATE != '' && 'certificate.p12' || '' }}
+          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: npm run pack-macarm
 
       - name: Upload Release Asset
@@ -35,10 +52,9 @@ jobs:
           files: release-builds/*.zip
           body: |
             ## Updates in this version
-            - **Custom Animations:** Full support for Anime.js 4.x structured animations.
-            - **UI/UX Improvements:** Refactored to Vue 3 components for better performance.
-            - **Native ARM Support:** Explicit builds for Apple Silicon (now via electron-builder).
-            - **Stability:** Fixed migration bugs from v3 files.
+            - **Self-Signed Code Signing:** macOS apps are now signed to prevent "damaged app" errors.
+            - **Custom Animations:** Full support for Anime.js 4.x.
+            - **Improved Stability:** Multi-window architecture fixes jQuery conflicts.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -70,9 +86,7 @@ jobs:
             release-builds/*.exe
           body: |
             ## Updates in this version
-            - **Custom Animations:** Full support for Anime.js 4.x structured animations.
-            - **UI/UX Improvements:** Refactored to Vue 3 components for better performance.
-            - **Native ARM Support:** Explicit builds for Apple Silicon (now via electron-builder).
-            - **Stability:** Fixed migration bugs from v3 files.
+            - **Custom Animations:** Full support for Anime.js 4.x.
+            - **Improved Stability:** Multi-window architecture fixes jQuery conflicts.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
