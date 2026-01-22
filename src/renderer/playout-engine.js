@@ -238,7 +238,7 @@ function applyLocalStyles(el, s) {
         background: transformColor(s.bgColor),
         minWidth: s.minWidth + 'vw',
         minHeight: s.minHeight + 'vh',
-        display: 'flex',
+        display: 'inline-flex',
         flexDirection: 'column',
         justifyContent: s.justifyContent || 'center',
         alignItems: s.alignItems || 'center',
