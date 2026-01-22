@@ -11,8 +11,6 @@ permissions:
 jobs:
   build-mac:
     runs-on: macos-latest
-    env:
-      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,22 +26,12 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
-      - name: Import Certificate
-        if: env.MACOS_CERTIFICATE != ''
-        run: |
-          printf "%s" "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
-          security create-keychain -p "" build.keychain
-          security import certificate.p12 -k build.keychain -P "" -T /usr/bin/codesign
-          security list-keychains -s build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "" build.keychain
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
-
       - name: Build and Publish macOS App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ env.MACOS_CERTIFICATE != '' && 'certificate.p12' || '' }}
-          CSC_KEY_PASSWORD: ""
+          # electron-builder automatically handles base64 in CSC_LINK
+          CSC_LINK: ${{ secrets.MACOS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: npm run pack-macarm
 
   build-win:
