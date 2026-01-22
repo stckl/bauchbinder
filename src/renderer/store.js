@@ -14,6 +14,14 @@ export const state = reactive({
             flexAlign: 'center', flexJustify: 'center', flexGap: 2, imageHeight: true, imageManualHeight: 10,
             _overrides: {} 
         },
+        container: {
+            left: { enabled: true, value: 0 },
+            right: { enabled: true, value: 0 },
+            top: { enabled: false, value: 0 },
+            bottom: { enabled: true, value: 0 },
+            width: { enabled: false, value: 100 },
+            height: { enabled: false, value: 10 }
+        },
         layoutOrder: [
             { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
             { id: '.image', name: 'Bild (Bauchbinde)', alignSelf: 'auto' },

@@ -3,6 +3,36 @@
     <div class="col">
       <h2>style</h2>
       <form class="ui form inverted" v-on:submit.prevent>
+        <h4 class="ui dividing header inverted">Positionierung (Container)</h4>
+        <div class="ui doubling six column grid">
+          <div v-for="prop in ['left', 'right', 'width']" :key="prop" class="column field">
+            <label>{{ prop.charAt(0).toUpperCase() + prop.slice(1) }} (vw)</label>
+            <div class="ui right labeled input left icon fluid inverted" :class="{ disabled: !state.design.container[prop].enabled && getEnabledCount('horizontal') >= 2 }">
+              <i class="arrows alternate horizontal icon"></i>
+              <input type="number" step="0.1" v-model="state.design.container[prop].value" :disabled="!state.design.container[prop].enabled">
+              <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
+                <div class="ui checkbox inverted" style="margin: 0;">
+                  <input type="checkbox" v-model="state.design.container[prop].enabled" :disabled="!state.design.container[prop].enabled && getEnabledCount('horizontal') >= 2">
+                  <label></label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-for="prop in ['top', 'bottom', 'height']" :key="prop" class="column field">
+            <label>{{ prop.charAt(0).toUpperCase() + prop.slice(1) }} (vh)</label>
+            <div class="ui right labeled input left icon fluid inverted" :class="{ disabled: !state.design.container[prop].enabled && getEnabledCount('vertical') >= 2 }">
+              <i class="arrows alternate vertical icon"></i>
+              <input type="number" step="0.1" v-model="state.design.container[prop].value" :disabled="!state.design.container[prop].enabled">
+              <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
+                <div class="ui checkbox inverted" style="margin: 0;">
+                  <input type="checkbox" v-model="state.design.container[prop].enabled" :disabled="!state.design.container[prop].enabled && getEnabledCount('vertical') >= 2">
+                  <label></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <h4 class="ui dividing header inverted">Bauchbinde</h4>
         <div class="ui doubling four column grid">
           <div class="column field">
@@ -472,6 +502,12 @@ const handleLogoDrop = (e) => {
     }
 };
 
+const getEnabledCount = (axis) => {
+    if (!state.design.container) return 0;
+    const props = axis === 'horizontal' ? ['left', 'right', 'width'] : ['top', 'bottom', 'height'];
+    return props.filter(p => state.design.container[p].enabled).length;
+};
+
 // CSS Generation Logic
 const buildCss = () => {
   const line = (obj, key, prop, val) => {
@@ -480,7 +516,17 @@ const buildCss = () => {
   };
 
   let css = ".bauchbinde {\n";
-  css += line(state.design.white, 'bottom', 'bottom', (state.design.white.bottom || 0) + "vh");
+  if (state.design.container) {
+      const c = state.design.container;
+      ['left', 'right', 'width'].forEach(p => {
+          if (c[p].enabled) css += `  ${p}: ${c[p].value}vw;\n`;
+      });
+      ['top', 'bottom', 'height'].forEach(p => {
+          if (c[p].enabled) css += `  ${p}: ${c[p].value}vh;\n`;
+      });
+  } else {
+      css += line(state.design.white, 'bottom', 'bottom', (state.design.white.bottom || 0) + "vh");
+  }
   css += "  display: flex;\n";
   css += `  justify-content: ${["flex-start", "center", "flex-end"][state.design.white.divalign || 0]};\n`;
   css += "}\n\n";
@@ -574,8 +620,21 @@ const parseCssToProperties = (css) => {
         return match ? match[1].trim().replace(/['"]/g, '') : null;
     };
 
+    if (state.design.container) {
+        ['left', 'right', 'width'].forEach(p => {
+            const v = extractValue('.bauchbinde', p);
+            if (v) { state.design.container[p].value = parseFloat(v); state.design.container[p].enabled = true; }
+            else { state.design.container[p].enabled = false; }
+        });
+        ['top', 'bottom', 'height'].forEach(p => {
+            const v = extractValue('.bauchbinde', p);
+            if (v) { state.design.container[p].value = parseFloat(v); state.design.container[p].enabled = true; }
+            else { state.design.container[p].enabled = false; }
+        });
+    }
+
     const bottom = extractValue('.bauchbinde', 'bottom');
-    if (bottom) state.design.white.bottom = parseFloat(bottom);
+    if (bottom && !state.design.container) state.design.white.bottom = parseFloat(bottom);
     const justify = extractValue('.bauchbinde', 'justify-content');
     if (justify) state.design.white.divalign = ['flex-start', 'center', 'flex-end'].indexOf(justify);
 
@@ -804,7 +863,7 @@ const syncToMain = () => {
 
 // Watch GUI changes -> Rebuild CSS
 watch(() => [
-    state.design.white, state.design.h1, state.design.h2, 
+    state.design.white, state.design.container, state.design.h1, state.design.h2, 
     state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle,
     state.design.logo, state.design.logoStyle.marginLeft, state.design.logoStyle.marginRight,
     state.design.imageStyle.marginLeft, state.design.imageStyle.marginRight

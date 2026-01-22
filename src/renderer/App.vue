@@ -134,7 +134,19 @@ const openFile = () => {
                         .replace(/display:\s*block/g, 'display: flex');
                 }
                 if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
-                if (ld.design) Object.assign(state.design, ld.design);
+                if (ld.design) {
+                    if (!ld.design.container) {
+                        ld.design.container = {
+                            left: { enabled: true, value: 0 },
+                            right: { enabled: true, value: 0 },
+                            top: { enabled: false, value: 0 },
+                            bottom: { enabled: true, value: ld.design.white?.bottom || 0 },
+                            width: { enabled: false, value: 100 },
+                            height: { enabled: false, value: 10 }
+                        };
+                    }
+                    Object.assign(state.design, ld.design);
+                }
                 if (ld.animation) Object.assign(state.animation, ld.animation);
                 
                 ipc.send('update-data', JSON.parse(JSON.stringify(state.lowerthirds)));
