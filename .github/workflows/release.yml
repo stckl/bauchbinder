@@ -29,9 +29,8 @@ jobs:
       - name: Build and Publish macOS App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # electron-builder automatically handles base64 in CSC_LINK
           CSC_LINK: ${{ secrets.MACOS_CERTIFICATE }}
-          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          CSC_KEY_PASSWORD: "bauchbinder"
         run: npm run pack-macarm
 
   build-win:
