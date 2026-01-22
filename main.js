@@ -13,6 +13,7 @@ const fs = require('fs');
 const { dialog } = require('electron')
 const winston = require('winston');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const Store = require('electron-store');
 
 const logger = winston.createLogger({
   level: 'info',
@@ -26,18 +27,28 @@ const logger = winston.createLogger({
   ]
 });
 
+const store = new Store();
+
 let win, winKey, winFill, winEditor, winStep;
-let data = [{ name: 'Max Mustermann', title: 'Beispiel-Titel für Bauchbinde', image: null }];
+let data = store.get('data', [{ name: 'Max Mustermann', title: 'Beispiel-Titel für Bauchbinde', image: null }]);
 let activeLowerThirdId = null;
 let activeLowerThirdData = null;
 
-let lastDesign = {
+let lastDesign = store.get('lastDesign', {
   white: { 
     width: 10, left: 5, bottom: 7, height: 1, fixedWidth: false, fixedHeight: false,
     color: 'rgba(255,255,255,0.8)', 
     paddingh: 5, paddingv: 2.6, borderradius: 0, 
     divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible',
     flexAlign: 'center', flexJustify: 'center', flexGap: 2, imageHeight: true, imageManualHeight: 10
+  },
+  container: {
+    left: { enabled: false, value: 0 },
+    right: { enabled: false, value: 0 },
+    top: { enabled: false, value: 0 },
+    bottom: { enabled: true, value: 0 },
+    width: { enabled: false, value: 100 },
+    height: { enabled: false, value: 0 }
   },
   layoutOrder: [
     { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
@@ -50,16 +61,16 @@ let lastDesign = {
   h2: { fontfamily: 'Helvetica, Arial, sans-serif', fontsize: 3.7, italic: false, color: '#000000' },
   unifiedCss: '',
   logo: null
-};
+});
 
-let lastAnimation = { 
+let lastAnimation = store.get('lastAnimation', { 
   type: 'structured', 
   duration: 750, 
   easing: 'easeInOutCirc', 
   code: '',
-  show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-  hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
-};
+  show: [{ selector: '.bauchbinde-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+  hide: [{ selector: '.bauchbinde-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+});
 
 expressapp.set('port', process.env.PORT || 5001);
 
@@ -283,16 +294,19 @@ ipc.on('request-state', (event) => {
 
 ipc.on('update-data', (event, arg) => {
   data = arg;
+  store.set('data', data);
 });
 
 ipc.on('update-css', (event, arg) => {
   lastDesign = arg;
+  store.set('lastDesign', lastDesign);
   sendToWindows('update-css', arg);
   io.emit('update-css', arg);
 });
 
 ipc.on('update-js', (event, arg) => {
   lastAnimation = arg;
+  store.set('lastAnimation', lastAnimation);
   sendToWindows('update-js', arg);
   io.emit('update-js', arg);
 });

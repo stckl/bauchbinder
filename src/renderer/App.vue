@@ -143,7 +143,7 @@ const openFile = () => {
                             left: { enabled: false, value: 0 },
                             right: { enabled: false, value: 0 },
                             top: { enabled: false, value: 0 },
-                            bottom: { enabled: true, value: ld.design.white?.bottom || 0 }, // Preserve old bottom value
+                            bottom: { enabled: false, value: ld.design.white?.bottom || 0 }, // Preserve old bottom value, but disable by default
                             width: { enabled: false, value: 100 },
                             height: { enabled: false, value: 0 }
                         };
