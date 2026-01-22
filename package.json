@@ -10,9 +10,9 @@
     "preview": "vite preview",
     "start": "electron .",
     "generate-icons": "electron-icon-builder --input=assets/Bauchbinder_icon.png --output=assets --flatten",
-    "build-companion": "cd companion-module && npm install && npm run build && cd .. && bestzip public/downloads/bauchbinder-companion.zip companion-module/package.json companion-module/dist/",
-    "pack-win": "electron-builder build --windows --x64 --publish always",
-    "pack-macarm": "electron-builder build --macos --arm64 --publish always"
+    "build-companion": "cd companion-module && npm install && npm run package && cd .. && cp companion-module/*.tgz public/downloads/bauchbinder.tgz",
+    "pack-win": "npm run build-companion && npm run build && electron-builder build --windows --x64 --publish always",
+    "pack-macarm": "npm run build-companion && npm run build && electron-builder build --macos --arm64 --publish always"
   },
   "build": {
     "appId": "de.mstockle.bauchbinder",

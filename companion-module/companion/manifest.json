@@ -1,0 +1,26 @@
+{
+	"id": "bauchbinder",
+	"name": "Bauchbinder",
+	"shortname": "bauchbind",
+	"description": "Control Bauchbinder Lower Thirds Software",
+	"version": "0.0.0",
+	"license": "Unlicense",
+	"repository": "git+https://github.com/stckl/bauchbinder.git",
+	"bugs": "https://github.com/stckl/bauchbinder/issues",
+	"maintainers": [
+		{
+			"name": "Michael Stöckle",
+			"email": "info@bauchbinder.de"
+		}
+	],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../src/main.js"
+	},
+	"legacyIds": [],
+	"manufacturer": "Michael Stöckle",
+	"products": ["Bauchbinder"],
+	"keywords": ["lower-thirds", "graphics", "broadcast"]
+}
