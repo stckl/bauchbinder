@@ -234,9 +234,9 @@
             <p style="margin-top: 10px; color: #888;">Bild hierher ziehen oder klicken</p>
             <input type="file" ref="logoInput" style="display: none" accept="image/*" @change="handleLogoDrop({ dataTransfer: { files: $event.target.files } })">
           </div>
-          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px; min-height: 150px; display: flex; align-items: center; justify-content: center;">
-             <img :src="state.design.logo" style="max-height: 130px; max-width: 100%; object-fit: contain; display: block; margin: 0 auto;">
-             <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px;" @click="removeLogo"><i class="trash icon"></i></div>
+          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 0; min-height: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+             <img :src="state.design.logo" style="height: 150px; width: 100%; object-fit: contain; display: block; margin: 0 auto;">
+             <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px; z-index: 10;" @click="removeLogo"><i class="trash icon"></i></div>
           </div>
         </div>
 
