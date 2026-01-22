@@ -227,8 +227,8 @@ function applyLocalStyles(el, s) {
     el.css({
         position: 'absolute',
         left: s.x + 'vw',
-        top: s.y + 'vh',
-        bottom: 'auto',
+        bottom: s.y + 'vh',
+        top: 'auto',
         margin: 0,
         textAlign: 'left' // Reset global text align
     });

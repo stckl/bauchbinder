@@ -190,7 +190,8 @@ const allFonts = computed(() => {
 });
 
 const createDefaultLocalStyle = (globalDesign = null) => ({
-    x: 20, y: 75, minWidth: 60, minHeight: 0, padding: 2,
+    x: 20, y: 25, minWidth: 60, minHeight: 0, padding: 2,
+    yInverted: true, // Marker for new coordinate system
     justifyContent: 'center', alignItems: 'center',
     bgColor: 'rgba(0,0,0,0.7)',
     h1: { 
@@ -223,7 +224,15 @@ onMounted(() => {
                 delete entry.value.hideGlobalLogo;
             }
             if (entry.value.showGlobalLogo === undefined) entry.value.showGlobalLogo = true;
-            if (!entry.value.localStyle) entry.value.localStyle = createDefaultLocalStyle(arg.globalDesign);
+            
+            if (!entry.value.localStyle) {
+                entry.value.localStyle = createDefaultLocalStyle(arg.globalDesign);
+            } else if (!entry.value.localStyle.yInverted) {
+                // Convert old Top-Down Y to Bottom-Up
+                console.log("[Editor] Converting legacy Y coordinate...");
+                entry.value.localStyle.y = 100 - (entry.value.localStyle.y || 0);
+                entry.value.localStyle.yInverted = true;
+            }
         } else {
             // New Entry
             entry.value.localStyle = createDefaultLocalStyle(arg.globalDesign);

@@ -202,7 +202,7 @@ function createEditorWin(id = null) {
     return;
   }
   winEditor = new BrowserWindow({
-    width: 500, height: 600,
+    width: 1000, height: 600,
     parent: win,
     backgroundColor: '#1b1c1d',
     webPreferences: { nodeIntegration: true, contextIsolation: false }
