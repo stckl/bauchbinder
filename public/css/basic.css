@@ -22,3 +22,27 @@ html, body {
     width: 100%;
     left: 0;
 }
+
+.bb-box {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.bb-box img {
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.text h1, .text h2 {
+    margin: 0;
+    padding: 0;
+}

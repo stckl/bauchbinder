@@ -127,6 +127,12 @@ const openFile = () => {
         if (!res.canceled && res.filePaths.length > 0) {
             fs.readFile(res.filePaths[0], 'utf8', (err, data) => {
                 const ld = JSON.parse(data);
+                if (ld.design && ld.design.unifiedCss) {
+                    // Migrate old display values
+                    ld.design.unifiedCss = ld.design.unifiedCss
+                        .replace(/display:\s*inline-block/g, 'display: inline-flex')
+                        .replace(/display:\s*block/g, 'display: flex');
+                }
                 if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
                 if (ld.design) Object.assign(state.design, ld.design);
                 if (ld.animation) Object.assign(state.animation, ld.animation);

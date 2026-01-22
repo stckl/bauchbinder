@@ -530,146 +530,94 @@ const handleLogoDrop = (e) => {
     }
 };
 
-// CSS Generation Logic (reused)
+// CSS Generation Logic
 const buildCss = () => {
-    const line = (obj, key, prop, val) => {
-        const comment = (obj._overrides && obj._overrides[key]) ? ' /* aus custom-css */' : '';
-        return `  ${prop}: ${val};${comment}
+  const line = (obj, key, prop, val) => {
+    return `  ${prop}: ${val};
 `;
-    };
+  };
 
-        let css = `.bauchbinde {
+  let css = ".bauchbinde {\n";
+  css += line(state.design.white, 'bottom', 'bottom', (state.design.white.bottom || 0) + "vh");
+  css += `  text-align: ${["left", "center", "right"][state.design.white.divalign || 0]};\n`;
+  css += "}\n\n";
 
-      position: absolute;
+  css += ".bb-box {\n";
+  const wProp = state.design.white.fixedWidth ? "width" : "min-width";
+  css += line(state.design.white, 'width', wProp, (state.design.white.width || 10) + "vw");
+  
+  if (state.design.white.height > 0) {
+    const hProp = state.design.white.fixedHeight ? "height" : "min-height";
+    css += line(state.design.white, 'height', hProp, (state.design.white.height || 1) + "vh");
+  }
+  
+  css += line(state.design.white, 'left', 'margin', "0 " + (state.design.white.left || 0) + "vw");
+  css += line(state.design.white, 'color', 'background', state.design.white.color);
+  css += line(state.design.white, 'borderradius', 'border-radius', (state.design.white.borderradius || 0) + "px");
+  css += line(state.design.white, 'padding', 'padding', (state.design.white.paddingv || 0) + "vh " + (state.design.white.paddingh || 0) + "vh");
+  css += `  text-align: ${["left", "center", "right"][state.design.white.textalign || 0]};\n`;
+  css += `  overflow: ${state.design.white.overflow || "hidden"};\n`;
+  css += `  align-items: ${state.design.white.flexAlign || "center"};\n`;
+  css += `  justify-content: ${state.design.white.flexJustify || "center"};\n`;
+  css += line(state.design.white, 'flexGap', 'gap', (state.design.white.flexGap || 0) + "vh");
+  css += "}\n\n";
 
-    `;
-
-        css += line(state.design.white, 'bottom', 'bottom', `${state.design.white.bottom || 0}vh`);
-
-        css += `  text-align: ${['left', 'center', 'right'][state.design.white.divalign || 0]};
-
-      overflow: visible;
-
+  const imgBlock = (sel, obj) => {
+    let s = sel + " {\n";
+    if (obj.fitHeight) {
+      s += "  height: 100%;\n  width: auto;\n";
+    } else {
+      s += line(obj, 'height', 'height', (obj.height > 0 ? obj.height + "%" : "auto"));
+      s += line(obj, 'width', 'width', (obj.width > 0 ? obj.width + "%" : "auto"));
     }
-
+    s += line(obj, 'radius', 'border-radius', (obj.radius || 0) + "px");
+    s += line(obj, 'opacity', 'opacity', (obj.opacity || 1));
+    s += line(obj, 'margin', 'margin', "0 " + (obj.margin || 0) + "px");
     
+    if (obj.position && obj.position !== "static") {
+      s += line(obj, 'position', 'position', obj.position);
+      s += line(obj, 'x', 'left', (obj.x || 0) + "vw");
+      s += line(obj, 'y', 'top', (obj.y || 0) + "vh");
+    }
+    s += "}\n\n";
+    return s;
+  };
 
-    .bb-box {
+  css += imgBlock(".logo", state.design.logoStyle);
+  css += imgBlock(".image", state.design.imageStyle);
+  
+  state.design.layoutOrder.forEach((item, index) => {
+    css += `${item.id} { order: ${index + 1}; align-self: ${item.alignSelf || "auto"}; }\n`;
+  });
 
-      display: inline-block;
+  css += "\n.text {\n";
+  css += `  overflow: ${state.design.white.textOverflow || "visible"};\n`;
+  css += "}\n\n";
 
-    `;
-
-        css += line(state.design.white, 'width', 'min-width', `${state.design.white.width || 0}vw`);
-
-        css += line(state.design.white, 'height', 'min-height', `${state.design.white.height || 0}vh`);
-
-        css += line(state.design.white, 'left', 'margin', `0 ${state.design.white.left || 0}vw`);
-
-        css += line(state.design.white, 'color', 'background-color', state.design.white.color || 'transparent');
-
-        css += line(state.design.white, 'paddingh', 'padding-left', `${state.design.white.paddingh || 0}vw`);
-
-        css += `  padding-right: ${state.design.white.paddingh || 0}vw;
-
-    `;
-
-        css += line(state.design.white, 'paddingv', 'padding-top', `${state.design.white.paddingv || 0}vh`);
-
-        css += `  padding-bottom: ${state.design.white.paddingv || 0}vh;
-
-    `;
-
-        css += line(state.design.white, 'borderradius', 'border-radius', `${state.design.white.borderradius || 0}px`);
-
-        css += `}
-
+  const textBlock = (sel, obj) => {
+    let family = obj.fontfamily || "Helvetica, Arial, sans-serif";
+    family = String(family).replace(/!important/g, "").replace(/['"]/g, "").trim();
+    const formattedFamily = family.split(",").map(f => {
+      f = f.trim();
+      return (f.includes(" ") && !f.startsWith("\"")) ? `"${f}"` : f;
+    }).join(", ");
     
+    let s = sel + " {\n";
+    s += line(obj, 'fontfamily', 'font-family', formattedFamily);
+    s += line(obj, 'fontsize', 'font-size', (obj.fontsize || (sel === "h1" ? 5 : 3.7)) + "vh");
+    s += line(obj, 'fontsize', 'line-height', (obj.fontsize || (sel === "h1" ? 5 : 3.7)) + "vh");
+    s += line(obj, 'color', 'color', obj.color);
+    s += line(obj, 'fontweight', 'font-weight', obj.fontweight || "normal");
+    s += line(obj, 'italic', 'font-style', obj.italic ? "italic" : "normal");
+    s += line(obj, 'texttransform', 'text-transform', obj.texttransform || "none");
+    s += line(obj, 'fontvariant', 'font-variant', obj.fontvariant || "normal");
+    s += "}\n\n";
+    return s;
+  };
 
-.bb-box img {
-  object-fit: contain;
-}
-
-`;
-            
-    const imgBlock = (sel, obj) => {
-        let s = `${sel} {
-`;
-        if (obj.fitHeight) {
-            s += `  height: 100%;
-  width: auto;
-`;
-        } else {
-            s += line(obj, 'height', 'height', (obj.height > 0 ? obj.height + '%' : 'auto'));
-            s += line(obj, 'width', 'width', (obj.width > 0 ? obj.width + '%' : 'auto'));
-        }
-        s += line(obj, 'radius', 'border-radius', obj.radius + 'px');
-        s += line(obj, 'opacity', 'opacity', obj.opacity);
-        s += line(obj, 'margin', 'margin', `0 ${obj.margin}px`);
-        
-        if (obj.position && obj.position !== 'static') {
-            s += line(obj, 'position', 'position', obj.position);
-            s += line(obj, 'x', 'left', obj.x + 'vw');
-            s += line(obj, 'y', 'top', obj.y + 'vh');
-        } else {
-            s += `  position: static;
-`;
-        }
-
-        s += `}
-
-`;
-        return s;
-    };
-
-    css += imgBlock('.logo', state.design.logoStyle);
-    css += imgBlock('.image', state.design.imageStyle);
-    
-    // Order & Align Self
-    state.design.layoutOrder.forEach((item, index) => {
-        css += `${item.id} { order: ${index + 1}; align-self: ${item.alignSelf || 'auto'}; }
-`;
-    });
-
-    css += `
-.text {
-`;
-    css += `  overflow: ${state.design.white.textOverflow || 'visible'};
-}
-
-`;
-
-    const textBlock = (sel, obj) => {
-        let family = obj.fontfamily || 'Helvetica, Arial, sans-serif';
-        // Deep clean: remove quotes and any accidental !important suffixes
-        family = String(family).replace(/!important/g, '').replace(/['"]/g, '').trim();
-        
-        // Properly format font stack
-        const formattedFamily = family.split(',').map(f => {
-            f = f.trim();
-            return (f.includes(' ') && !f.startsWith('"')) ? `"${f}"` : f;
-        }).join(', ');
-        
-        let s = `${sel} {
-`;
-        s += line(obj, 'fontfamily', 'font-family', `${formattedFamily}`);
-        s += line(obj, 'fontsize', 'font-size', `${obj.fontsize || (sel === 'h1' ? 5 : 3.7)}vh`);
-        s += `  line-height: ${obj.fontsize || (sel === 'h1' ? 5 : 3.7)}vh;
-`;
-        s += line(obj, 'color', 'color', obj.color);
-        s += line(obj, 'fontweight', 'font-weight', obj.fontweight || 'normal');
-        s += line(obj, 'italic', 'font-style', obj.italic ? 'italic' : 'normal');
-        s += line(obj, 'texttransform', 'text-transform', obj.texttransform || 'none');
-        s += line(obj, 'fontvariant', 'font-variant', obj.fontvariant || 'normal');
-        s += `}
-
-`;
-        return s;
-    };
-
-    css += textBlock('h1', state.design.h1);
-    css += textBlock('h2', state.design.h2);
-    return css;
+  css += textBlock("h1", state.design.h1);
+  css += textBlock("h2", state.design.h2);
+  return css;
 };
 
 // ... CSS Parsing Logic ... (omitted for brevity, but should be included)
@@ -705,6 +653,13 @@ const parseCssToProperties = (css) => {
     if (bg) state.design.white.color = bg;
     const radius = extractValue('.bb-box', 'border-radius') || extractValue('.white', 'border-radius');
     if (radius) state.design.white.borderradius = parseFloat(radius);
+    
+    // Migration: Update display types to Flexbox
+    const display = extractValue('.bb-box', 'display') || extractValue('.white', 'display');
+    if (display === 'inline-block') {
+        // Automatically handled by basic.css now, but we ensure state is clean
+    }
+
     const overflow = extractValue('.bb-box', 'overflow');
     if (overflow) state.design.white.overflow = overflow;
     const textOverflow = extractValue('.text', 'overflow');
@@ -894,7 +849,8 @@ const syncToMain = () => {
 // Watch GUI changes -> Rebuild CSS
 watch(() => [
     state.design.white, state.design.h1, state.design.h2, 
-    state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle
+    state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle,
+    state.design.logo
 ], () => {
     const parts = state.design.unifiedCss.split('/* CUSTOM */');
     const customPart = parts.length > 1 ? parts[1].trim() : '';
