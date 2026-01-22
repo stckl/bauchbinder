@@ -1,3 +1,5 @@
-html, body {
-    background: transparent;
+@import "basic.css";
+
+.h5 {
+    background: transparent !important;
 }

@@ -404,16 +404,18 @@
 
 <script setup>
 import { ref, computed, nextTick, watch, onMounted } from 'vue';
-import { ipcRenderer as ipc } from 'electron';
 import draggable from 'vuedraggable';
 import ColorPicker from './ColorPicker.vue';
 import CssEditor from './CssEditor.vue';
 import FomanticDropdown from './FomanticDropdown.vue';
 import { state, systemFonts, manualFonts } from '../store.js';
-const { dialog } = require('@electron/remote');
-const fs = require('fs');
-const path = require('path');
-import $ from 'jquery';
+
+const isElectron = typeof window !== 'undefined' && window.process && window.process.versions?.electron;
+const ipc = isElectron ? window.require('electron').ipcRenderer : null;
+const remote = isElectron ? window.require('@electron/remote') : null;
+const dialog = remote ? remote.dialog : null;
+const fs = isElectron ? window.require('fs') : null;
+const path = isElectron ? window.require('path') : null;
 
 const WEB_FONTS = [
     'Arial, sans-serif',
@@ -879,12 +881,13 @@ const resolveConflict = async (index, source) => {
 };
 
 let isSyncing = false;
+let isInternalUpdate = false;
 
 // Function to sync everything to server
 const syncToMain = () => {
-    if (isSyncing) return;
+    if (isSyncing || isInternalUpdate) return;
     isSyncing = true;
-    ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
+    if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
     nextTick(() => { isSyncing = false; });
 };
 
@@ -921,6 +924,13 @@ watch(() => state.design.unifiedCss, (nv, ov) => {
 });
 
 onMounted(() => {
+    if (ipc) {
+        ipc.on('update-css', (event, arg) => {
+            isInternalUpdate = true;
+            Object.assign(state.design, arg);
+            nextTick(() => { isInternalUpdate = false; });
+        });
+    }
     // Force initial build if missing
     if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
         console.log("[DesignTab] Building initial CSS...");

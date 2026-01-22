@@ -55,4 +55,6 @@ patches/mtime-cache.json
 
 spec/fixtures/logo.png
 release-builds/
+convert-problems/
+debug.log
 GEMINI.md

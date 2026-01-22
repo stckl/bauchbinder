@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="de">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com; connect-src 'self' ws://localhost:3000 http://localhost:5001 ws://localhost:5001 http://127.0.0.1:5001 ws://127.0.0.1:5001; worker-src 'self' blob:;">
-    <title>HTML5 Playout</title>
-    <link rel="stylesheet" type="text/css" href="/css/basic.css">
-    <link rel="stylesheet" type="text/css" href="/css/basic_h5.css">
-  </head>
-  <body>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>bauchbinder - h5</title>
+    <link rel="stylesheet" href="/css/basic_h5.css">
+</head>
+<body class="h5">
+    <div id="bauchbinde-container"></div>
     <script type="module">
         import { initEngine } from './src/renderer/playout-engine.js';
         initEngine('h5');
     </script>
-  </body>
+</body>
 </html>

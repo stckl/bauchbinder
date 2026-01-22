@@ -1,5 +1,5 @@
 const { app, BrowserWindow, globalShortcut, ipcMain: ipc } = require('electron')
-const isDev = require('electron-is-dev')
+const isDev = !app.isPackaged
 require('@electron/remote/main').initialize()
 const path = require('path')
 const url = require('url')
@@ -25,24 +25,17 @@ const logger = winston.createLogger({
   ]
 });
 
-let win, winKey, winFill, data;
+let win, winKey, winFill, winEditor, winStep, data;
 let activeLowerThirdId = null;
 let activeLowerThirdData = null;
 
 let lastDesign = {
-
   white: { 
-
     width: 10, left: 5, bottom: 7, height: 1, fixedWidth: false, fixedHeight: false,
-
     color: 'rgba(255,255,255,0.8)', 
-
     paddingh: 5, paddingv: 2.6, borderradius: 0, 
-
     divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible',
-
     flexAlign: 'center', flexJustify: 'center', flexGap: 2, imageHeight: true, imageManualHeight: 10
-
   },
   layoutOrder: [
     { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
@@ -76,13 +69,11 @@ expressapp.get('/', (req, res) => {
 expressapp.use('/src', express.static(path.join(__dirname, 'src/')));
 expressapp.use('/node_modules', express.static(path.join(__dirname, 'node_modules/')));
 
-// Legacy support for OBS custom.css
 expressapp.get('/custom.css', (req, res) => {
   res.header("Content-Type", "text/css");
   res.send(lastDesign.unifiedCss || '');
 });
 
-// REST API
 expressapp.get('/v1/list', (req, res) => {
   const list = data ? data.map((item, index) => ({ id: index + 1, name: item.name, title: item.title })) : [];
   res.json({ activeId: activeLowerThirdId, list: list });
@@ -112,6 +103,12 @@ http.listen(expressapp.get('port'), () => {
     console.log('[express.js] listening on *:' + expressapp.get('port'));
 });
 
+function sendToWindows(channel, arg) {
+  if (win) win.webContents.send(channel, arg);
+  if (winKey) winKey.webContents.send(channel, arg);
+  if (winFill) winFill.webContents.send(channel, arg);
+}
+
 function createWindow () {
   const width = isDev ? 1400 : 800;
   win = new BrowserWindow({
@@ -131,7 +128,10 @@ function createWindow () {
     const { response } = await dialog.showMessageBox(win, {
       type: 'question', title: 'Confirm', message: 'Willst du Bauchbinder wirklich beenden?', buttons: ['Ja', 'Nein'],
     });
-    if (response === 0) win.destroy();
+    if (response === 0) {
+      win.destroy();
+      app.quit();
+    }
   });
   win.on('closed', () => { win = null; });
 }
@@ -164,32 +164,67 @@ function createFillWin() {
   }
 }
 
-function sendToWindows(type, msg) {
-  if(winFill) winFill.webContents.send(type, msg);
-  if(winKey) winKey.webContents.send(type, msg);
+function createEditorWin(id = null) {
+  if (winEditor) {
+    winEditor.focus();
+    return;
+  }
+  winEditor = new BrowserWindow({
+    width: 500, height: 600,
+    parent: win,
+    backgroundColor: '#1b1c1d',
+    webPreferences: { nodeIntegration: true, contextIsolation: false }
+  });
+  require("@electron/remote/main").enable(winEditor.webContents);
+  const editorUrl = isDev 
+    ? 'http://localhost:3000/index.html?window=entry' 
+    : url.format({ pathname: path.join(__dirname, 'dist/index.html'), protocol: 'file:', slashes: true, query: { window: 'entry' } });
+  winEditor.loadURL(editorUrl);
+  winEditor.removeMenu();
+  ipc.once('editor-ready', () => {
+    winEditor.webContents.send('setup-editor', { id: id, entry: id !== null ? data[id] : null });
+  });
+  winEditor.on('closed', () => { winEditor = null; });
+}
+
+function createStepEditorWin(phase, index) {
+  if (winStep) {
+    winStep.focus();
+    return;
+  }
+  winStep = new BrowserWindow({
+    width: 500, height: 700,
+    parent: win,
+    backgroundColor: '#1b1c1d',
+    webPreferences: { nodeIntegration: true, contextIsolation: false }
+  });
+  require("@electron/remote/main").enable(winStep.webContents);
+  const stepUrl = isDev 
+    ? 'http://localhost:3000/index.html?window=step' 
+    : url.format({ pathname: path.join(__dirname, 'dist/index.html'), protocol: 'file:', slashes: true, query: { window: 'step' } });
+  winStep.loadURL(stepUrl);
+  winStep.removeMenu();
+  ipc.once('step-editor-ready', () => {
+    winStep.webContents.send('setup-step-editor', { phase, index, step: lastAnimation[phase][index] });
+  });
+  winStep.on('closed', () => { winStep = null; });
 }
 
 function showLowerThird(arg) {
   activeLowerThirdData = JSON.parse(JSON.stringify(arg));
   activeLowerThirdId = arg.id || null;
-  
   const status = { activeId: activeLowerThirdId, activeItem: activeLowerThirdData };
   sendToWindows('show-lowerthird', activeLowerThirdData);
   io.emit('show-lowerthird', activeLowerThirdData);
-  
-  // Broadcast status to keep all controllers and playouts in sync
   sendToWindows('status-update', status);
   io.emit('status-update', status);
-  
-  console.log('show lowerthird', activeLowerThirdId);
 }
 
 function showLowerThirdByID(arg) {
   let id = Number.parseInt(arg);
-  console.log('show lowerthird by id', arg);
   if(id >= 1 && data && data.length >= id) {
     const item = JSON.parse(JSON.stringify(data[id-1]));
-    item.id = id; // Ensure ID is present
+    item.id = id;
     showLowerThird(item);
   }
 }
@@ -203,13 +238,12 @@ function hideLowerThird() {
   sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: null });
 }
 
-// IPC Listeners
 ipc.on('request-state', (event) => {
-  logger.info('IPC: request-state');
-  if (data) event.reply('update-data', data);
-  if (lastDesign) event.reply('update-css', lastDesign);
-  if (lastAnimation) event.reply('update-js', lastAnimation);
-  event.reply('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
+  logger.info('IPC: request-state from ' + (event.sender === win?.webContents ? 'Main' : 'Playout'));
+  if (data) event.sender.send('update-data', data);
+  if (lastDesign) event.sender.send('update-css', lastDesign);
+  if (lastAnimation) event.sender.send('update-js', lastAnimation);
+  event.sender.send('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
 });
 
 ipc.on('update-data', (event, arg) => {
@@ -251,7 +285,6 @@ ipc.handle('download-to-base64', async (event, url) => {
 ipc.on('show-lowerthird', (event, arg) => showLowerThird(arg));
 ipc.on('hide-lowerthird', () => hideLowerThird());
 ipc.on('kill-playout', () => {
-  logger.info('IPC: kill-playout command triggered');
   sendToWindows('kill-playout', null);
   io.emit('kill-playout', null);
   activeLowerThirdId = null;
@@ -259,13 +292,32 @@ ipc.on('kill-playout', () => {
 });
 ipc.on('openwinkey', () => createKeyWin());
 ipc.on('openwinfill', () => createFillWin());
+ipc.on('open-entry-editor', (event, id) => createEditorWin(id));
+ipc.on('open-step-editor', (event, arg) => createStepEditorWin(arg.phase, arg.index));
+
+ipc.on('save-entry', (event, arg) => {
+  if (arg.id !== null) data[arg.id] = arg.entry;
+  else { if (!data) data = []; data.push(arg.entry); }
+  sendToWindows('update-data', data);
+  if (arg.close && winEditor) winEditor.close();
+});
+
+ipc.on('save-step', (event, arg) => {
+  if (lastAnimation[arg.phase]) {
+    lastAnimation[arg.phase][arg.index] = arg.step;
+    sendToWindows('update-js', lastAnimation);
+    io.emit('update-js', lastAnimation);
+  }
+  if (winStep) winStep.close();
+});
+
+ipc.on('delete-entry', (event, id) => {
+  if (id !== null && data) { data.splice(id, 1); sendToWindows('update-data', data); }
+  if (winEditor) winEditor.close();
+});
 
 ipc.on('toggle-fullscreen-key', () => { if (winKey) winKey.setFullScreen(!winKey.isFullScreen()); });
 ipc.on('toggle-fullscreen-fill', () => { if (winFill) winFill.setFullScreen(!winFill.isFullScreen()); });
-ipc.on('toggle-fullscreen', (event) => {
-  if (winKey && event.sender === winKey.webContents) winKey.setFullScreen(!winKey.isFullScreen());
-  if (winFill && event.sender === winFill.webContents) winFill.setFullScreen(!winFill.isFullScreen());
-});
 
 app.on('ready', () => {
   createWindow();
@@ -277,5 +329,5 @@ app.on('ready', () => {
 });
 
 app.on('will-quit', () => { globalShortcut.unregisterAll(); });
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('window-all-closed', () => { app.quit(); });
 app.on('activate', () => { if (win === null) createWindow(); });

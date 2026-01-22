@@ -37,7 +37,7 @@ jobs:
             ## Updates in this version
             - **Custom Animations:** Full support for Anime.js 4.x structured animations.
             - **UI/UX Improvements:** Refactored to Vue 3 components for better performance.
-            - **Native ARM Support:** Explicit builds for Apple Silicon.
+            - **Native ARM Support:** Explicit builds for Apple Silicon (now via electron-builder).
             - **Stability:** Fixed migration bugs from v3 files.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,23 +62,17 @@ jobs:
       - name: Build Windows App
         run: npm run pack-win
 
-      - name: Zip Application
-        shell: pwsh
-        run: |
-          $version = $env:GITHUB_REF -replace "refs/tags/", ""
-          $src = "release-builds/bauchbinder-win32-x64"
-          $dest = "release-builds/bauchbinder-win32-x64-$version.zip"
-          Compress-Archive -Path $src -DestinationPath $dest
-
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: release-builds/*.zip
+          files: |
+            release-builds/*.zip
+            release-builds/*.exe
           body: |
             ## Updates in this version
             - **Custom Animations:** Full support for Anime.js 4.x structured animations.
             - **UI/UX Improvements:** Refactored to Vue 3 components for better performance.
-            - **Native ARM Support:** Explicit builds for Apple Silicon.
+            - **Native ARM Support:** Explicit builds for Apple Silicon (now via electron-builder).
             - **Stability:** Fixed migration bugs from v3 files.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

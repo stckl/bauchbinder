@@ -25,7 +25,6 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import $ from 'jquery';
 
 const props = defineProps(['modelValue', 'label']);
 const emit = defineEmits(['update:modelValue']);
