@@ -37,8 +37,8 @@
 
       <div class="field">
         <div class="ui toggle checkbox inverted">
-          <input type="checkbox" v-model="entry.hideGlobalLogo">
-          <label>Globales Logo für diese Bauchbinde ausblenden</label>
+          <input type="checkbox" v-model="entry.showGlobalLogo">
+          <label>Globales Logo anzeigen</label>
         </div>
       </div>
 
@@ -76,14 +76,19 @@
 import { ref, onMounted } from 'vue';
 const ipc = (typeof window !== 'undefined' && window.require) ? window.require('electron').ipcRenderer : null;
 
-const entry = ref({ name: '', title: '', image: null, hideGlobalLogo: false });
+const entry = ref({ name: '', title: '', image: null, showGlobalLogo: true });
 const entryId = ref(null);
 
 onMounted(() => {
     ipc.on('setup-editor', (event, arg) => {
         if (arg.entry) {
             entry.value = JSON.parse(JSON.stringify(arg.entry));
-            if (entry.value.hideGlobalLogo === undefined) entry.value.hideGlobalLogo = false;
+            // Migration: handle old hideGlobalLogo property if it exists
+            if (entry.value.hideGlobalLogo !== undefined) {
+                entry.value.showGlobalLogo = !entry.value.hideGlobalLogo;
+                delete entry.value.hideGlobalLogo;
+            }
+            if (entry.value.showGlobalLogo === undefined) entry.value.showGlobalLogo = true;
         }
         entryId.value = arg.id;
     });
@@ -99,7 +104,7 @@ const save = (close = true) => {
     
     if (!close) {
         if (entryId.value === null) {
-            entry.value = { name: '', title: '', image: null, hideGlobalLogo: false };
+            entry.value = { name: '', title: '', image: null, showGlobalLogo: true };
         }
     }
 };
