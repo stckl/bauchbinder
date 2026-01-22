@@ -214,7 +214,11 @@ function createEditorWin(id = null) {
   winEditor.loadURL(editorUrl);
   winEditor.removeMenu();
   ipc.once('editor-ready', () => {
-    winEditor.webContents.send('setup-editor', { id: id, entry: id !== null ? data[id] : null });
+    winEditor.webContents.send('setup-editor', { 
+      id: id, 
+      entry: id !== null ? data[id] : null,
+      globalDesign: lastDesign
+    });
   });
   winEditor.on('closed', () => { winEditor = null; });
 }

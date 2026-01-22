@@ -242,7 +242,7 @@ function applyLocalStyles(el, s) {
         flexDirection: 'column',
         justifyContent: s.justifyContent || 'center',
         alignItems: s.alignItems || 'center',
-        padding: '1vh 2vh'
+        padding: (s.padding || 2) + 'vh'
     });
 
     const h1 = el.find('h1');

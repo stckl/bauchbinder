@@ -50,6 +50,10 @@
             <label>Min-Höhe (vh)</label>
             <input type="number" step="0.1" v-model="entry.localStyle.minHeight">
           </div>
+          <div class="column field">
+            <label>Padding (vh)</label>
+            <input type="number" step="0.1" v-model="entry.localStyle.padding">
+          </div>
         </div>
 
         <div class="two fields" style="margin-top: 15px;">
@@ -185,12 +189,20 @@ const allFonts = computed(() => {
     return [...new Set([...WEB_FONTS, ...systemFonts.value])];
 });
 
-const createDefaultLocalStyle = () => ({
-    x: 5, y: 80, minWidth: 20, minHeight: 5,
+const createDefaultLocalStyle = (globalDesign = null) => ({
+    x: 20, y: 75, minWidth: 60, minHeight: 0, padding: 2,
     justifyContent: 'center', alignItems: 'center',
-    bgColor: 'rgba(0,0,0,0.8)',
-    h1: { fontfamily: 'Helvetica, sans-serif', fontsize: 5, color: '#ffffff' },
-    h2: { fontfamily: 'Helvetica, sans-serif', fontsize: 3.7, color: '#ffffff' }
+    bgColor: 'rgba(0,0,0,0.7)',
+    h1: { 
+        fontfamily: globalDesign?.h1?.fontfamily || 'Helvetica, sans-serif', 
+        fontsize: globalDesign?.h1?.fontsize || 5, 
+        color: '#ffffff' 
+    },
+    h2: { 
+        fontfamily: globalDesign?.h2?.fontfamily || 'Helvetica, sans-serif', 
+        fontsize: globalDesign?.h2?.fontsize || 3.7, 
+        color: '#ffffff' 
+    }
 });
 
 const entry = ref({ 
@@ -198,9 +210,11 @@ const entry = ref({
     useLocalStyle: false, localStyle: createDefaultLocalStyle() 
 });
 const entryId = ref(null);
+const currentGlobalDesign = ref(null);
 
 onMounted(() => {
     ipc.on('setup-editor', (event, arg) => {
+        currentGlobalDesign.value = arg.globalDesign;
         if (arg.entry) {
             entry.value = JSON.parse(JSON.stringify(arg.entry));
             // Migration
@@ -209,7 +223,10 @@ onMounted(() => {
                 delete entry.value.hideGlobalLogo;
             }
             if (entry.value.showGlobalLogo === undefined) entry.value.showGlobalLogo = true;
-            if (!entry.value.localStyle) entry.value.localStyle = createDefaultLocalStyle();
+            if (!entry.value.localStyle) entry.value.localStyle = createDefaultLocalStyle(arg.globalDesign);
+        } else {
+            // New Entry
+            entry.value.localStyle = createDefaultLocalStyle(arg.globalDesign);
         }
         entryId.value = arg.id;
     });
@@ -227,7 +244,7 @@ const save = (close = true) => {
         if (entryId.value === null) {
             entry.value = { 
                 name: '', title: '', image: null, showGlobalLogo: true, 
-                useLocalStyle: false, localStyle: createDefaultLocalStyle() 
+                useLocalStyle: false, localStyle: createDefaultLocalStyle(currentGlobalDesign.value) 
             };
         }
     }
