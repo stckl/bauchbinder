@@ -29,28 +29,33 @@ jobs:
       - name: Build and Publish macOS App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           CSC_KEY_PASSWORD: "bauchbinder"
-        run: npm run pack-macarm
+        run: |
+          if [ -n "$MACOS_CERTIFICATE" ]; then
+            echo "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
+            export CSC_LINK=$(pwd)/certificate.p12
+          fi
+          npm run pack-macarm
 
-  build-win:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Frontend
-        run: npm run build
-
-      - name: Build and Publish Windows App
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run pack-win
+#  build-win:
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Setup Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: 20
+#          cache: 'npm'
+#
+#      - name: Install Dependencies
+#        run: npm ci
+#
+#      - name: Build Frontend
+#        run: npm run build
+#
+#      - name: Build and Publish Windows App
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: npm run pack-win

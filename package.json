@@ -1,7 +1,7 @@
 {
   "name": "bauchbinder",
-  "version": "4.1.12",
-  "description": "",
+  "version": "4.1.14",
+  "description": "Tool für Bauchbinden in Live-Streams",
   "main": "main.js",
   "scripts": {
     "dev": "vite",
