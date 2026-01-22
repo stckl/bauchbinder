@@ -140,12 +140,12 @@ const openFile = () => {
                         // Old system had .bauchbinde at full width (left:0, right:0)
                         // and used white.bottom for the vertical position.
                         ld.design.container = {
-                            left: { enabled: true, value: 0 },
-                            right: { enabled: true, value: 0 },
+                            left: { enabled: false, value: 0 },
+                            right: { enabled: false, value: 0 },
                             top: { enabled: false, value: 0 },
-                            bottom: { enabled: true, value: ld.design.white?.bottom || 0 },
-                            width: { enabled: false, value: 100 },
-                            height: { enabled: false, value: 10 }
+                            bottom: { enabled: true, value: ld.design.white?.bottom || 0 }, // Preserve old bottom value
+                            width: { enabled: true, value: 100 },
+                            height: { enabled: false, value: 0 }
                         };
                     }
                     Object.assign(state.design, ld.design);

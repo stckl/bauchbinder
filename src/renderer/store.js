@@ -15,12 +15,12 @@ export const state = reactive({
             _overrides: {} 
         },
         container: {
-            left: { enabled: true, value: 0 },
-            right: { enabled: true, value: 0 },
+            left: { enabled: false, value: 0 },
+            right: { enabled: false, value: 0 },
             top: { enabled: false, value: 0 },
             bottom: { enabled: true, value: 0 },
-            width: { enabled: false, value: 100 },
-            height: { enabled: false, value: 10 }
+            width: { enabled: true, value: 100 },
+            height: { enabled: false, value: 0 }
         },
         layoutOrder: [
             { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
