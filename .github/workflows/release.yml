@@ -11,6 +11,8 @@ permissions:
 jobs:
   build-mac:
     runs-on: macos-latest
+    env:
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,9 +29,8 @@ jobs:
         run: npm run build
 
       - name: Import Certificate
-        if: ${{ secrets.MACOS_CERTIFICATE != '' }}
+        if: env.MACOS_CERTIFICATE != ''
         env:
-          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
           echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
@@ -43,7 +44,7 @@ jobs:
       - name: Build and Publish macOS App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.MACOS_CERTIFICATE != '' && 'certificate.p12' || '' }}
+          CSC_LINK: ${{ env.MACOS_CERTIFICATE != '' && 'certificate.p12' || '' }}
           CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: npm run pack-macarm
 
