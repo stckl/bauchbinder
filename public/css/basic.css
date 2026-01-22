@@ -26,17 +26,20 @@ html, body {
     position: absolute;
     width: 100%;
     left: 0;
+    display: flex;
+    pointer-events: none;
 }
 
-.bb-box {
+.bauchbinde-box {
     display: inline-flex;
     flex-direction: row;
     flex-wrap: nowrap !important;
     align-items: center;
     justify-content: center;
+    pointer-events: auto;
 }
 
-.bb-box img {
+.bauchbinde-box img {
     object-fit: contain;
     flex-shrink: 0;
 }

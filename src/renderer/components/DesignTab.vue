@@ -481,10 +481,11 @@ const buildCss = () => {
 
   let css = ".bauchbinde {\n";
   css += line(state.design.white, 'bottom', 'bottom', (state.design.white.bottom || 0) + "vh");
-  css += `  text-align: ${["left", "center", "right"][state.design.white.divalign || 0]};\n`;
+  css += "  display: flex;\n";
+  css += `  justify-content: ${["flex-start", "center", "flex-end"][state.design.white.divalign || 0]};\n`;
   css += "}\n\n";
 
-  css += ".bb-box {\n";
+  css += ".bauchbinde-box {\n";
   const wProp = state.design.white.fixedWidth ? "width" : "min-width";
   css += line(state.design.white, 'width', wProp, (state.design.white.width || 10) + "vw");
   
@@ -575,41 +576,38 @@ const parseCssToProperties = (css) => {
 
     const bottom = extractValue('.bauchbinde', 'bottom');
     if (bottom) state.design.white.bottom = parseFloat(bottom);
-    const align = extractValue('.bauchbinde', 'text-align');
-    if (align) state.design.white.divalign = ['left', 'center', 'right'].indexOf(align);
+    const justify = extractValue('.bauchbinde', 'justify-content');
+    if (justify) state.design.white.divalign = ['flex-start', 'center', 'flex-end'].indexOf(justify);
 
-    const minWidth = extractValue('.bb-box', 'min-width') || extractValue('.white', 'min-width');
-    const fixedWidth = extractValue('.bb-box', 'width');
+    const minWidth = extractValue('.bauchbinde-box', 'min-width') || extractValue('.bb-box', 'min-width') || extractValue('.white', 'min-width');
+    const fixedWidth = extractValue('.bauchbinde-box', 'width');
     if (minWidth) { state.design.white.width = parseFloat(minWidth); state.design.white.fixedWidth = false; }
     else if (fixedWidth) { state.design.white.width = parseFloat(fixedWidth); state.design.white.fixedWidth = true; }
     
-    const minHeight = extractValue('.bb-box', 'min-height');
-    const fixedHeight = extractValue('.bb-box', 'height');
+    const minHeight = extractValue('.bauchbinde-box', 'min-height');
+    const fixedHeight = extractValue('.bauchbinde-box', 'height');
     if (minHeight) { state.design.white.height = parseFloat(minHeight); state.design.white.fixedHeight = false; }
     else if (fixedHeight) { state.design.white.height = parseFloat(fixedHeight); state.design.white.fixedHeight = true; }
 
-    const bg = extractValue('.bb-box', 'background') || extractValue('.white', 'background');
+    const bg = extractValue('.bauchbinde-box', 'background') || extractValue('.bb-box', 'background') || extractValue('.white', 'background');
     if (bg) state.design.white.color = bg;
-    const radius = extractValue('.bb-box', 'border-radius') || extractValue('.white', 'border-radius');
+    const radius = extractValue('.bauchbinde-box', 'border-radius') || extractValue('.bb-box', 'border-radius') || extractValue('.white', 'border-radius');
     if (radius) state.design.white.borderradius = parseFloat(radius);
     
     // Migration: Update display types to Flexbox
-    const display = extractValue('.bb-box', 'display') || extractValue('.white', 'display');
-    if (display === 'inline-block') {
-        // Automatically handled by basic.css now, but we ensure state is clean
-    }
-
-    const overflow = extractValue('.bb-box', 'overflow');
+    const display = extractValue('.bauchbinde-box', 'display') || extractValue('.bb-box', 'display') || extractValue('.white', 'display');
+    
+    const overflow = extractValue('.bauchbinde-box', 'overflow');
     if (overflow) state.design.white.overflow = overflow;
     const textOverflow = extractValue('.text', 'overflow');
     if (textOverflow) state.design.white.textOverflow = textOverflow;
 
     // Flex props
-    const flexAlign = extractValue('.bb-box', 'align-items');
+    const flexAlign = extractValue('.bauchbinde-box', 'align-items');
     if (flexAlign) state.design.white.flexAlign = flexAlign;
-    const flexJustify = extractValue('.bb-box', 'justify-content');
+    const flexJustify = extractValue('.bauchbinde-box', 'justify-content');
     if (flexJustify) state.design.white.flexJustify = flexJustify;
-    const gap = extractValue('.bb-box', 'gap');
+    const gap = extractValue('.bauchbinde-box', 'gap');
     if (gap) state.design.white.flexGap = parseFloat(gap);
 
     const parseText = (sel, obj) => {

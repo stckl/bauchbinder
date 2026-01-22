@@ -59,7 +59,7 @@ import { state } from '../store.js';
 const ipc = (typeof window !== 'undefined' && window.require) ? window.require('electron').ipcRenderer : null;
 
 const getFriendlyName = (s) => {
-    const names = { '.bauchbinde-instance': 'Ganze Bauchbinde', '.bb-box': 'Box', '.white': 'Box', '.text': 'Text-Bereich', 'h1': 'Name (H1)', 'h2': 'Titel (H2)', '.logo': 'Bild (Global)', '.image': 'Bild (Bauchbinde)' };
+    const names = { '.bauchbinde': 'Ganze Bauchbinde', '.bauchbinde-box': 'Box', '.white': 'Box', '.text': 'Text-Bereich', 'h1': 'Name (H1)', 'h2': 'Titel (H2)', '.logo': 'Bild (Global)', '.image': 'Bild (Bauchbinde)' };
     return names[s] || s;
 };
 

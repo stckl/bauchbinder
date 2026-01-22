@@ -77,7 +77,7 @@ function updateCSS(data) {
     $('#custom-styles').remove();
     const style = document.createElement('style');
     style.id = 'custom-styles';
-    style.innerHTML = fontCss + "\n.bauchbinde-instance { position: absolute; width: 100%; }\n" + transformedCss + "\n" + extraCss;
+    style.innerHTML = fontCss + "\n.bauchbinde { position: absolute; width: 100%; display: flex; }\n" + transformedCss + "\n" + extraCss;
     document.head.appendChild(style);
 
     // LIVE UPDATE for Logo if something is showing
@@ -86,7 +86,7 @@ function updateCSS(data) {
         const $logo = lt.el.find('.logo');
         if (data.logo) {
             if ($logo.length) $logo.attr('src', data.logo);
-            else lt.el.find('.bb-box').prepend('<img src="' + data.logo + '" class="logo">');
+            else lt.el.find('.bauchbinde-box').prepend('<img src="' + data.logo + '" class="logo">');
         } else {
             $logo.remove();
         }
@@ -147,7 +147,7 @@ async function playLowerthird(item) {
                 $logo.remove();
             } else {
                 if ($logo.length) $logo.attr('src', currentDesign.logo);
-                else existing.el.find('.bb-box').prepend('<img src="' + currentDesign.logo + '" class="logo">');
+                else existing.el.find('.bauchbinde-box').prepend('<img src="' + currentDesign.logo + '" class="logo">');
             }
 
             const $img = existing.el.find('.image');
@@ -176,8 +176,8 @@ async function playLowerthird(item) {
             imageHtml = '';
         }
 
-        const html = '<div id="' + id + '" class="bauchbinde bauchbinde-instance">' +
-            '<div class="bb-box">' +
+        const html = '<div id="' + id + '" class="bauchbinde">' +
+            '<div class="bauchbinde-box">' +
                 logoHtml +
                 imageHtml +
                 '<div class="text">' +
@@ -196,8 +196,9 @@ async function playLowerthird(item) {
             await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
         } else if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.show) {
             const stepPromises = currentAnimation.show.map(async (step) => {
-                let selector = step.selector === '.white' ? '.bb-box' : step.selector;
-                const targetEl = selector === '.bauchbinde-instance' ? el[0] : el.find(selector)[0];
+                let selector = step.selector;
+                if (selector === '.white' || selector === '.bb-box') selector = '.bauchbinde-box';
+                const targetEl = selector === '.bauchbinde' ? el[0] : el.find(selector)[0];
                 if (targetEl) {
                     await animate(targetEl, transformProperties(step.properties), {
                         duration: step.duration || 750,
@@ -229,11 +230,14 @@ function applyLocalStyles(el, s) {
         left: s.x + 'vw',
         bottom: s.y + 'vh',
         top: 'auto',
+        width: '100%',
+        display: 'flex',
+        justifyContent: s.justifyContent || 'center',
         margin: 0,
         textAlign: 'left' // Reset global text align
     });
 
-    const box = el.find('.bb-box');
+    const box = el.find('.bauchbinde-box');
     box.css({
         background: transformColor(s.bgColor),
         minWidth: s.minWidth + 'vw',
@@ -271,8 +275,9 @@ async function stopAll() {
     const hidePromises = currentActive.map(async (lt) => {
         if (!lt.useLocalStyle && currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
             const stepPromises = currentAnimation.hide.map(async (step) => {
-                let selector = step.selector === '.white' ? '.bb-box' : step.selector;
-                const targetEl = selector === '.bauchbinde-instance' ? lt.el[0] : lt.el.find(selector)[0];
+                let selector = step.selector;
+                if (selector === '.white' || selector === '.bb-box') selector = '.bauchbinde-box';
+                const targetEl = selector === '.bauchbinde' ? lt.el[0] : lt.el.find(selector)[0];
                 if (targetEl) {
                     await animate(targetEl, transformProperties(step.properties), {
                         duration: step.duration || 500,
