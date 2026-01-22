@@ -41,11 +41,17 @@ function updateJS(data) {
     currentAnimation = data;
 }
 
+function handleStatusUpdate(arg) {
+    if (arg && arg.activeItem && activeLowerthirds.length === 0) {
+        if (isDev) console.log("[ENGINE] Active item found on page load, showing:", arg.activeItem.name);
+        playLowerthird(arg.activeItem);
+    }
+}
+
 async function playLowerthird(item) {
     if (!item || !animate) return;
     
     if (activeLowerthirds.length > 0) {
-        if (isDev) console.log("[ENGINE] Auto-hiding existing items before new play...");
         await stopAll();
     }
 
@@ -71,7 +77,6 @@ async function playLowerthird(item) {
             let selector = step.selector === '.white' ? '.bb-box' : step.selector;
             const targetEl = selector === '.bauchbinde-instance' ? el[0] : el.find(selector)[0];
             if (targetEl) {
-                // Anime 4: animate(target, props, options)
                 animate(targetEl, { ...step.properties }, {
                     duration: step.duration || 750,
                     delay: step.delay || 0,
@@ -86,21 +91,17 @@ async function playLowerthird(item) {
 }
 
 async function stopAll() {
-    if (isDev) console.log("[ENGINE] stopAll triggered. Active count:", activeLowerthirds.length);
+    if (isDev) console.log("[ENGINE] stopAll triggered");
     
     const currentActive = [...activeLowerthirds];
     activeLowerthirds = [];
 
     const hidePromises = currentActive.map(async (lt) => {
         if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
-            if (isDev) console.log("[ENGINE] Executing structured HIDE for", lt.id);
-            
             const stepPromises = currentAnimation.hide.map(step => {
                 let selector = step.selector === '.white' ? '.bb-box' : step.selector;
-                const targetEl = selector === '.bauchbinde-instance' ? lt.el[0] : lt.el.find(selector)[0];
+                const targetEl = selector === '.bauchbinde-instance' ? lt.el[0] : lt.el.find(step.selector)[0];
                 if (targetEl) {
-                    if (isDev) console.log(`[ENGINE] Animating hide step for ${selector}`);
-                    // animate() in v4 returns a promise-like object
                     return animate(targetEl, { ...step.properties }, {
                         duration: step.duration || 500,
                         delay: step.delay || 0,
@@ -109,19 +110,14 @@ async function stopAll() {
                 }
                 return Promise.resolve();
             });
-            
             await Promise.all(stepPromises);
         } else {
-            if (isDev) console.log("[ENGINE] Executing fallback HIDE for", lt.id);
             await animate(lt.el[0], { opacity: 0 }, { duration: 500, easing: 'out-quad' });
         }
-        
-        if (isDev) console.log("[ENGINE] Animation finished, removing element:", lt.id);
         lt.el.remove();
     });
 
     await Promise.all(hidePromises);
-    if (isDev) console.log("[ENGINE] All items hidden and removed.");
 }
 
 export function initEngine(mode) {
@@ -131,12 +127,14 @@ export function initEngine(mode) {
     socket.on('update-js', updateJS);
     socket.on('show-lowerthird', playLowerthird);
     socket.on('hide-lowerthird', stopAll);
+    socket.on('status-update', handleStatusUpdate);
     
     if (ipc) {
         ipc.on('update-css', (e, d) => updateCSS(d));
         ipc.on('update-js', (e, d) => updateJS(d));
         ipc.on('show-lowerthird', (e, d) => playLowerthird(d));
         ipc.on('hide-lowerthird', stopAll);
+        ipc.on('status-update', (e, d) => handleStatusUpdate(d));
         ipc.on('kill-playout', () => { location.reload(); });
         ipc.send('request-state');
     }
