@@ -136,6 +136,9 @@ const openFile = () => {
                 if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
                 if (ld.design) {
                     if (!ld.design.container) {
+                        // Legacy Migration: 
+                        // Old system had .bauchbinde at full width (left:0, right:0)
+                        // and used white.bottom for the vertical position.
                         ld.design.container = {
                             left: { enabled: true, value: 0 },
                             right: { enabled: true, value: 0 },

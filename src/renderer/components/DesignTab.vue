@@ -930,6 +930,23 @@ watch(() => state.design.unifiedCss, (nv, ov) => {
 });
 
 onMounted(() => {
+    if (ipc) {
+        ipc.on('design-update-start', () => { isInternalUpdate = true; });
+        ipc.on('design-update-end', () => { isInternalUpdate = false; });
+    }
+
+    // Legacy Migration Fallback
+    if (!state.design.container) {
+        state.design.container = {
+            left: { enabled: true, value: 0 },
+            right: { enabled: true, value: 0 },
+            top: { enabled: false, value: 0 },
+            bottom: { enabled: true, value: state.design.white?.bottom || 0 },
+            width: { enabled: false, value: 100 },
+            height: { enabled: false, value: 10 }
+        };
+    }
+
     // Force initial build if missing
     if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
         console.log("[DesignTab] Building initial CSS...");
