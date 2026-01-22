@@ -69,13 +69,6 @@
             </div>
           </div>
           <div class="column field">
-            <label>Abstand unten (in %)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.01" min="-100" max="100" v-model="state.design.white.bottom" placeholder="Abstand unten">
-              <i class="arrow up icon"></i>
-            </div>
-          </div>
-          <div class="column field">
             <color-picker v-model="state.design.white.color" label="Hintergrundfarbe"></color-picker>
           </div>
           <div class="column field">
@@ -561,7 +554,8 @@ const buildCss = () => {
   } else { // Fallback for old states without state.design.container
       css += `  width: 100vw;\n`;
       css += `  left: 0;\n`;
-      css += line(state.design.white, 'bottom', 'bottom', (state.design.white.bottom || 0) + "vh");
+      css += `  bottom: ${(state.design.white?.bottom || 0)}vh;\n`;
+      css += `  height: 10vh;\n`;
   }
 
   css += `  justify-content: ${["flex-start", "center", "flex-end"][state.design.white.divalign || 0]};\n`;
@@ -669,8 +663,6 @@ const parseCssToProperties = (css) => {
         });
     }
 
-    const bottom = extractValue('.bauchbinde', 'bottom');
-    if (bottom && !state.design.container) state.design.white.bottom = parseFloat(bottom);
     const justify = extractValue('.bauchbinde', 'justify-content');
     if (justify) state.design.white.divalign = ['flex-start', 'center', 'flex-end'].indexOf(justify);
 
