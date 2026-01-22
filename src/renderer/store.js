@@ -19,7 +19,7 @@ export const state = reactive({
             right: { enabled: false, value: 0 },
             top: { enabled: false, value: 0 },
             bottom: { enabled: true, value: 0 },
-            width: { enabled: true, value: 100 },
+            width: { enabled: false, value: 100 },
             height: { enabled: false, value: 0 }
         },
         layoutOrder: [

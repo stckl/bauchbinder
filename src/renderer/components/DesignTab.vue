@@ -12,7 +12,7 @@
               <input type="number" step="0.1" v-model="state.design.container[prop].value" :disabled="!state.design.container[prop].enabled">
               <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
                 <div class="ui checkbox inverted" style="margin: 0;">
-                  <input type="checkbox" v-model="state.design.container[prop].enabled">
+                  <input type="checkbox" v-model="state.design.container[prop].enabled" :disabled="!state.design.container[prop].enabled && getEnabledCount('horizontal') >= 2">
                   <label></label>
                 </div>
               </div>
@@ -25,7 +25,7 @@
               <input type="number" step="0.1" v-model="state.design.container[prop].value" :disabled="!state.design.container[prop].enabled">
               <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
                 <div class="ui checkbox inverted" style="margin: 0;">
-                  <input type="checkbox" v-model="state.design.container[prop].enabled">
+                  <input type="checkbox" v-model="state.design.container[prop].enabled" :disabled="!state.design.container[prop].enabled && getEnabledCount('vertical') >= 2">
                   <label></label>
                 </div>
               </div>
@@ -519,8 +519,9 @@ const buildCss = () => {
 
       if (hCount === 0) { // No left/right enabled
           if (c.width.enabled) {
-              css += `  width: ${c.width.value}vw;\n`;
-              css += `  left: calc(50vw - ${c.width.value}vw / 2);\n`;
+              const widthVal = c.width.value || 0;
+              css += `  width: ${widthVal}vw;\n`;
+              css += `  left: calc(50vw - ${widthVal}vw / 2);\n`;
               css += `  right: auto;\n`; // Ensure right is not set
           } else { // No left/right/width enabled
               css += `  width: auto;\n`;
@@ -528,17 +529,18 @@ const buildCss = () => {
               css += `  right: auto;\n`;
           }
       } else { // left/right or both enabled
-          if (c.left.enabled) css += `  left: ${c.left.value}vw;\n`; else css += `  left: auto;\n`;
-          if (c.right.enabled) css += `  right: ${c.right.value}vw;\n`; else css += `  right: auto;\n`;
-          if (c.width.enabled) css += `  width: ${c.width.value}vw;\n`; else css += `  width: auto;\n`;
+          if (c.left.enabled) css += `  left: ${(c.left.value || 0)}vw;\n`; else css += `  left: auto;\n`;
+          if (c.right.enabled) css += `  right: ${(c.right.value || 0)}vw;\n`; else css += `  right: auto;\n`;
+          if (c.width.enabled) css += `  width: ${(c.width.value || 0)}vw;\n`; else css += `  width: auto;\n`;
       }
 
       // Vertical positioning
       const vCount = (c.top.enabled ? 1 : 0) + (c.bottom.enabled ? 1 : 0);
       if (vCount === 0) { // No top/bottom enabled
           if (c.height.enabled) {
-              css += `  height: ${c.height.value}vh;\n`;
-              css += `  top: calc(50vh - ${c.height.value}vh / 2);\n`;
+              const heightVal = c.height.value || 0;
+              css += `  height: ${heightVal}vh;\n`;
+              css += `  top: calc(50vh - ${heightVal}vh / 2);\n`;
               css += `  bottom: auto;\n`; // Ensure bottom is not set
           } else { // No top/bottom/height enabled
               css += `  height: auto;\n`;
@@ -547,9 +549,9 @@ const buildCss = () => {
               css += `  align-items: center;\n`; // If height is auto, align the flex items (box) vertically
           }
       } else { // top/bottom or both enabled
-          if (c.top.enabled) css += `  top: ${c.top.value}vh;\n`; else css += `  top: auto;\n`;
-          if (c.bottom.enabled) css += `  bottom: ${c.bottom.value}vh;\n`; else css += `  bottom: auto;\n`;
-          if (c.height.enabled) css += `  height: ${c.height.value}vh;\n`; else css += `  height: auto;\n`;
+          if (c.top.enabled) css += `  top: ${(c.top.value || 0)}vh;\n`; else css += `  top: auto;\n`;
+          if (c.bottom.enabled) css += `  bottom: ${(c.bottom.value || 0)}vh;\n`; else css += `  bottom: auto;\n`;
+          if (c.height.enabled) css += `  height: ${(c.height.value || 0)}vh;\n`; else css += `  height: auto;\n`;
       }
   } else { // Fallback for old states without state.design.container
       css += `  width: 100vw;\n`;
@@ -941,7 +943,7 @@ onMounted(() => {
             right: { enabled: false, value: 0 },
             top: { enabled: false, value: 0 },
             bottom: { enabled: true, value: state.design.white?.bottom || 0 }, // Preserve old bottom value
-            width: { enabled: true, value: 100 },
+            width: { enabled: false, value: 100 },
             height: { enabled: false, value: 0 }
         };
     }
