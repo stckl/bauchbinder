@@ -77,7 +77,7 @@ function updateCSS(data) {
     $('#custom-styles').remove();
     const style = document.createElement('style');
     style.id = 'custom-styles';
-    style.innerHTML = fontCss + "\n.bauchbinde-instance { position: absolute; width: 100%; }\n" + transformedCss + "\n" + extraCss;
+    style.innerHTML = fontCss + "\n.bauchbinde-instance { position: absolute; }\n" + transformedCss + "\n" + extraCss;
     document.head.appendChild(style);
 
     // LIVE UPDATE for Logo if something is showing
