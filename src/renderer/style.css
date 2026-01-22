@@ -263,6 +263,6 @@ body {
 .checkerboard {
     background-color: #1b1c1d !important;
     background-image: url('/checkerpattern.svg') !important;
-    background-size: 10px 10px;
+    background-size: 5px 5px;
     background-repeat: repeat;
 }

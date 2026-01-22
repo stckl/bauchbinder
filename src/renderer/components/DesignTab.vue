@@ -811,10 +811,10 @@ watch(() => [
     const newCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
     
     if (state.design.unifiedCss !== newCss) {
+        // This will trigger the watch on unifiedCss which calls syncToMain
         state.design.unifiedCss = newCss;
-        // The watch on unifiedCss will handle the IPC send
     } else {
-        // If CSS text is same but logo or other data changed, sync manually
+        // Logo or other non-CSS data might have changed
         syncToMain();
     }
 }, { deep: true });
@@ -823,10 +823,16 @@ watch(() => [
 watch(() => state.design.unifiedCss, (nv, ov) => {
     if (isSyncing || isInternalUpdate || !nv) return;
     
-    // If it was a manual edit in the CSS editor (not from buildCss)
-    // we might need to parse it back to properties
-    parseCssToProperties(nv); 
-    auditCSS(nv);
+    // Check if this was a manual change in the CSS editor 
+    // or just our own buildCss() update
+    const parts = nv.split('/* CUSTOM */');
+    const guiPart = parts[0];
+    const oldGuiPart = ov ? ov.split('/* CUSTOM */')[0] : '';
+    
+    if (guiPart !== oldGuiPart) {
+        parseCssToProperties(nv); 
+        auditCSS(nv);
+    }
     
     syncToMain();
 });
