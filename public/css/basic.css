@@ -24,6 +24,8 @@ html, body {
 
 .bauchbinde {
     position: absolute;
+    width: 100%;
+    left: 0;
 }
 
 .bb-box {
