@@ -24,6 +24,7 @@ let currentMode = 'h5';
 let currentDesign = null;
 let currentAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
 let activeLowerthirds = []; 
+let playLock = false;
 
 function getRGBA(color) {
     if (typeof color !== 'string') color = String(color || 'white');
@@ -127,7 +128,7 @@ function transformProperties(props) {
 }
 
 async function playLowerthird(item) {
-    if (!item || !animate) return;
+    if (!item || !animate || playLock) return;
     
     // LIVE UPDATE: Check if we are already showing this ID
     const existing = activeLowerthirds.find(lt => lt.idFromStatus === item.id);
@@ -155,44 +156,50 @@ async function playLowerthird(item) {
         return;
     }
 
-    if (activeLowerthirds.length > 0) await stopAll();
+    playLock = true;
+    try {
+        if (activeLowerthirds.length > 0) await stopAll();
 
-    console.log("[ENGINE] Rendering new instance - Logo:", !!currentDesign?.logo, "ItemImg:", !!item.image);
+        console.log("[ENGINE] Rendering new instance - Logo:", !!currentDesign?.logo, "ItemImg:", !!item.image);
 
-    const id = "bb-" + Date.now();
-    const logoHtml = (currentDesign?.logo && item.showGlobalLogo !== false) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
-    const imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
-    
-    const html = '<div id="' + id + '" class="bauchbinde bauchbinde-instance">' +
-        '<div class="bb-box">' +
-            logoHtml +
-            imageHtml +
-            '<div class="text">' +
-                '<h1>' + (item.name || '') + '</h1>' +
-                '<h2>' + (item.title || '') + '</h2>' +
+        const id = "bb-" + Date.now();
+        const logoHtml = (currentDesign?.logo && item.showGlobalLogo !== false) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
+        const imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
+        
+        const html = '<div id="' + id + '" class="bauchbinde bauchbinde-instance">' +
+            '<div class="bb-box">' +
+                logoHtml +
+                imageHtml +
+                '<div class="text">' +
+                    '<h1>' + (item.name || '') + '</h1>' +
+                    '<h2>' + (item.title || '') + '</h2>' +
+                '</div>' +
             '</div>' +
-        '</div>' +
-    '</div>';
-    
-    $('#bauchbinde-container').append(html);
-    const el = $("#" + id);
-    
-    if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.show) {
-        currentAnimation.show.forEach((step) => {
-            let selector = step.selector === '.white' ? '.bb-box' : step.selector;
-            const targetEl = selector === '.bauchbinde-instance' ? el[0] : el.find(selector)[0];
-            if (targetEl) {
-                animate(targetEl, transformProperties(step.properties), {
-                    duration: step.duration || 750,
-                    delay: step.delay || 0,
-                    easing: step.easing || 'out-expo'
-                });
-            }
-        });
-    } else {
-        animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
+        '</div>';
+        
+        $('#bauchbinde-container').append(html);
+        const el = $("#" + id);
+        
+        if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.show) {
+            const stepPromises = currentAnimation.show.map(async (step) => {
+                let selector = step.selector === '.white' ? '.bb-box' : step.selector;
+                const targetEl = selector === '.bauchbinde-instance' ? el[0] : el.find(selector)[0];
+                if (targetEl) {
+                    await animate(targetEl, transformProperties(step.properties), {
+                        duration: step.duration || 750,
+                        delay: step.delay || 0,
+                        easing: step.easing || 'out-expo'
+                    });
+                }
+            });
+            await Promise.all(stepPromises);
+        } else {
+            await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
+        }
+        activeLowerthirds.push({ id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false });
+    } finally {
+        playLock = false;
     }
-    activeLowerthirds.push({ id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false });
 }
 
 async function stopAll() {
@@ -227,23 +234,26 @@ export function initEngine(mode) {
     console.log("[ENGINE] init mode: " + mode + ", IPC: " + (!!ipc));
 
     const socket = io();
-    socket.on('connect', () => { 
-        console.log("[ENGINE] Socket connected, requesting state...");
-        socket.emit('request-state'); 
-    });
-    socket.on('update-css', (d) => updateCSS(d));
-    socket.on('update-js', (d) => updateJS(d));
-    socket.on('show-lowerthird', (d) => playLowerthird(d));
-    socket.on('hide-lowerthird', stopAll);
-    socket.on('status-update', (d) => handleStatusUpdate(d));
     
+    const setupListeners = (bus, isIpc = false) => {
+        const on = isIpc ? (ev, cb) => bus.on(ev, (e, d) => cb(d)) : (ev, cb) => bus.on(ev, cb);
+        
+        on('update-css', (d) => updateCSS(d));
+        on('update-js', (d) => updateJS(d));
+        on('show-lowerthird', (d) => playLowerthird(d));
+        on('hide-lowerthird', () => stopAll());
+        on('status-update', (d) => handleStatusUpdate(d));
+    };
+
     if (ipc) {
-        ipc.on('update-css', (e, d) => updateCSS(d));
-        ipc.on('update-js', (e, d) => updateJS(d));
-        ipc.on('show-lowerthird', (e, d) => playLowerthird(d));
-        ipc.on('hide-lowerthird', stopAll);
-        ipc.on('status-update', (e, d) => handleStatusUpdate(d));
+        setupListeners(ipc, true);
         ipc.on('kill-playout', () => { location.reload(); });
         ipc.send('request-state');
+    } else {
+        socket.on('connect', () => { 
+            console.log("[ENGINE] Socket connected, requesting state...");
+            socket.emit('request-state'); 
+        });
+        setupListeners(socket, false);
     }
 }
