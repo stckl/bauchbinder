@@ -48,7 +48,8 @@ let lastDesign = {
   imageStyle: { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true },
   h1: { fontfamily: 'Helvetica, Arial, sans-serif', fontsize: 5, italic: false, color: '#000000' },
   h2: { fontfamily: 'Helvetica, Arial, sans-serif', fontsize: 3.7, italic: false, color: '#000000' },
-  unifiedCss: ''
+  unifiedCss: '',
+  logo: null
 };
 
 let lastAnimation = { 
@@ -291,9 +292,6 @@ ipc.on('update-js', (event, arg) => {
   sendToWindows('update-js', arg);
   io.emit('update-js', arg);
 });
-
-ipc.on('design-update-start', () => { sendToWindows('design-update-start'); });
-ipc.on('design-update-end', () => { sendToWindows('design-update-end'); });
 
 ipc.on('log-debug', (event, arg) => {
   logger.info('RENDERER DEBUG:', arg);

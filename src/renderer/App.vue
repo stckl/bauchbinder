@@ -160,9 +160,9 @@ onMounted(() => {
             state.lowerthirds = arg;
         });
         ipc.on('update-css', (event, arg) => {
-            ipc.send('design-update-start');
+            state.isInternalUpdate = true;
             Object.assign(state.design, arg);
-            nextTick(() => { ipc.send('design-update-end'); });
+            nextTick(() => { state.isInternalUpdate = false; });
         });
         ipc.on('update-js', (event, arg) => {
             Object.assign(state.animation, arg);

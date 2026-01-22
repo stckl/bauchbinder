@@ -1,6 +1,7 @@
 import { reactive, ref } from 'vue';
 
 export const state = reactive({
+    isInternalUpdate: false,
     lowerthirds: [
         { name: 'Max Mustermann', title: 'Beispiel-Titel für Bauchbinde', image: null }
     ],
