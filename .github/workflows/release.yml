@@ -40,23 +40,12 @@ jobs:
           security unlock-keychain -p "" build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
 
-      - name: Build macOS App
+      - name: Build and Publish macOS App
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.MACOS_CERTIFICATE != '' && 'certificate.p12' || '' }}
           CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: npm run pack-macarm
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release-builds/*.zip
-          body: |
-            ## Updates in this version
-            - **Self-Signed Code Signing:** macOS apps are now signed to prevent "damaged app" errors.
-            - **Custom Animations:** Full support for Anime.js 4.x.
-            - **Improved Stability:** Multi-window architecture fixes jQuery conflicts.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-win:
     runs-on: windows-latest
@@ -75,18 +64,7 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
-      - name: Build Windows App
-        run: npm run pack-win
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            release-builds/*.zip
-            release-builds/*.exe
-          body: |
-            ## Updates in this version
-            - **Custom Animations:** Full support for Anime.js 4.x.
-            - **Improved Stability:** Multi-window architecture fixes jQuery conflicts.
+      - name: Build and Publish Windows App
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run pack-win
