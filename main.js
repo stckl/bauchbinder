@@ -13,7 +13,7 @@ const fs = require('fs');
 const { dialog } = require('electron')
 const winston = require('winston');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const Store = require('electron-store');
+const Store = require('electron-store').default;
 
 const logger = winston.createLogger({
   level: 'info',
