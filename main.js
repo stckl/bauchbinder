@@ -12,6 +12,7 @@ const io = require('socket.io')(http, {
 const fs = require('fs');
 const { dialog } = require('electron')
 const winston = require('winston');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const logger = winston.createLogger({
   level: 'info',
@@ -59,16 +60,33 @@ let lastAnimation = {
 };
 
 expressapp.set('port', process.env.PORT || 5001);
-expressapp.use(express.static(isDev ? path.join(__dirname, 'public/') : path.join(__dirname, 'dist/')));
 
-expressapp.get('/', (req, res) => {
-    if (isDev) res.redirect('http://localhost:3000/bauchbinde_h5.html');
-    else res.sendFile(path.join(__dirname, 'dist/bauchbinde_h5.html'));
+// Disable caching in dev mode
+if (isDev) {
+    expressapp.use((req, res, next) => {
+        res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+        res.header('Expires', '-1');
+        res.header('Pragma', 'no-cache');
+        next();
+    });
+}
+
+// 1. Root Route: Always serve Playout
+expressapp.get('/', (req, res, next) => {
+    if (isDev) {
+        req.url = '/bauchbinde_h5.html';
+        next();
+    } else {
+        const prodPath = path.join(__dirname, 'dist/bauchbinde_h5.html');
+        if (fs.existsSync(prodPath)) {
+            res.sendFile(prodPath);
+        } else {
+            res.status(404).send('Playout files not found.');
+        }
+    }
 });
 
-expressapp.use('/src', express.static(path.join(__dirname, 'src/')));
-expressapp.use('/node_modules', express.static(path.join(__dirname, 'node_modules/')));
-
+// 2. Custom CSS & API Routes
 expressapp.get('/custom.css', (req, res) => {
   res.header("Content-Type", "text/css");
   res.send(lastDesign.unifiedCss || '');
@@ -89,8 +107,20 @@ expressapp.post('/v1/hide', (req, res) => {
   res.send("ok");
 });
 
+// 3. Dev Proxy (HIGH PRIORITY in Dev)
+if (isDev) {
+    expressapp.use(createProxyMiddleware({
+        target: 'http://localhost:3000',
+        ws: true,
+        logLevel: 'silent',
+        changeOrigin: true
+    }));
+}
+
+// 4. Static Files (ONLY Production)
+expressapp.use(express.static(path.join(__dirname, 'dist/')));
+
 io.on('connection', (socket) => {
-    logger.info('Socket: User connected');
     socket.emit('status-update', { activeId: activeLowerThirdId, activeItem: activeLowerThirdData });
     socket.on('request-state', () => {
       socket.emit('update-css', lastDesign);
@@ -239,7 +269,6 @@ function hideLowerThird() {
 }
 
 ipc.on('request-state', (event) => {
-  logger.info('IPC: request-state from ' + (event.sender === win?.webContents ? 'Main' : 'Playout'));
   if (data) event.sender.send('update-data', data);
   if (lastDesign) event.sender.send('update-css', lastDesign);
   if (lastAnimation) event.sender.send('update-js', lastAnimation);
@@ -247,19 +276,16 @@ ipc.on('request-state', (event) => {
 });
 
 ipc.on('update-data', (event, arg) => {
-  logger.info('IPC: update-data', { count: arg ? arg.length : 0 });
   data = arg;
 });
 
 ipc.on('update-css', (event, arg) => {
-  logger.info('IPC: update-css', { hasUnified: !!arg.unifiedCss });
   lastDesign = arg;
   sendToWindows('update-css', arg);
   io.emit('update-css', arg);
 });
 
 ipc.on('update-js', (event, arg) => {
-  logger.info('IPC: update-js', { type: arg.type });
   lastAnimation = arg;
   sendToWindows('update-js', arg);
   io.emit('update-js', arg);
