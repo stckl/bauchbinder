@@ -234,8 +234,20 @@
             <p style="margin-top: 10px; color: #888;">Bild hierher ziehen oder klicken</p>
             <input type="file" ref="logoInput" style="display: none" accept="image/*" @change="handleLogoDrop({ dataTransfer: { files: $event.target.files } })">
           </div>
-          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px;">
-             <img :src="state.design.logo" style="max-height: 100px; max-width: 100%; display: block; margin: 0 auto;">
+// Function to sync everything to server
+const syncToMain = () => {
+    if (isSyncing || state.isInternalUpdate) return;
+    // Safety: Only sync if this tab is actually intended to be the source of truth
+    // In App.vue we know which tab is active. We can check this if we want, 
+    // but for now, the most important is that we don't sync if isInternalUpdate is true.
+    isSyncing = true;
+    if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
+    nextTick(() => { isSyncing = false; });
+};
+
+// ... (in template, update the preview area)
+          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px; min-height: 150px; display: flex; align-items: center; justify-content: center;">
+             <img :src="state.design.logo" style="max-height: 130px; max-width: 100%; object-fit: contain; display: block; margin: 0 auto;">
              <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px;" @click="removeLogo"><i class="trash icon"></i></div>
           </div>
         </div>
@@ -787,11 +799,18 @@ const resolveConflict = async (index, source) => {
     if (cssConflicts.value.length === 0) $('#conflict-modal').modal('hide');
 };
 
+const props = defineProps({
+    isActive: Boolean
+});
+
 let isSyncing = false;
 
 // Function to sync everything to server
 const syncToMain = () => {
     if (isSyncing || state.isInternalUpdate) return;
+    // Safety: Only sync if this tab is actually the active one
+    if (!props.isActive) return;
+    
     isSyncing = true;
     if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
     nextTick(() => { isSyncing = false; });

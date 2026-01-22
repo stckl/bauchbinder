@@ -29,15 +29,15 @@
     </div>
 
     <div class="ui tab segment" :class="{ active: activeTab === 'items' }">
-      <ItemsTab />
+      <ItemsTab :is-active="activeTab === 'items'" />
     </div>
 
     <div class="ui tab segment" :class="{ active: activeTab === 'design' }">
-      <DesignTab />
+      <DesignTab :is-active="activeTab === 'design'" />
     </div>
 
     <div class="ui tab segment" :class="{ active: activeTab === 'animation' }">
-      <AnimationTab />
+      <AnimationTab :is-active="activeTab === 'animation'" />
     </div>
 
     <div class="ui tab segment" :class="{ active: activeTab === 'info' }">
