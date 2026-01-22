@@ -1,7 +1,9 @@
 import { reactive, ref } from 'vue';
 
 export const state = reactive({
-    lowerthirds: [],
+    lowerthirds: [
+        { name: 'Max Mustermann', title: 'Beispiel-Titel für Bauchbinde', image: null }
+    ],
     design: {
         white: { 
             width: 10, left: 5, bottom: 7, height: 1, fixedWidth: false, fixedHeight: false,
@@ -16,8 +18,8 @@ export const state = reactive({
             { id: '.image', name: 'Bild (Bauchbinde)', alignSelf: 'auto' },
             { id: '.text', name: 'Text', alignSelf: 'auto' }
         ],
-        logoStyle: { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true, _overrides: {} },
-        imageStyle: { height: 100, width: 0, radius: 0, opacity: 1, margin: 0, position: 'static', x: 0, y: 0, fitHeight: true, _overrides: {} },
+        logoStyle: { height: 10, width: 0, radius: 0, opacity: 1, marginLeft: 0, marginRight: 0, position: 'static', x: 0, y: 0, fitHeight: false, _overrides: {} },
+        imageStyle: { height: 10, width: 0, radius: 0, opacity: 1, marginLeft: 0, marginRight: 0, position: 'static', x: 0, y: 0, fitHeight: false, _overrides: {} },
         h1: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 5, italic: false, color: '#000000', _overrides: {} },
         h2: { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 3.7, italic: false, color: '#000000', _overrides: {} },
         unifiedCss: '',

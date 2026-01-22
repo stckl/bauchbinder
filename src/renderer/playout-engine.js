@@ -54,7 +54,7 @@ function transformCssColors(css) {
 
 function updateCSS(data) {
     if (!data) return;
-    console.log("[ENGINE] updateCSS received", !!data.unifiedCss);
+    console.log("[ENGINE] updateCSS - Logo:", !!data.logo, "CSS-Len:", data.unifiedCss?.length);
     currentDesign = data;
     
     let fontCss = '';
@@ -78,28 +78,28 @@ function updateCSS(data) {
     style.id = 'custom-styles';
     style.innerHTML = fontCss + "\n.bauchbinde-instance { position: absolute; width: 100%; }\n" + transformedCss + "\n" + extraCss;
     document.head.appendChild(style);
+
+    // LIVE UPDATE for Logo if something is showing
+    activeLowerthirds.forEach(lt => {
+        const $logo = lt.el.find('.logo');
+        if (data.logo) {
+            if ($logo.length) $logo.attr('src', data.logo);
+            else lt.el.find('.bb-box').prepend('<img src="' + data.logo + '" class="logo">');
+        } else {
+            $logo.remove();
+        }
+    });
 }
 
 function updateJS(data) {
     if (!data) return;
-    console.log("[ENGINE] updateJS received:", data.type);
     currentAnimation = data;
 }
 
 function handleStatusUpdate(arg) {
-    console.log("[ENGINE] handleStatusUpdate received:", arg);
     if (arg && arg.activeItem) {
-        const alreadyShowing = activeLowerthirds.some(lt => lt.idFromStatus === arg.activeItem.id);
-        if (alreadyShowing) {
-            console.log("[ENGINE] Already showing item with ID:", arg.activeItem.id);
-            return;
-        }
-
-        console.log("[ENGINE] New active item detected, playing:", arg.activeItem.name);
-        // Small delay to ensure CSS is applied
-        setTimeout(() => playLowerthird(arg.activeItem), 100);
+        playLowerthird(arg.activeItem);
     } else if (arg && arg.activeId === null && activeLowerthirds.length > 0) {
-        console.log("[ENGINE] Status says no item active, stopping all.");
         stopAll();
     }
 }
@@ -127,21 +127,41 @@ function transformProperties(props) {
 
 async function playLowerthird(item) {
     if (!item || !animate) return;
-    console.log("[ENGINE] playLowerthird animation start for:", item.name);
-    console.log("[ENGINE] currentDesign logo present:", !!currentDesign?.logo);
     
+    // LIVE UPDATE: Check if we are already showing this ID
+    const existing = activeLowerthirds.find(lt => lt.idFromStatus === item.id);
+    if (existing) {
+        console.log("[ENGINE] Live update for item ID:", item.id);
+        existing.el.find('h1').text(item.name || '');
+        existing.el.find('h2').text(item.title || '');
+        
+        const $img = existing.el.find('.image');
+        if (item.image) {
+            if ($img.length) $img.attr('src', item.image);
+            else existing.el.find('.text').before('<img src="' + item.image + '" class="image">');
+        } else {
+            $img.remove();
+        }
+        return;
+    }
+
     if (activeLowerthirds.length > 0) await stopAll();
 
+    console.log("[ENGINE] Rendering new instance - Logo:", !!currentDesign?.logo, "ItemImg:", !!item.image);
+
     const id = "bb-" + Date.now();
+    const logoHtml = currentDesign?.logo ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
+    const imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
+    
     const html = '<div id="' + id + '" class="bauchbinde bauchbinde-instance">' +
         '<div class="bb-box">' +
-            (currentDesign?.logo ? '<img src="' + currentDesign.logo + '" class="logo">' : '') + 
-            (item.image ? '<img src="' + item.image + '" class="image">' : '') + 
+            logoHtml +
+            imageHtml +
             '<div class="text">' +
-                '<h1>' + (item.name || '') + '</h1>' + 
-                '<h2>' + (item.title || '') + '</h2>' + 
-            '</div>' + 
-        '</div>' + 
+                '<h1>' + (item.name || '') + '</h1>' +
+                '<h2>' + (item.title || '') + '</h2>' +
+            '</div>' +
+        '</div>' +
     '</div>';
     
     $('#bauchbinde-container').append(html);

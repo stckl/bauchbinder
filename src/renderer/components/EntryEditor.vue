@@ -29,8 +29,8 @@
           </div>
           <input type="file" ref="imgInput" style="display: none" accept="image/*" @change="handleImageDrop({ dataTransfer: { files: $event.target.files } })">
         </div>
-        <div v-else class="ui segment inverted" style="text-align: center; position: relative; padding: 0;">
-          <img :src="entry.image" style="max-height: 200px; max-width: 100%;">
+        <div v-else class="ui segment inverted checkerboard" style="text-align: center; position: relative; padding: 10px;">
+          <img :src="entry.image" style="max-height: 200px; max-width: 100%; display: block; margin: 0 auto;">
           <div class="ui top right attached label red" style="cursor: pointer;" @click="entry.image = null"><i class="trash icon"></i></div>
         </div>
       </div>

@@ -230,23 +230,16 @@
         <h5 class="ui header inverted" style="margin-top: 10px;">Stil: Bild (Global)</h5>
         <div class="ui doubling four column grid">
           <div class="column field">
-            <label>Größe anpassen</label>
-            <div class="ui toggle checkbox inverted">
-              <input type="checkbox" v-model="state.design.logoStyle.fitHeight">
-              <label>100% Höhe</label>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Höhe (in %)</label>
+            <label>Höhe (in vh)</label>
             <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="200" v-model="state.design.logoStyle.height" :disabled="state.design.logoStyle.fitHeight">
+              <input type="number" step="0.1" min="0" max="100" v-model="state.design.logoStyle.height">
               <i class="arrows alternate vertical icon"></i>
             </div>
           </div>
           <div class="column field">
-            <label>Breite (in %)</label>
+            <label>Breite (in vh)</label>
             <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="200" v-model="state.design.logoStyle.width" :disabled="state.design.logoStyle.fitHeight">
+              <input type="number" step="0.1" min="0" max="100" v-model="state.design.logoStyle.width">
               <i class="arrows alternate horizontal icon"></i>
             </div>
           </div>
@@ -258,10 +251,17 @@
             </div>
           </div>
           <div class="column field">
-            <label>Seitenabstand (px)</label>
+            <label>Abstand Links (vh)</label>
             <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="100" v-model="state.design.logoStyle.margin">
-              <i class="arrows alternate horizontal icon"></i>
+              <input type="number" step="0.1" v-model="state.design.logoStyle.marginLeft">
+              <i class="arrow left icon"></i>
+            </div>
+          </div>
+          <div class="column field">
+            <label>Abstand Rechts (vh)</label>
+            <div class="ui left icon input fluid inverted">
+              <input type="number" step="0.1" v-model="state.design.logoStyle.marginRight">
+              <i class="arrow right icon"></i>
             </div>
           </div>
           <div class="column field">
@@ -291,23 +291,16 @@
         <h5 class="ui header inverted" style="margin-top: 20px;">Stil: Bild (Bauchbinde)</h5>
         <div class="ui doubling four column grid">
           <div class="column field">
-            <label>Größe anpassen</label>
-            <div class="ui toggle checkbox inverted">
-              <input type="checkbox" v-model="state.design.imageStyle.fitHeight">
-              <label>100% Höhe</label>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Höhe (in %)</label>
+            <label>Höhe (in vh)</label>
             <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="200" v-model="state.design.imageStyle.height" :disabled="state.design.imageStyle.fitHeight">
+              <input type="number" step="0.1" min="0" max="100" v-model="state.design.imageStyle.height">
               <i class="arrows alternate vertical icon"></i>
             </div>
           </div>
           <div class="column field">
-            <label>Breite (in %)</label>
+            <label>Breite (in vh)</label>
             <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="200" v-model="state.design.imageStyle.width" :disabled="state.design.imageStyle.fitHeight">
+              <input type="number" step="0.1" min="0" max="100" v-model="state.design.imageStyle.width">
               <i class="arrows alternate horizontal icon"></i>
             </div>
           </div>
@@ -319,10 +312,17 @@
             </div>
           </div>
           <div class="column field">
-            <label>Seitenabstand (px)</label>
+            <label>Abstand Links (vh)</label>
             <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="100" v-model="state.design.imageStyle.margin">
-              <i class="arrows alternate horizontal icon"></i>
+              <input type="number" step="0.1" v-model="state.design.imageStyle.marginLeft">
+              <i class="arrow left icon"></i>
+            </div>
+          </div>
+          <div class="column field">
+            <label>Abstand Rechts (vh)</label>
+            <div class="ui left icon input fluid inverted">
+              <input type="number" step="0.1" v-model="state.design.imageStyle.marginRight">
+              <i class="arrow right icon"></i>
             </div>
           </div>
           <div class="column field">
@@ -355,8 +355,8 @@
             <i class="huge image outline icon" style="color: #555;"></i>
             <p style="margin-top: 10px; color: #888;">Bild hierher ziehen</p>
           </div>
-          <div v-else class="ui segment" style="background: #1b1c1d; text-align: center; position: relative;">
-             <img :src="state.design.logo" style="max-height: 100px; max-width: 100%;">
+          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px;">
+             <img :src="state.design.logo" style="max-height: 100px; max-width: 100%; display: block; margin: 0 auto;">
              <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px;" @click="removeLogo"><i class="trash icon"></i></div>
           </div>
         </div>
@@ -564,15 +564,12 @@ const buildCss = () => {
 
   const imgBlock = (sel, obj) => {
     let s = sel + " {\n";
-    if (obj.fitHeight) {
-      s += "  height: 100%;\n  width: auto;\n";
-    } else {
-      s += line(obj, 'height', 'height', (obj.height > 0 ? obj.height + "%" : "auto"));
-      s += line(obj, 'width', 'width', (obj.width > 0 ? obj.width + "%" : "auto"));
-    }
+    s += line(obj, 'height', 'height', (obj.height > 0 ? obj.height + "vh" : "auto"));
+    s += line(obj, 'width', 'width', (obj.width > 0 ? obj.width + "vh" : "auto"));
     s += line(obj, 'radius', 'border-radius', (obj.radius || 0) + "px");
     s += line(obj, 'opacity', 'opacity', (obj.opacity || 1));
-    s += line(obj, 'margin', 'margin', "0 " + (obj.margin || 0) + "px");
+    s += line(obj, 'marginLeft', 'margin-left', (obj.marginLeft || 0) + "vh");
+    s += line(obj, 'marginRight', 'margin-right', (obj.marginRight || 0) + "vh");
     
     if (obj.position && obj.position !== "static") {
       s += line(obj, 'position', 'position', obj.position);
@@ -700,21 +697,34 @@ const parseCssToProperties = (css) => {
 
     const parseImg = (sel, obj) => {
         const h = extractValue(sel, 'height');
-        if (h === '100%') obj.fitHeight = true;
-        else if (h && h.includes('%')) { obj.height = parseFloat(h); obj.fitHeight = false; }
-        else obj.fitHeight = false;
+        if (h && (h.includes('%') || h.includes('vh'))) { obj.height = parseFloat(h); }
 
         const w = extractValue(sel, 'width');
-        if (w && w.includes('%')) obj.width = parseFloat(w);
+        if (w && (w.includes('%') || w.includes('vh'))) obj.width = parseFloat(w);
         const r = extractValue(sel, 'border-radius');
         if (r) obj.radius = parseFloat(r);
         const o = extractValue(sel, 'opacity');
         if (o) obj.opacity = parseFloat(o);
+        
+        const ml = extractValue(sel, 'margin-left');
+        if (ml) obj.marginLeft = parseFloat(ml);
+        const mr = extractValue(sel, 'margin-right');
+        if (mr) obj.marginRight = parseFloat(mr);
+        
         const m = extractValue(sel, 'margin');
         if (m) {
-            const parts = m.split(' ');
-            if (parts.length > 1) obj.margin = parseFloat(parts[1]);
+            const parts = m.trim().split(' ');
+            if (parts.length > 1) {
+                const val = parseFloat(parts[1]);
+                if (isNaN(obj.marginLeft)) obj.marginLeft = val;
+                if (isNaN(obj.marginRight)) obj.marginRight = val;
+            } else if (parts.length === 1 && parts[0] !== '') {
+                const val = parseFloat(parts[0]);
+                if (isNaN(obj.marginLeft)) obj.marginLeft = val;
+                if (isNaN(obj.marginRight)) obj.marginRight = val;
+            }
         }
+        
         const p = extractValue(sel, 'position');
         if (p) obj.position = p;
         const x = extractValue(sel, 'left');
@@ -850,7 +860,8 @@ const syncToMain = () => {
 watch(() => [
     state.design.white, state.design.h1, state.design.h2, 
     state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle,
-    state.design.logo
+    state.design.logo, state.design.logoStyle.marginLeft, state.design.logoStyle.marginRight,
+    state.design.imageStyle.marginLeft, state.design.imageStyle.marginRight
 ], () => {
     const parts = state.design.unifiedCss.split('/* CUSTOM */');
     const customPart = parts.length > 1 ? parts[1].trim() : '';
@@ -859,6 +870,9 @@ watch(() => [
     if (state.design.unifiedCss !== newCss) {
         state.design.unifiedCss = newCss;
         // The watch on unifiedCss will handle the IPC send
+    } else {
+        // If CSS text is same but logo or other data changed, sync manually
+        syncToMain();
     }
 }, { deep: true });
 

@@ -26,7 +26,8 @@ const logger = winston.createLogger({
   ]
 });
 
-let win, winKey, winFill, winEditor, winStep, data;
+let win, winKey, winFill, winEditor, winStep;
+let data = [{ name: 'Max Mustermann', title: 'Beispiel-Titel für Bauchbinde', image: null }];
 let activeLowerThirdId = null;
 let activeLowerThirdData = null;
 
@@ -325,6 +326,14 @@ ipc.on('save-entry', (event, arg) => {
   if (arg.id !== null) data[arg.id] = arg.entry;
   else { if (!data) data = []; data.push(arg.entry); }
   sendToWindows('update-data', data);
+  
+  // LIVE UPDATE: If this item is currently active, broadcast changes immediately
+  if (arg.id !== null && (arg.id + 1) === activeLowerThirdId) {
+    const updatedItem = JSON.parse(JSON.stringify(data[arg.id]));
+    updatedItem.id = activeLowerThirdId;
+    showLowerThird(updatedItem);
+  }
+
   if (arg.close && winEditor) winEditor.close();
 });
 

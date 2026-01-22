@@ -4,7 +4,12 @@ html, body {
     width: 100vw;
     height: 100vh;
     overflow: hidden !important;
-    background: transparent;
+    background: transparent !important;
+}
+
+/* Ensure any Vite/Dev backgrounds are transparent */
+#app, #bauchbinde-container {
+    background: transparent !important;
 }
 
 #bauchbinde-container {
