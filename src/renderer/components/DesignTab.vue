@@ -788,10 +788,11 @@ const resolveConflict = async (index, source) => {
 };
 
 let isSyncing = false;
+let isInternalUpdate = false;
 
 // Function to sync everything to server
 const syncToMain = () => {
-    if (isSyncing) return;
+    if (isSyncing || isInternalUpdate) return;
     isSyncing = true;
     if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
     nextTick(() => { isSyncing = false; });
@@ -804,6 +805,7 @@ watch(() => [
     state.design.logo, state.design.logoStyle.marginLeft, state.design.logoStyle.marginRight,
     state.design.imageStyle.marginLeft, state.design.imageStyle.marginRight
 ], () => {
+    if (isInternalUpdate) return;
     const parts = (state.design.unifiedCss || '').split('/* CUSTOM */');
     const customPart = parts.length > 1 ? parts[1].trim() : '';
     const newCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
@@ -819,7 +821,7 @@ watch(() => [
 
 // Watch unifiedCss -> Parse back to properties (if changed manually) and Sync
 watch(() => state.design.unifiedCss, (nv, ov) => {
-    if (isSyncing || !nv) return;
+    if (isSyncing || isInternalUpdate || !nv) return;
     
     // If it was a manual edit in the CSS editor (not from buildCss)
     // we might need to parse it back to properties
@@ -830,6 +832,10 @@ watch(() => state.design.unifiedCss, (nv, ov) => {
 });
 
 onMounted(() => {
+    if (ipc) {
+        ipc.on('design-update-start', () => { isInternalUpdate = true; });
+        ipc.on('design-update-end', () => { isInternalUpdate = false; });
+    }
     // Force initial build if missing
     if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
         console.log("[DesignTab] Building initial CSS...");

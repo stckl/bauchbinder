@@ -292,6 +292,9 @@ ipc.on('update-js', (event, arg) => {
   io.emit('update-js', arg);
 });
 
+ipc.on('design-update-start', () => { sendToWindows('design-update-start'); });
+ipc.on('design-update-end', () => { sendToWindows('design-update-end'); });
+
 ipc.on('log-debug', (event, arg) => {
   logger.info('RENDERER DEBUG:', arg);
 });
