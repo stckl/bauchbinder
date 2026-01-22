@@ -29,16 +29,16 @@ jobs:
       - name: Build macOS App
         run: npm run pack-macarm
 
-      - name: Zip Application
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          cd release-builds
-          zip -r bauchbinder-darwin-arm64-${VERSION}.zip bauchbinder-darwin-arm64
-
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
           files: release-builds/*.zip
+          body: |
+            ## Updates in this version
+            - **Custom Animations:** Full support for Anime.js 4.x structured animations.
+            - **UI/UX Improvements:** Refactored to Vue 3 components for better performance.
+            - **Native ARM Support:** Explicit builds for Apple Silicon.
+            - **Stability:** Fixed migration bugs from v3 files.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -74,5 +74,11 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: release-builds/*.zip
+          body: |
+            ## Updates in this version
+            - **Custom Animations:** Full support for Anime.js 4.x structured animations.
+            - **UI/UX Improvements:** Refactored to Vue 3 components for better performance.
+            - **Native ARM Support:** Explicit builds for Apple Silicon.
+            - **Stability:** Fixed migration bugs from v3 files.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
