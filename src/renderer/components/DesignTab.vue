@@ -351,9 +351,10 @@
 
         <h5 class="ui header inverted" style="margin-top: 20px;">Upload: Bild (Global)</h5>
         <div class="field">
-          <div v-if="!state.design.logo" class="ui segment" style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;" @dragover.prevent @drop.prevent="handleLogoDrop">
+          <div v-if="!state.design.logo" class="ui segment" style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;" @dragover.prevent @drop.prevent="handleLogoDrop" @click="$refs.logoInput.click()">
             <i class="huge image outline icon" style="color: #555;"></i>
-            <p style="margin-top: 10px; color: #888;">Bild hierher ziehen</p>
+            <p style="margin-top: 10px; color: #888;">Bild hierher ziehen oder klicken</p>
+            <input type="file" ref="logoInput" style="display: none" accept="image/*" @change="handleLogoDrop({ dataTransfer: { files: $event.target.files } })">
           </div>
           <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px;">
              <img :src="state.design.logo" style="max-height: 100px; max-width: 100%; display: block; margin: 0 auto;">
