@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import ItemsTab from './components/ItemsTab.vue';
 import DesignTab from './components/DesignTab.vue';
 import AnimationTab from './components/AnimationTab.vue';
