@@ -201,17 +201,16 @@ async function stopAll() {
 
     const hidePromises = currentActive.map(async (lt) => {
         if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
-            const stepPromises = currentAnimation.hide.map(step => {
+            const stepPromises = currentAnimation.hide.map(async (step) => {
                 let selector = step.selector === '.white' ? '.bb-box' : step.selector;
-                const targetEl = selector === '.bauchbinde-instance' ? lt.el[0] : lt.el.find(step.selector)[0];
+                const targetEl = selector === '.bauchbinde-instance' ? lt.el[0] : lt.el.find(selector)[0];
                 if (targetEl) {
-                    return animate(targetEl, transformProperties(step.properties), {
+                    await animate(targetEl, transformProperties(step.properties), {
                         duration: step.duration || 500,
                         delay: step.delay || 0,
                         easing: step.easing || 'out-expo'
                     });
                 }
-                return Promise.resolve();
             });
             await Promise.all(stepPromises);
         } else {
