@@ -516,18 +516,47 @@ const buildCss = () => {
   };
 
   let css = ".bauchbinde {\n";
+  css += "  display: flex;\n";
+  
   if (state.design.container) {
       const c = state.design.container;
-      ['left', 'right', 'width'].forEach(p => {
-          if (c[p].enabled) css += `  ${p}: ${c[p].value}vw;\n`;
-      });
-      ['top', 'bottom', 'height'].forEach(p => {
-          if (c[p].enabled) css += `  ${p}: ${c[p].value}vh;\n`;
-      });
+      
+      // Horizontal positioning
+      if (!c.left.enabled && !c.right.enabled) {
+          if (c.width.enabled) {
+              css += `  width: ${c.width.value}vw;\n`;
+              css += `  left: calc(50vw - ${c.width.value}vw / 2);\n`;
+          } else {
+              css += `  width: 100vw;\n`;
+              css += `  left: 0;\n`;
+          }
+      } else {
+          if (c.left.enabled) css += `  left: ${c.left.value}vw;\n`;
+          if (c.right.enabled) css += `  right: ${c.right.value}vw;\n`;
+          if (c.width.enabled) css += `  width: ${c.width.value}vw;\n`;
+      }
+
+      // Vertical positioning
+      if (!c.top.enabled && !c.bottom.enabled) {
+          if (c.height.enabled) {
+              css += `  height: ${c.height.value}vh;\n`;
+              css += `  top: calc(50vh - ${c.height.value}vh / 2);\n`;
+          } else {
+              css += `  height: 100vh;\n`;
+              css += `  top: 0;\n`;
+              css += `  align-items: center;\n`;
+          }
+      } else {
+          if (c.top.enabled) css += `  top: ${c.top.value}vh;\n`;
+          if (c.bottom.enabled) css += `  bottom: ${c.bottom.value}vh;\n`;
+          if (c.height.enabled) css += `  height: ${c.height.value}vh;\n`;
+      }
   } else {
+      css += `  width: 100vw;\n`;
+      css += `  left: 0;\n`;
       css += line(state.design.white, 'bottom', 'bottom', (state.design.white.bottom || 0) + "vh");
   }
-  css += "  display: flex;\n";
+
   css += `  justify-content: ${["flex-start", "center", "flex-end"][state.design.white.divalign || 0]};\n`;
   css += "}\n\n";
 
