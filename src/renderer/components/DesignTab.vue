@@ -522,23 +522,41 @@ const buildCss = () => {
       const c = state.design.container;
       
       // Horizontal positioning
-      const hCount = (c.left.enabled ? 1 : 0) + (c.right.enabled ? 1 : 0);
+      if (c.left.enabled || c.right.enabled || c.width.enabled) { // Custom horizontal is active
+          const hCount = (c.left.enabled ? 1 : 0) + (c.right.enabled ? 1 : 0); // Re-calculate based on current state
 
-      if (hCount === 0) { // No left/right enabled
-          if (c.width.enabled) {
-              const widthVal = c.width.value;
-              css += cssProp('width', widthVal, 'vw');
-              css += `  left: calc(50vw - ${widthVal}vw / 2);\n`;
-              css += `  right: auto;\n`;
-          } else { // No left/right/width enabled
-              css += `  width: auto;\n`;
-              css += `  left: auto;\n`;
-              css += `  right: auto;\n`;
+          if (hCount === 0) { // Only width enabled, or none
+              if (c.width.enabled) { // Only width enabled
+                  css += cssProp('width', c.width.value, 'vw');
+                  css += `  left: calc(50vw - ${c.width.value}vw / 2);\n`;
+                  css += `  right: auto;\n`;
+              } else { // None of left/right/width enabled
+                  css += `  width: auto;\n`; // This means content width
+                  css += `  left: auto;\n`;
+                  css += `  right: auto;\n`;
+              }
+          } else { // At least one of left/right/width is enabled
+              if (c.left.enabled) css += cssProp('left', c.left.value, 'vw'); else css += `  left: auto;\n`;
+              if (c.right.enabled) css += cssProp('right', c.right.value, 'vw'); else css += `  right: auto;\n`;
+              if (c.width.enabled) css += cssProp('width', c.width.value, 'vw'); else css += `  width: auto;\n`;
           }
-      } else { // left/right or both enabled
-          if (c.left.enabled) css += cssProp('left', c.left.value, 'vw'); else css += `  left: auto;\n`;
-          if (c.right.enabled) css += cssProp('right', c.right.value, 'vw'); else css += `  right: auto;\n`;
-          if (c.width.enabled) css += cssProp('width', c.width.value, 'vw'); else css += `  width: auto;\n`;
+      } else { // ALL custom horizontal controls are disabled. Use old divalign logic for container position
+          const divalign = state.design.white.divalign || 0; // 0=left, 1=center, 2=right
+          if (divalign === 0) { // Left
+              css += `  left: 0vw;\n`;
+              css += `  right: auto;\n`;
+              css += `  width: auto;\n`; // Default to content width
+          } else if (divalign === 1) { // Center
+              css += `  left: 0;\n`;
+              css += `  right: 0;\n`;
+              css += `  margin-left: auto;\n`;
+              css += `  margin-right: auto;\n`;
+              css += `  width: fit-content;\n`; // Center content-sized element
+          } else { // Right
+              css += `  left: auto;\n`;
+              css += `  right: 0vw;\n`;
+              css += `  width: auto;\n`; // Default to content width
+          }
       }
 
       // Vertical positioning
