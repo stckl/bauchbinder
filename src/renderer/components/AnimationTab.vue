@@ -13,6 +13,9 @@
         <button class="ui button" :class="{ blue: isPresetActive('slideup') }" @click.prevent="loadPreset('slideup')">slideup</button>
         <button class="ui button" :class="{ blue: isPresetActive('slideup_textdelay') }" @click.prevent="loadPreset('slideup_textdelay')">slideup textdelay</button>
       </div>
+      <button class="ui red inverted button" style="margin-left: 20px;" @click="resetAnimation">
+        <i class="undo icon"></i> Animation zurücksetzen
+      </button>
     </div>
   </div>
 
@@ -68,27 +71,27 @@ const openStepEditor = (phase, index) => {
 };
 
 const addAnimationStep = (phase) => {
-    state.animation[phase].push({ selector: '.bb-box', properties: { opacity: (phase==='show'?[0, 1]:[1, 0]) }, duration: 750, delay: 0, easing: 'easeInOutCirc' });
+    state.animation[phase].push({ selector: '.bb-box', properties: { opacity: (phase==='show'?[0, 1]:[1, 0]) }, duration: (phase==='show' ? 1000 : 750), delay: 0, easing: 'easeInOutCirc' });
 };
 
 const removeAnimationStep = (phase, index) => { state.animation[phase].splice(index, 1); };
 
 const PRESETS = {
     fade: {
-        show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideleft: {
-        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['-100vw', '0vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '-100vw'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['-100vw', '0vw'] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '-100vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideright: {
-        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['100vw', '0vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '100vw'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { translateX: ['100vw', '0vw'] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { translateX: ['0vw', '100vw'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideup: {
-        show: [{ selector: '.bauchbinde-instance', properties: { translateY: ['100vh', '0vh'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '100vh'] }, duration: 500, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-instance', properties: { translateY: ['100vh', '0vh'] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-instance', properties: { translateY: ['0vh', '100vh'] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
     },
     slideup_textdelay: {
         show: [
@@ -116,6 +119,17 @@ const isPresetActive = (name) => {
     // Compare only show and hide arrays
     return JSON.stringify(state.animation.show) === JSON.stringify(p.show) &&
            JSON.stringify(state.animation.hide) === JSON.stringify(p.hide);
+};
+
+const resetAnimation = () => {
+    if (!confirm('Animation wirklich zurücksetzen? Alle Einstellungen werden auf Standard (fade) zurückgesetzt.')) return;
+
+    state.animation.type = 'structured';
+    state.animation.duration = 1000;
+    state.animation.easing = 'easeInOutCirc';
+    state.animation.code = '';
+    state.animation.show = [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }];
+    state.animation.hide = [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }];
 };
 
 let isInternalUpdate = false;

@@ -136,16 +136,17 @@ const openFile = () => {
                 if (ld.lowerthirds) state.lowerthirds = ld.lowerthirds;
                 if (ld.design) {
                     if (!ld.design.container) {
-                        // Legacy Migration: 
+                        // Legacy Migration:
                         // Old system had .bauchbinde at full width (left:0, right:0)
                         // and used white.bottom for the vertical position.
+                        // white.divalign (0=left, 1=center, 2=right) is preserved and used via justify-content.
                         ld.design.container = {
                             left: { enabled: false, value: 0 },
                             right: { enabled: false, value: 0 },
                             top: { enabled: false, value: 0 },
-                            bottom: { enabled: false, value: ld.design.white?.bottom || 0 }, // Preserve old bottom value, but disable by default
+                            bottom: { enabled: true, value: ld.design.white?.bottom || 7 },
                             width: { enabled: false, value: 100 },
-                            height: { enabled: false, value: 0 }
+                            height: { enabled: false, value: 100 }
                         };
                     }
                     Object.assign(state.design, ld.design);

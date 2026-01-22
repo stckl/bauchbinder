@@ -12,7 +12,7 @@
               <input type="number" step="0.1" v-model="state.design.container[prop].value" :disabled="!state.design.container[prop].enabled">
               <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
                 <div class="ui checkbox inverted" style="margin: 0;">
-                  <input type="checkbox" v-model="state.design.container[prop].enabled" :disabled="!state.design.container[prop].enabled && getEnabledCount('horizontal') >= 2">
+                  <input type="checkbox" v-model="state.design.container[prop].enabled">
                   <label></label>
                 </div>
               </div>
@@ -25,7 +25,7 @@
               <input type="number" step="0.1" v-model="state.design.container[prop].value" :disabled="!state.design.container[prop].enabled">
               <div class="ui basic label" style="background: #333; border-color: #555; color: #fff; padding: 0 8px; display: flex; align-items: center;">
                 <div class="ui checkbox inverted" style="margin: 0;">
-                  <input type="checkbox" v-model="state.design.container[prop].enabled" :disabled="!state.design.container[prop].enabled && getEnabledCount('vertical') >= 2">
+                  <input type="checkbox" v-model="state.design.container[prop].enabled">
                   <label></label>
                 </div>
               </div>
@@ -74,9 +74,9 @@
           <div class="column field">
             <label>Position</label>
             <div class="ui icon inverted buttons fluid">
-              <button class="ui button" :class="{ blue: (state.design.white.divalign == 0) }"  v-on:click.prevent="state.design.white.divalign = 0"><i class="align left icon"></i></button>
-              <button class="ui button" :class="{ blue: (state.design.white.divalign == 1) }"  v-on:click.prevent="state.design.white.divalign = 1"><i class="align center icon"></i></button>
-              <button class="ui button" :class="{ blue: (state.design.white.divalign == 2) }"  v-on:click.prevent="state.design.white.divalign = 2"><i class="align right icon"></i></button>
+              <button class="ui button" :class="{ blue: (state.design.white.divalign == 0) }" @click.prevent="setPosition(0)"><i class="align left icon"></i></button>
+              <button class="ui button" :class="{ blue: (state.design.white.divalign == 1) }" @click.prevent="setPosition(1)"><i class="align center icon"></i></button>
+              <button class="ui button" :class="{ blue: (state.design.white.divalign == 2) }" @click.prevent="setPosition(2)"><i class="align right icon"></i></button>
             </div>
           </div>
           <div class="column field">
@@ -87,19 +87,21 @@
               <button class="ui button" :class="{ blue: (state.design.white.textalign == 2) }"  v-on:click.prevent="state.design.white.textalign = 2"><i class="align right icon"></i></button>
             </div>
           </div>
-          <div class="column field">
-            <label>Text Abstand horizontal</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.01" min="0" max="100" v-model="state.design.white.paddingh" placeholder="Abstand seite">
-              <i class="arrow right icon"></i>
-            </div>
+          <div class="two wide column field compact-inputs">
+            <label>Abst. O</label>
+            <input type="number" step="0.01" min="0" max="100" v-model="state.design.white.paddingTop">
           </div>
-          <div class="column field">
-            <label>Text Abstand vertikal</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.01" min="0" max="100" v-model="state.design.white.paddingv" placeholder="Abstand unten">
-              <i class="arrow up icon"></i>
-            </div>
+          <div class="two wide column field compact-inputs">
+            <label>Abst. R</label>
+            <input type="number" step="0.01" min="0" max="100" v-model="state.design.white.paddingRight">
+          </div>
+          <div class="two wide column field compact-inputs">
+            <label>Abst. U</label>
+            <input type="number" step="0.01" min="0" max="100" v-model="state.design.white.paddingBottom">
+          </div>
+          <div class="two wide column field compact-inputs">
+            <label>Abst. L</label>
+            <input type="number" step="0.01" min="0" max="100" v-model="state.design.white.paddingLeft">
           </div>
           <div class="column field">
             <label>Ecken Rundung</label>
@@ -264,71 +266,94 @@
         </div>
 
         <h5 class="ui header inverted" style="margin-top: 20px;">Stil: Bild (Global)</h5>
-        <div class="ui doubling four column grid">
+        <div class="ui doubling six column grid compact-inputs">
           <div class="column field">
-            <label>Höhe (in vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" min="0" max="100" v-model="state.design.logoStyle.height">
-              <i class="arrows alternate vertical icon"></i>
-            </div>
+            <label>Höhe</label>
+            <input type="number" step="0.1" min="0" max="100" v-model="state.design.logoStyle.height" class="ui input inverted mini">
           </div>
           <div class="column field">
-            <label>Breite (in vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" min="0" max="100" v-model="state.design.logoStyle.width">
-              <i class="arrows alternate horizontal icon"></i>
-            </div>
+            <label>Breite</label>
+            <input type="number" step="0.1" min="0" max="100" v-model="state.design.logoStyle.width" class="ui input inverted mini">
           </div>
           <div class="column field">
-            <label>Ecken Rundung</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="1000" v-model="state.design.logoStyle.radius">
-              <i class="circle outline icon"></i>
-            </div>
+            <label>Rundung</label>
+            <input type="number" step="1" min="0" max="1000" v-model="state.design.logoStyle.radius" class="ui input inverted mini">
           </div>
           <div class="column field">
-            <label>Abstand Links (vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.logoStyle.marginLeft">
-              <i class="arrow left icon"></i>
-            </div>
+            <label>Abst. L</label>
+            <input type="number" step="0.1" v-model="state.design.logoStyle.marginLeft" class="ui input inverted mini">
           </div>
           <div class="column field">
-            <label>Abstand Rechts (vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.logoStyle.marginRight">
-              <i class="arrow right icon"></i>
-            </div>
+            <label>Abst. R</label>
+            <input type="number" step="0.1" v-model="state.design.logoStyle.marginRight" class="ui input inverted mini">
           </div>
           <div class="column field">
-            <label>Positionierung</label>
-            <select class="ui inverted dropdown fluid" v-model="state.design.logoStyle.position">
-              <option value="static">Standard (Flex)</option>
+            <label>Position</label>
+            <select class="ui inverted dropdown fluid mini" v-model="state.design.logoStyle.position">
+              <option value="static">Flex</option>
               <option value="relative">Relativ</option>
               <option value="absolute">Absolut</option>
             </select>
           </div>
           <div class="column field" v-if="state.design.logoStyle.position !== 'static'">
-            <label>X-Pos (vw)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.logoStyle.x">
-              <i class="arrows alternate horizontal icon"></i>
-            </div>
+            <label>X</label>
+            <input type="number" step="0.1" v-model="state.design.logoStyle.x" class="ui input inverted mini">
           </div>
           <div class="column field" v-if="state.design.logoStyle.position !== 'static'">
-            <label>Y-Pos (vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.logoStyle.y">
-              <i class="arrows alternate vertical icon"></i>
-            </div>
+            <label>Y</label>
+            <input type="number" step="0.1" v-model="state.design.logoStyle.y" class="ui input inverted mini">
           </div>
         </div>
 
-        <h5 class="ui header inverted" style="margin-top: 20px;">Stil: Bild (Bauchbinde)</h5>
+        <h5 class="ui header inverted" style="margin-top: 15px;">Stil: Bild (Bauchbinde)</h5>
+        <div class="ui doubling six column grid compact-inputs">
+          <div class="column field">
+            <label>Höhe</label>
+            <input type="number" step="0.1" min="0" max="100" v-model="state.design.imageStyle.height" class="ui input inverted mini">
+          </div>
+          <div class="column field">
+            <label>Breite</label>
+            <input type="number" step="0.1" min="0" max="100" v-model="state.design.imageStyle.width" class="ui input inverted mini">
+          </div>
+          <div class="column field">
+            <label>Rundung</label>
+            <input type="number" step="1" min="0" max="1000" v-model="state.design.imageStyle.radius" class="ui input inverted mini">
+          </div>
+          <div class="column field">
+            <label>Abst. L</label>
+            <input type="number" step="0.1" v-model="state.design.imageStyle.marginLeft" class="ui input inverted mini">
+          </div>
+          <div class="column field">
+            <label>Abst. R</label>
+            <input type="number" step="0.1" v-model="state.design.imageStyle.marginRight" class="ui input inverted mini">
+          </div>
+          <div class="column field">
+            <label>Position</label>
+            <select class="ui inverted dropdown fluid mini" v-model="state.design.imageStyle.position">
+              <option value="static">Flex</option>
+              <option value="relative">Relativ</option>
+              <option value="absolute">Absolut</option>
+            </select>
+          </div>
+          <div class="column field" v-if="state.design.imageStyle.position !== 'static'">
+            <label>X</label>
+            <input type="number" step="0.1" v-model="state.design.imageStyle.x" class="ui input inverted mini">
+          </div>
+          <div class="column field" v-if="state.design.imageStyle.position !== 'static'">
+            <label>Y</label>
+            <input type="number" step="0.1" v-model="state.design.imageStyle.y" class="ui input inverted mini">
+          </div>
+        </div>
 
         <h4 class="ui dividing header inverted">Unified CSS Editor</h4>
         <div class="field">
           <css-editor v-model="state.design.unifiedCss"></css-editor>
+        </div>
+
+        <div class="field" style="margin-top: 30px;">
+          <button class="ui red inverted button" type="button" @click="resetDesign">
+            <i class="undo icon"></i> Gestaltung zurücksetzen
+          </button>
         </div>
       </form>
     </div>
@@ -495,10 +520,51 @@ const handleLogoDrop = (e) => {
     }
 };
 
-const getEnabledCount = (axis) => {
-    if (!state.design.container) return 0;
-    const props = axis === 'horizontal' ? ['left', 'right', 'width'] : ['top', 'bottom', 'height'];
-    return props.filter(p => state.design.container[p].enabled).length;
+const resetDesign = () => {
+    if (!confirm('Gestaltung wirklich zurücksetzen? Alle Einstellungen werden auf Standard zurückgesetzt.')) return;
+
+    // Prevent parser from overriding our values
+    state.isInternalUpdate = true;
+
+    state.design.white = {
+        width: 10, left: 5, bottom: 7, height: 1, fixedWidth: false, fixedHeight: false,
+        color: 'rgba(255,255,255,0.8)',
+        paddingTop: 2.6, paddingRight: 5, paddingBottom: 2.6, paddingLeft: 5, borderradius: 0,
+        divalign: 0, textalign: 0, overflow: 'hidden', textOverflow: 'visible',
+        flexAlign: 'center', flexJustify: 'center', flexGap: 2, imageHeight: true, imageManualHeight: 10,
+        _overrides: {}
+    };
+    state.design.container = {
+        left: { enabled: false, value: 0 },
+        right: { enabled: false, value: 0 },
+        top: { enabled: false, value: 0 },
+        bottom: { enabled: true, value: 7 },
+        width: { enabled: false, value: 100 },
+        height: { enabled: false, value: 100 }
+    };
+    state.design.layoutOrder = [
+        { id: '.logo', name: 'Bild (Global)', alignSelf: 'auto' },
+        { id: '.image', name: 'Bild (Bauchbinde)', alignSelf: 'auto' },
+        { id: '.text', name: 'Text', alignSelf: 'auto' }
+    ];
+    state.design.logoStyle = { height: 10, width: 0, radius: 0, opacity: 1, marginLeft: 0, marginRight: 0, position: 'static', x: 0, y: 0, fitHeight: false, _overrides: {} };
+    state.design.imageStyle = { height: 10, width: 0, radius: 0, opacity: 1, marginLeft: 0, marginRight: 0, position: 'static', x: 0, y: 0, fitHeight: false, _overrides: {} };
+    state.design.h1 = { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 5, italic: false, color: '#000000', _overrides: {} };
+    state.design.h2 = { fontfamily: 'Helvetica, sans-serif', fontweight: 'normal', texttransform: 'none', fontvariant: 'normal', fontsize: 3.7, italic: false, color: '#000000', _overrides: {} };
+    state.design.customFonts = [];
+    state.design.logo = null;
+    state.design.unifiedCss = buildCss();
+
+    // Send to main and re-enable parser
+    nextTick(() => {
+        state.isInternalUpdate = false;
+        syncToMain();
+    });
+};
+
+const setPosition = (pos) => {
+    // Only sets justify-content via divalign, does NOT touch container values
+    state.design.white.divalign = pos;
 };
 
 // CSS Generation Logic
@@ -512,72 +578,32 @@ const buildCss = () => {
       if (typeof value === 'number' && !isNaN(value)) {
           return `  ${prop}: ${value}${unit};\n`;
       }
-      return ''; // Do not output if value is not a valid number
+      return '';
   };
 
   let css = ".bauchbinde {\n";
   css += "  display: flex;\n";
-  
+
   if (state.design.container) {
       const c = state.design.container;
-      
-      // Horizontal positioning
-      if (c.left.enabled || c.right.enabled || c.width.enabled) { // Custom horizontal is active
-          const hCount = (c.left.enabled ? 1 : 0) + (c.right.enabled ? 1 : 0); // Re-calculate based on current state
 
-          if (hCount === 0) { // Only width enabled, or none
-              if (c.width.enabled) { // Only width enabled
-                  css += cssProp('width', c.width.value, 'vw');
-                  css += `  left: calc(50vw - ${c.width.value}vw / 2);\n`;
-                  css += `  right: auto;\n`;
-              } else { // None of left/right/width enabled
-                  css += `  width: auto;\n`; // This means content width
-                  css += `  left: auto;\n`;
-                  css += `  right: auto;\n`;
-              }
-          } else { // At least one of left/right/width is enabled
-              if (c.left.enabled) css += cssProp('left', c.left.value, 'vw'); else css += `  left: auto;\n`;
-              if (c.right.enabled) css += cssProp('right', c.right.value, 'vw'); else css += `  right: auto;\n`;
-              if (c.width.enabled) css += cssProp('width', c.width.value, 'vw'); else css += `  width: auto;\n`;
-          }
-      } else { // ALL custom horizontal controls are disabled. Use old divalign logic for container position
-          const divalign = state.design.white.divalign || 0; // 0=left, 1=center, 2=right
-          if (divalign === 0) { // Left
-              css += `  left: 0vw;\n`;
-              css += `  right: auto;\n`;
-              css += `  width: auto;\n`; // Default to content width
-          } else if (divalign === 1) { // Center
-              css += `  left: 0;\n`;
-              css += `  right: 0;\n`;
-              css += `  margin-left: auto;\n`;
-              css += `  margin-right: auto;\n`;
-              css += `  width: fit-content;\n`; // Center content-sized element
-          } else { // Right
-              css += `  left: auto;\n`;
-              css += `  right: 0vw;\n`;
-              css += `  width: auto;\n`; // Default to content width
-          }
+      // Horizontal positioning - only output enabled values
+      const hasHorizontal = c.left.enabled || c.right.enabled || c.width.enabled;
+      if (hasHorizontal) {
+          if (c.left.enabled) css += cssProp('left', c.left.value, 'vw');
+          if (c.right.enabled) css += cssProp('right', c.right.value, 'vw');
+          if (c.width.enabled) css += cssProp('width', c.width.value, 'vw');
+      } else {
+          // No horizontal enabled: full width for justify-content positioning
+          css += `  width: 100%;\n`;
+          css += `  left: 0;\n`;
+          css += `  right: 0;\n`;
       }
 
-      // Vertical positioning
-      const vCount = (c.top.enabled ? 1 : 0) + (c.bottom.enabled ? 1 : 0);
-      if (vCount === 0) { // No top/bottom enabled
-          if (c.height.enabled) {
-              const heightVal = c.height.value;
-              css += cssProp('height', heightVal, 'vh');
-              css += `  top: calc(50vh - ${heightVal}vh / 2);\n`;
-              css += `  bottom: auto;\n`;
-          } else { // No top/bottom/height enabled
-              css += `  height: auto;\n`;
-              css += `  top: auto;\n`;
-              css += `  bottom: auto;\n`;
-              css += `  align-items: center;\n`;
-          }
-      } else { // top/bottom or both enabled
-          if (c.top.enabled) css += cssProp('top', c.top.value, 'vh'); else css += `  top: auto;\n`;
-          if (c.bottom.enabled) css += cssProp('bottom', c.bottom.value, 'vh'); else css += `  bottom: auto;\n`;
-          if (c.height.enabled) css += cssProp('height', c.height.value, 'vh'); else css += `  height: auto;\n`;
-      }
+      // Vertical positioning - only output enabled values
+      if (c.top.enabled) css += cssProp('top', c.top.value, 'vh');
+      if (c.bottom.enabled) css += cssProp('bottom', c.bottom.value, 'vh');
+      if (c.height.enabled) css += cssProp('height', c.height.value, 'vh');
   } else { // Fallback for old states without state.design.container
       css += `  width: 100vw;\n`;
       css += `  left: 0;\n`;
@@ -600,7 +626,12 @@ const buildCss = () => {
   css += line(state.design.white, 'left', 'margin', "0 " + (state.design.white.left || 0) + "vw");
   css += line(state.design.white, 'color', 'background', state.design.white.color);
   css += line(state.design.white, 'borderradius', 'border-radius', (state.design.white.borderradius || 0) + "px");
-  css += line(state.design.white, 'padding', 'padding', (state.design.white.paddingv || 0) + "vh " + (state.design.white.paddingh || 0) + "vh");
+  // Padding: top right bottom left
+  const pt = state.design.white.paddingTop ?? state.design.white.paddingv ?? 0;
+  const pr = state.design.white.paddingRight ?? state.design.white.paddingh ?? 0;
+  const pb = state.design.white.paddingBottom ?? state.design.white.paddingv ?? 0;
+  const pl = state.design.white.paddingLeft ?? state.design.white.paddingh ?? 0;
+  css += `  padding: ${pt}vh ${pr}vh ${pb}vh ${pl}vh;\n`;
   css += `  text-align: ${["left", "center", "right"][state.design.white.textalign || 0]};\n`;
   css += `  overflow: ${state.design.white.overflow || "hidden"};\n`;
   css += `  align-items: ${state.design.white.flexAlign || "center"};\n`;
@@ -678,24 +709,38 @@ const parseCssToProperties = (css) => {
     };
 
     if (state.design.container) {
+        // Helper to check if value is a "zero" default (0, 0vw, 0vh, 0px, etc.)
+        const isZero = (v) => v && parseFloat(v) === 0;
+        // Helper to check if value is "100%" width default
+        const is100 = (v) => v && (v === '100%' || parseFloat(v) === 100);
+
+        // Parse horizontal values
         ['left', 'right', 'width'].forEach(p => {
             const v = extractValue('.bauchbinde', p);
-            if (v && v !== 'auto') { 
-                const parsedValue = parseFloat(v);
-                state.design.container[p].value = isNaN(parsedValue) ? 0 : parsedValue;
-                state.design.container[p].enabled = true; 
-            } else { 
-                state.design.container[p].enabled = false; 
+            if (!v || v === 'auto') {
+                state.design.container[p].enabled = false;
+            } else {
+                // Skip default values: left:0, right:0, width:100%
+                const isDefault = ((p === 'left' || p === 'right') && isZero(v)) ||
+                                  (p === 'width' && is100(v));
+                if (!isDefault) {
+                    state.design.container[p].value = parseFloat(v) || 0;
+                    state.design.container[p].enabled = true;
+                } else {
+                    state.design.container[p].enabled = false;
+                }
             }
         });
+
+        // Parse vertical values
         ['top', 'bottom', 'height'].forEach(p => {
             const v = extractValue('.bauchbinde', p);
-            if (v && v !== 'auto') { 
-                const parsedValue = parseFloat(v);
-                state.design.container[p].value = isNaN(parsedValue) ? 0 : parsedValue;
-                state.design.container[p].enabled = true; 
-            } else { 
-                state.design.container[p].enabled = false; 
+            if (!v || v === 'auto') {
+                state.design.container[p].enabled = false;
+            } else {
+                // For vertical: only height:auto is default, actual values are user-set
+                state.design.container[p].value = parseFloat(v) || 0;
+                state.design.container[p].enabled = true;
             }
         });
     }
@@ -717,7 +762,28 @@ const parseCssToProperties = (css) => {
     if (bg) state.design.white.color = bg;
     const radius = extractValue('.bauchbinde-box', 'border-radius') || extractValue('.bb-box', 'border-radius') || extractValue('.white', 'border-radius');
     if (radius) state.design.white.borderradius = parseFloat(radius);
-    
+
+    // Parse padding (can be 1-4 values)
+    const padding = extractValue('.bauchbinde-box', 'padding') || extractValue('.bb-box', 'padding') || extractValue('.white', 'padding');
+    if (padding) {
+        const parts = padding.split(/\s+/).map(p => parseFloat(p) || 0);
+        if (parts.length === 1) {
+            state.design.white.paddingTop = state.design.white.paddingRight = state.design.white.paddingBottom = state.design.white.paddingLeft = parts[0];
+        } else if (parts.length === 2) {
+            state.design.white.paddingTop = state.design.white.paddingBottom = parts[0];
+            state.design.white.paddingRight = state.design.white.paddingLeft = parts[1];
+        } else if (parts.length === 3) {
+            state.design.white.paddingTop = parts[0];
+            state.design.white.paddingRight = state.design.white.paddingLeft = parts[1];
+            state.design.white.paddingBottom = parts[2];
+        } else if (parts.length >= 4) {
+            state.design.white.paddingTop = parts[0];
+            state.design.white.paddingRight = parts[1];
+            state.design.white.paddingBottom = parts[2];
+            state.design.white.paddingLeft = parts[3];
+        }
+    }
+
     // Migration: Update display types to Flexbox
     const display = extractValue('.bauchbinde-box', 'display') || extractValue('.bb-box', 'display') || extractValue('.white', 'display');
     
@@ -914,54 +980,81 @@ const props = defineProps({
 });
 
 let isSyncing = false;
+let isBuilding = false;  // Flag to prevent CSS parser from running during buildCss
+let syncDebounceTimer = null;
+let hasInitialSynced = false;  // Track if we've done the initial sync
 
-// Function to sync everything to server
+// Function to sync everything to server (debounced)
 const syncToMain = () => {
     if (isSyncing || state.isInternalUpdate) return;
     // Safety: Only sync if this tab is actually the active one
     if (!props.isActive) return;
-    
-    isSyncing = true;
-    if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
-    nextTick(() => { isSyncing = false; });
+
+    // Debounce: Clear previous timer and set new one
+    if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = setTimeout(() => {
+        isSyncing = true;
+        if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
+        setTimeout(() => { isSyncing = false; }, 100);  // Keep flag longer to prevent race
+    }, 50);
 };
 
 // Watch GUI changes -> Rebuild CSS
 watch(() => [
-    state.design.white, state.design.container, state.design.h1, state.design.h2, 
+    state.design.white, state.design.container, state.design.h1, state.design.h2,
     state.design.layoutOrder, state.design.logoStyle, state.design.imageStyle,
     state.design.logo, state.design.logoStyle.marginLeft, state.design.logoStyle.marginRight,
     state.design.imageStyle.marginLeft, state.design.imageStyle.marginRight
 ], () => {
-    if (state.isInternalUpdate) return;
+    if (state.isInternalUpdate || isBuilding) return;
+
+    isBuilding = true;  // Prevent CSS parser from running
     const parts = (state.design.unifiedCss || '').split('/* CUSTOM */');
     const customPart = parts.length > 1 ? parts[1].trim() : '';
     const newCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
-    
+
     if (state.design.unifiedCss !== newCss) {
-        // This will trigger the watch on unifiedCss which calls syncToMain
         state.design.unifiedCss = newCss;
-    } else {
-        // Logo or other non-CSS data might have changed
+    }
+    // Always sync after GUI change
+    syncToMain();
+
+    setTimeout(() => { isBuilding = false; }, 100);  // Reset after a short delay
+}, { deep: true });
+
+// Watch for state load from main process (IPC) - only sync on FIRST load
+watch(() => state.isInternalUpdate, (newVal, oldVal) => {
+    if (oldVal === true && newVal === false && !hasInitialSynced) {
+        // First load from main - rebuild CSS if empty, then sync once
+        hasInitialSynced = true;
+        if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
+            console.log("[DesignTab] Building CSS after initial state load...");
+            state.design.unifiedCss = buildCss();
+        }
+        console.log("[DesignTab] Initial sync to main...");
         syncToMain();
     }
-}, { deep: true });
+});
 
 // Watch unifiedCss -> Parse back to properties (if changed manually) and Sync
 watch(() => state.design.unifiedCss, (nv, ov) => {
-    if (isSyncing || state.isInternalUpdate || !nv) return;
-    
-    // Check if this was a manual change in the CSS editor 
+    // Skip if we're building CSS from GUI, syncing, or during internal update
+    if (isBuilding || isSyncing || state.isInternalUpdate || !nv) return;
+
+    // Check if this was a manual change in the CSS editor
     // or just our own buildCss() update
     const parts = nv.split('/* CUSTOM */');
     const guiPart = parts[0];
     const oldGuiPart = ov ? ov.split('/* CUSTOM */')[0] : '';
-    
+
     if (guiPart !== oldGuiPart) {
-        parseCssToProperties(nv); 
+        console.log("[DesignTab] CSS changed manually, parsing back to properties...");
+        isBuilding = true;  // Prevent loop
+        parseCssToProperties(nv);
         auditCSS(nv);
+        setTimeout(() => { isBuilding = false; }, 100);
     }
-    
+
     syncToMain();
 });
 
@@ -977,17 +1070,69 @@ onMounted(() => {
             left: { enabled: false, value: 0 },
             right: { enabled: false, value: 0 },
             top: { enabled: false, value: 0 },
-            bottom: { enabled: false, value: state.design.white?.bottom || 0 }, // Preserve old bottom value, but disable by default
+            bottom: { enabled: true, value: state.design.white?.bottom || 7 },
             width: { enabled: false, value: 100 },
-            height: { enabled: false, value: 0 }
+            height: { enabled: false, value: 100 }
         };
     }
 
-    // Force initial build if missing
+    // Force initial build if missing (before IPC state arrives)
     if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
         console.log("[DesignTab] Building initial CSS...");
+        isBuilding = true;
         state.design.unifiedCss = buildCss();
-        syncToMain();
+        setTimeout(() => { isBuilding = false; }, 100);
     }
 });
 </script>
+
+<style scoped>
+select.ui.dropdown {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+}
+select.ui.dropdown option {
+    background: #2d2d2d;
+    color: #fff;
+}
+.compact-inputs input[type="number"] {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+    padding: 6px 8px !important;
+    width: 100% !important;
+    border-radius: 4px;
+}
+.compact-inputs .field {
+    margin-bottom: 8px !important;
+}
+.compact-inputs label {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+}
+.compact-inputs select.mini {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+}
+/* Responsive: narrower inputs on small screens */
+@media (max-width: 1200px) {
+    .compact-inputs input[type="number"] {
+        padding: 4px 6px !important;
+        font-size: 11px !important;
+    }
+    .compact-inputs label {
+        font-size: 10px !important;
+    }
+}
+@media (max-width: 900px) {
+    .compact-inputs input[type="number"] {
+        padding: 3px 4px !important;
+        font-size: 10px !important;
+        min-width: 40px !important;
+    }
+    .compact-inputs .field {
+        margin-bottom: 4px !important;
+    }
+}
+</style>

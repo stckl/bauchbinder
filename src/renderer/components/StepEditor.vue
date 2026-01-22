@@ -35,13 +35,13 @@
         <div class="field">
           <label>Dauer (ms)</label>
           <div class="ui input inverted fluid">
-            <input type="number" v-model="step.duration">
+            <input type="number" v-model.number="step.duration">
           </div>
         </div>
         <div class="field">
           <label>Verzögerung (ms)</label>
           <div class="ui input inverted fluid">
-            <input type="number" v-model="step.delay">
+            <input type="number" v-model.number="step.delay">
           </div>
         </div>
         <div class="field">
@@ -130,7 +130,8 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
-import $ from 'jquery';
+// Use global jQuery with Fomantic UI plugins (loaded in index.html)
+const $ = window.$;
 const ipc = (typeof window !== 'undefined' && window.require) ? window.require('electron').ipcRenderer : null;
 
 const step = ref(null);
@@ -187,3 +188,15 @@ const save = () => {
     ipc.send('save-step', { phase: phase.value, index: index.value, step: JSON.parse(JSON.stringify(step.value)) });
 };
 </script>
+
+<style scoped>
+select.ui.dropdown {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+}
+select.ui.dropdown option {
+    background: #2d2d2d;
+    color: #fff;
+}
+</style>

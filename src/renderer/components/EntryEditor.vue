@@ -87,9 +87,9 @@
           <div class="field">
             <label>Inhalt Ausrichtung (Vertikal)</label>
             <select class="ui inverted dropdown fluid" v-model="entry.localStyle.alignItems">
-              <option value="flex-start">Oben</option>
+              <option value="start">Oben</option>
               <option value="center">Mitte</option>
-              <option value="flex-end">Unten</option>
+              <option value="end">Unten</option>
             </select>
           </div>
         </div>
@@ -209,11 +209,11 @@ const allFonts = computed(() => {
 });
 
 const createDefaultLocalStyle = (globalDesign = null) => ({
-    x: 0, y: 25, minWidth: 60, minHeight: 0, padding: 2,
+    x: 0, y: 7, minWidth: 60, minHeight: 0, padding: 2,
     yInverted: true, // Marker for new coordinate system
     position: 'center', // horizontal positioning of the box itself
     textalign: 'center', // text alignment inside the box
-    justifyContent: 'center', alignItems: 'center', // flex container alignment
+    justifyContent: 'center', alignItems: 'center', // flex container alignment (start/center/end)
     bgColor: 'rgba(0,0,0,0.7)',
     h1: { 
         fontfamily: globalDesign?.h1?.fontfamily || 'Helvetica, sans-serif', 
@@ -298,3 +298,17 @@ const handleImageDrop = (e) => {
     }
 };
 </script>
+
+<style scoped>
+select.ui.dropdown,
+.ui.form.inverted select {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+}
+select.ui.dropdown option,
+.ui.form.inverted select option {
+    background: #2d2d2d;
+    color: #fff;
+}
+</style>

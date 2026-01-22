@@ -34,9 +34,21 @@ const getWarning = (opt) => {
     if (!opt) return '';
     const name = cleanName(opt);
     // No warning for system fonts, custom fonts or standard web fonts
-    if (props.customFonts?.some(f => f.name === name) || 
-        props.systemFonts?.includes(name) || 
+    if (props.customFonts?.some(f => f.name === name) ||
+        props.systemFonts?.includes(name) ||
         WEB_FONTS.some(wf => name.toLowerCase().includes(wf.toLowerCase()))) return '';
     return ' ⚠️ (Nicht im System gefunden!)';
 };
 </script>
+
+<style scoped>
+select.ui.dropdown {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+}
+select.ui.dropdown option {
+    background: #2d2d2d;
+    color: #fff;
+}
+</style>

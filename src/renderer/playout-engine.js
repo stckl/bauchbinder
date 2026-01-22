@@ -23,8 +23,29 @@ if (typeof window !== 'undefined' && window['process'] && window['process'].vers
 let currentMode = 'h5';
 let currentDesign = null;
 let currentAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
-let activeLowerthirds = []; 
+let activeLowerthirds = [];
 let playLock = false;
+
+// Convert old anime.js 3.x easing names to 4.x format
+function convertEasing(easing) {
+    if (!easing) return 'out-quad';
+    // If already in new format (contains hyphen), return as-is
+    if (easing.includes('-')) return easing;
+    // Convert camelCase to kebab-case: easeInOutCirc -> in-out-circ
+    const map = {
+        'linear': 'linear',
+        'easeInQuad': 'in-quad', 'easeOutQuad': 'out-quad', 'easeInOutQuad': 'in-out-quad',
+        'easeInCubic': 'in-cubic', 'easeOutCubic': 'out-cubic', 'easeInOutCubic': 'in-out-cubic',
+        'easeInQuart': 'in-quart', 'easeOutQuart': 'out-quart', 'easeInOutQuart': 'in-out-quart',
+        'easeInQuint': 'in-quint', 'easeOutQuint': 'out-quint', 'easeInOutQuint': 'in-out-quint',
+        'easeInSine': 'in-sine', 'easeOutSine': 'out-sine', 'easeInOutSine': 'in-out-sine',
+        'easeInExpo': 'in-expo', 'easeOutExpo': 'out-expo', 'easeInOutExpo': 'in-out-expo',
+        'easeInCirc': 'in-circ', 'easeOutCirc': 'out-circ', 'easeInOutCirc': 'in-out-circ',
+        'easeInBack': 'in-back', 'easeOutBack': 'out-back', 'easeInOutBack': 'in-out-back',
+        'easeOutBounce': 'out-bounce', 'easeInBounce': 'in-bounce', 'easeInOutBounce': 'in-out-bounce'
+    };
+    return map[easing] || 'out-quad';
+}
 
 function getRGBA(color) {
     if (typeof color !== 'string') color = String(color || 'white');
@@ -77,12 +98,15 @@ function updateCSS(data) {
     $('#custom-styles').remove();
     const style = document.createElement('style');
     style.id = 'custom-styles';
-    style.innerHTML = fontCss + "\n.bauchbinde { position: absolute; width: 100%; display: flex; }\n" + transformedCss + "\n" + extraCss;
+    // .bauchbinde-custom has minimal base styling - actual styling comes from applyLocalStyles()
+    const baseCss = ".bauchbinde { position: absolute; width: 100%; display: flex; }\n" +
+                    ".bauchbinde-custom { position: absolute; display: flex; }\n";
+    style.innerHTML = fontCss + "\n" + baseCss + transformedCss + "\n" + extraCss;
     document.head.appendChild(style);
 
-    // LIVE UPDATE for Logo if something is showing
+    // LIVE UPDATE for Logo if something is showing (only for global style)
     activeLowerthirds.forEach(lt => {
-        if (lt.showGlobalLogo === false) return;
+        if (lt.useLocalStyle || lt.showGlobalLogo === false) return;
         const $logo = lt.el.find('.logo');
         if (data.logo) {
             if ($logo.length) $logo.attr('src', data.logo);
@@ -95,6 +119,7 @@ function updateCSS(data) {
 
 function updateJS(data) {
     if (!data) return;
+    console.log("[ENGINE] updateJS - hide duration:", data.hide?.[0]?.duration, "show duration:", data.show?.[0]?.duration);
     currentAnimation = data;
 }
 
@@ -134,8 +159,15 @@ async function playLowerthird(item) {
     const existing = activeLowerthirds.find(lt => lt.idFromStatus === item.id);
     if (existing) {
         console.log("[ENGINE] Live update for item ID:", item.id);
-        existing.el.find('h1').text(item.name || '');
-        existing.el.find('h2').text(item.title || '');
+
+        // Use appropriate selectors based on style type
+        if (existing.useLocalStyle) {
+            existing.el.find('.custom-h1').text(item.name || '');
+            existing.el.find('.custom-h2').text(item.title || '');
+        } else {
+            existing.el.find('h1').text(item.name || '');
+            existing.el.find('h2').text(item.title || '');
+        }
         existing.showGlobalLogo = item.showGlobalLogo !== false;
         
         // Update local style properties if enabled
@@ -168,24 +200,34 @@ async function playLowerthird(item) {
         console.log("[ENGINE] Rendering new instance - LocalStyle:", !!item.useLocalStyle);
 
         const id = "bb-" + Date.now();
-        let logoHtml = (currentDesign?.logo && item.showGlobalLogo !== false) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
-        let imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
-        
-        if (item.useLocalStyle) {
-            logoHtml = '';
-            imageHtml = '';
-        }
+        let html;
 
-        const html = '<div id="' + id + '" class="bauchbinde">' +
-            '<div class="bauchbinde-box">' +
-                logoHtml +
-                imageHtml +
-                '<div class="text">' +
-                    '<h1>' + (item.name || '') + '</h1>' +
-                    '<h2>' + (item.title || '') + '</h2>' +
+        if (item.useLocalStyle) {
+            // Custom style: use different classes to avoid global CSS interference
+            html = '<div id="' + id + '" class="bauchbinde-custom">' +
+                '<div class="custom-box">' +
+                    '<div class="custom-text">' +
+                        '<span class="custom-h1">' + (item.name || '') + '</span>' +
+                        '<span class="custom-h2">' + (item.title || '') + '</span>' +
+                    '</div>' +
                 '</div>' +
-            '</div>' +
-        '</div>';
+            '</div>';
+        } else {
+            // Global style: use standard classes that match unified CSS
+            let logoHtml = (currentDesign?.logo && item.showGlobalLogo !== false) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
+            let imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
+
+            html = '<div id="' + id + '" class="bauchbinde">' +
+                '<div class="bauchbinde-box">' +
+                    logoHtml +
+                    imageHtml +
+                    '<div class="text">' +
+                        '<h1>' + (item.name || '') + '</h1>' +
+                        '<h2>' + (item.title || '') + '</h2>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
         
         $('#bauchbinde-container').append(html);
         const el = $("#" + id);
@@ -193,23 +235,26 @@ async function playLowerthird(item) {
         if (item.useLocalStyle && item.localStyle) {
             applyLocalStyles(el, item.localStyle);
             // Simple Fade Animation for Local Style
-            await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
+            await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1], duration: 750, easing: 'out-quad' });
         } else if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.show) {
             const stepPromises = currentAnimation.show.map(async (step) => {
                 let selector = step.selector;
                 if (selector === '.white' || selector === '.bb-box') selector = '.bauchbinde-box';
-                const targetEl = selector === '.bauchbinde' ? el[0] : el.find(selector)[0];
+                // .bauchbinde-instance targets the root element (same as .bauchbinde)
+                const targetEl = (selector === '.bauchbinde' || selector === '.bauchbinde-instance') ? el[0] : el.find(selector)[0];
                 if (targetEl) {
-                    await animate(targetEl, transformProperties(step.properties), {
+                    // anime.js 4.x: duration/delay/easing go in the properties object
+                    await animate(targetEl, {
+                        ...transformProperties(step.properties),
                         duration: step.duration || 750,
                         delay: step.delay || 0,
-                        easing: step.easing || 'out-expo'
+                        easing: convertEasing(step.easing)
                     });
                 }
             });
             await Promise.all(stepPromises);
         } else {
-            await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
+            await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1], duration: 750, easing: 'out-quad' });
         }
         activeLowerthirds.push({ id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false, useLocalStyle: !!item.useLocalStyle });
     } finally {
@@ -225,30 +270,31 @@ function applyLocalStyles(el, s) {
         return c;
     };
 
+    // Container styling
     el.css({
         position: 'absolute',
-        left: s.x + 'vw',
         bottom: s.y + 'vh',
         top: 'auto',
-        width: 'auto', // Default to auto width for individual styling
+        width: 'auto',
         margin: 0,
-        textAlign: 'left' // Reset global text align
-
+        display: 'flex'
     });
-    // Apply horizontal positioning for the main container
+
+    // Apply horizontal positioning
     if (s.position === 'center') {
-        el.css({ left: '50%', transform: `translateX(-50%)` });
+        el.css({ left: '0', right: '0', justifyContent: 'center' });
     } else if (s.position === 'right') {
-        el.css({ left: 'auto', right: s.x + 'vw' });
+        el.css({ left: 'auto', right: s.x + 'vw', justifyContent: 'flex-end' });
     } else { // left
-        el.css({ left: s.x + 'vw', right: 'auto' });
+        el.css({ left: s.x + 'vw', right: 'auto', justifyContent: 'flex-start' });
     }
 
-    const box = el.find('.bauchbinde-box');
+    // Box styling (uses .custom-box for local style)
+    const box = el.find('.custom-box');
     box.css({
         background: transformColor(s.bgColor),
         minWidth: s.minWidth + 'vw',
-        minHeight: s.minHeight + 'vh',
+        minHeight: s.minHeight > 0 ? s.minHeight + 'vh' : 'auto',
         display: 'inline-flex',
         flexDirection: 'column',
         justifyContent: s.justifyContent || 'center',
@@ -257,22 +303,33 @@ function applyLocalStyles(el, s) {
         textAlign: s.textalign || 'center'
     });
 
-    const h1 = el.find('h1');
+    // Text container
+    el.find('.custom-text').css({
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: s.alignItems || 'center'
+    });
+
+    // H1 styling (uses .custom-h1)
+    const h1 = el.find('.custom-h1');
     h1.css({
         fontFamily: s.h1.fontfamily,
         fontSize: s.h1.fontsize + 'vh',
         lineHeight: s.h1.fontsize + 'vh',
         color: transformColor(s.h1.color),
-        margin: 0
+        margin: 0,
+        display: 'block'
     });
 
-    const h2 = el.find('h2');
+    // H2 styling (uses .custom-h2)
+    const h2 = el.find('.custom-h2');
     h2.css({
         fontFamily: s.h2.fontfamily,
         fontSize: s.h2.fontsize + 'vh',
         lineHeight: s.h2.fontsize + 'vh',
         color: transformColor(s.h2.color),
-        margin: 0
+        margin: 0,
+        display: 'block'
     });
 }
 
@@ -282,21 +339,26 @@ async function stopAll() {
 
     const hidePromises = currentActive.map(async (lt) => {
         if (!lt.useLocalStyle && currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
+            console.log("[ENGINE] Running hide animation, steps:", currentAnimation.hide.length);
             const stepPromises = currentAnimation.hide.map(async (step) => {
+                console.log("[ENGINE] Hide step - duration:", step.duration, "delay:", step.delay, "easing:", step.easing);
                 let selector = step.selector;
                 if (selector === '.white' || selector === '.bb-box') selector = '.bauchbinde-box';
-                const targetEl = selector === '.bauchbinde' ? lt.el[0] : lt.el.find(selector)[0];
+                // .bauchbinde-instance targets the root element (same as .bauchbinde)
+                const targetEl = (selector === '.bauchbinde' || selector === '.bauchbinde-instance') ? lt.el[0] : lt.el.find(selector)[0];
                 if (targetEl) {
-                    await animate(targetEl, transformProperties(step.properties), {
+                    // anime.js 4.x: duration/delay/easing go in the properties object, not separate options
+                    await animate(targetEl, {
+                        ...transformProperties(step.properties),
                         duration: step.duration || 500,
                         delay: step.delay || 0,
-                        easing: step.easing || 'out-expo'
+                        easing: convertEasing(step.easing)
                     });
                 }
             });
             await Promise.all(stepPromises);
         } else {
-            await animate(lt.el[0], { opacity: currentMode === 'fill' ? 1 : 0 }, { duration: 500, easing: 'out-quad' });
+            await animate(lt.el[0], { opacity: currentMode === 'fill' ? 1 : 0, duration: 500, easing: 'out-quad' });
         }
         lt.el.remove();
     });
