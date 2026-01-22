@@ -102,7 +102,7 @@ const fs = isElectron ? window.require('fs') : null;
 const fontList = isElectron ? window.require('font-list') : { getFonts: () => Promise.resolve([]) };
 
 const activeTab = ref('items');
-const appversion = ref('4.1.2');
+const appversion = ref('4.1.16');
 const windowMode = ref(null);
 
 const stopLowerthird = () => { 
@@ -158,6 +158,12 @@ onMounted(() => {
         });
         ipc.on('update-data', (event, arg) => {
             state.lowerthirds = arg;
+        });
+        ipc.on('update-css', (event, arg) => {
+            Object.assign(state.design, arg);
+        });
+        ipc.on('update-js', (event, arg) => {
+            Object.assign(state.animation, arg);
         });
         ipc.send('request-state');
         fontList.getFonts().then(ret => { systemFonts.value = ret; }).catch(err => console.log(err));

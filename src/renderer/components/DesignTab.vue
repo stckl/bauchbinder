@@ -846,11 +846,10 @@ const resolveConflict = async (index, source) => {
 };
 
 let isSyncing = false;
-let isInternalUpdate = false;
 
 // Function to sync everything to server
 const syncToMain = () => {
-    if (isSyncing || isInternalUpdate) return;
+    if (isSyncing) return;
     isSyncing = true;
     if (ipc) ipc.send('update-css', JSON.parse(JSON.stringify(state.design)));
     nextTick(() => { isSyncing = false; });
@@ -863,7 +862,7 @@ watch(() => [
     state.design.logo, state.design.logoStyle.marginLeft, state.design.logoStyle.marginRight,
     state.design.imageStyle.marginLeft, state.design.imageStyle.marginRight
 ], () => {
-    const parts = state.design.unifiedCss.split('/* CUSTOM */');
+    const parts = (state.design.unifiedCss || '').split('/* CUSTOM */');
     const customPart = parts.length > 1 ? parts[1].trim() : '';
     const newCss = buildCss() + "\n/* CUSTOM */\n" + customPart;
     
@@ -878,15 +877,10 @@ watch(() => [
 
 // Watch unifiedCss -> Parse back to properties (if changed manually) and Sync
 watch(() => state.design.unifiedCss, (nv, ov) => {
-    if (isSyncing) return;
+    if (isSyncing || !nv) return;
     
     // If it was a manual edit in the CSS editor (not from buildCss)
     // we might need to parse it back to properties
-    const parts = nv.split('/* CUSTOM */');
-    const guiPart = parts[0];
-    
-    // We only parse back if the GUI part changed (indicating manual edit or initial load)
-    // This is tricky. Let's simplify: Always parse if not syncing.
     parseCssToProperties(nv); 
     auditCSS(nv);
     
@@ -894,13 +888,6 @@ watch(() => state.design.unifiedCss, (nv, ov) => {
 });
 
 onMounted(() => {
-    if (ipc) {
-        ipc.on('update-css', (event, arg) => {
-            isInternalUpdate = true;
-            Object.assign(state.design, arg);
-            nextTick(() => { isInternalUpdate = false; });
-        });
-    }
     // Force initial build if missing
     if (!state.design.unifiedCss || state.design.unifiedCss.trim() === '') {
         console.log("[DesignTab] Building initial CSS...");
