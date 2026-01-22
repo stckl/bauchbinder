@@ -33,7 +33,7 @@ jobs:
         env:
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
-          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          printf "%s" "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
           security create-keychain -p "" build.keychain
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security list-keychains -s build.keychain
