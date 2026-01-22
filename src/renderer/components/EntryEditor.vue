@@ -8,37 +8,133 @@
     </h2>
     
     <form class="ui inverted form" @submit.prevent="save(true)">
-      <div class="field">
-        <label>Name</label>
-        <div class="ui input inverted fluid">
-          <input type="text" v-model="entry.name" placeholder="Name" autofocus>
-        </div>
-      </div>
-      <div class="field">
-        <label>Titel</label>
-        <div class="ui input inverted fluid">
-          <input type="text" v-model="entry.title" placeholder="Titel">
-        </div>
-      </div>
-      <div class="field">
-        <label>Bild (Optional)</label>
-        <div v-if="!entry.image" class="ui placeholder segment inverted" style="min-height: 150px; cursor: pointer;" @dragover.prevent @drop.prevent="handleImageDrop" @click="$refs.imgInput.click()">
-          <div class="ui icon header">
-            <i class="image outline icon"></i>
-            Bild hierher ziehen oder klicken
+      <div class="two fields">
+        <div class="field">
+          <label>Name</label>
+          <div class="ui input inverted fluid">
+            <input type="text" v-model="entry.name" placeholder="Name" autofocus>
           </div>
-          <input type="file" ref="imgInput" style="display: none" accept="image/*" @change="handleImageDrop({ dataTransfer: { files: $event.target.files } })">
         </div>
-        <div v-else class="ui segment inverted checkerboard" style="text-align: center; position: relative; padding: 0; min-height: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-          <img :src="entry.image" style="height: 150px; width: 100%; object-fit: contain; display: block; margin: 0 auto;">
-          <div class="ui top right attached label red" style="cursor: pointer; z-index: 10;" @click="entry.image = null"><i class="trash icon"></i></div>
+        <div class="field">
+          <label>Titel</label>
+          <div class="ui input inverted fluid">
+            <input type="text" v-model="entry.title" placeholder="Titel">
+          </div>
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" style="margin-top: 20px;">
         <div class="ui toggle checkbox inverted">
-          <input type="checkbox" v-model="entry.showGlobalLogo">
-          <label>Globales Logo anzeigen</label>
+          <input type="checkbox" v-model="entry.useLocalStyle">
+          <label>Individuelles Styling für diese Bauchbinde verwenden</label>
+        </div>
+      </div>
+
+      <!-- LOCAL STYLE SETTINGS -->
+      <div v-if="entry.useLocalStyle" class="ui segment inverted secondary" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+        <h4 class="ui dividing header inverted">Layout & Position</h4>
+        <div class="ui grid doubling four column">
+          <div class="column field">
+            <label>X-Position (vw)</label>
+            <input type="number" step="0.1" v-model="entry.localStyle.x">
+          </div>
+          <div class="column field">
+            <label>Y-Position (vh)</label>
+            <input type="number" step="0.1" v-model="entry.localStyle.y">
+          </div>
+          <div class="column field">
+            <label>Min-Breite (vw)</label>
+            <input type="number" step="0.1" v-model="entry.localStyle.minWidth">
+          </div>
+          <div class="column field">
+            <label>Min-Höhe (vh)</label>
+            <input type="number" step="0.1" v-model="entry.localStyle.minHeight">
+          </div>
+        </div>
+
+        <div class="two fields" style="margin-top: 15px;">
+          <div class="field">
+            <label>Inhalt Ausrichtung (Horizontal)</label>
+            <select class="ui inverted dropdown fluid" v-model="entry.localStyle.justifyContent">
+              <option value="flex-start">Links</option>
+              <option value="center">Mitte</option>
+              <option value="flex-end">Rechts</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Inhalt Ausrichtung (Vertikal)</label>
+            <select class="ui inverted dropdown fluid" v-model="entry.localStyle.alignItems">
+              <option value="flex-start">Oben</option>
+              <option value="center">Mitte</option>
+              <option value="flex-end">Unten</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 class="ui dividing header inverted" style="margin-top: 25px;">Design & Farben</h4>
+        <div class="field">
+          <color-picker v-model="entry.localStyle.bgColor" label="Hintergrundfarbe"></color-picker>
+        </div>
+
+        <div class="ui two column grid stackable" style="margin-top: 10px;">
+          <div class="column">
+            <h5 class="ui header inverted">Name (H1)</h5>
+            <div class="field">
+              <label>Schriftart</label>
+              <fomantic-dropdown v-model="entry.localStyle.h1.fontfamily" :options="allFonts" :system-fonts="systemFonts"></fomantic-dropdown>
+            </div>
+            <div class="two fields">
+              <div class="field">
+                <label>Größe (vh)</label>
+                <input type="number" step="0.1" v-model="entry.localStyle.h1.fontsize">
+              </div>
+              <div class="field">
+                <color-picker v-model="entry.localStyle.h1.color" label="Farbe"></color-picker>
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <h5 class="ui header inverted">Titel (H2)</h5>
+            <div class="field">
+              <label>Schriftart</label>
+              <fomantic-dropdown v-model="entry.localStyle.h2.fontfamily" :options="allFonts" :system-fonts="systemFonts"></fomantic-dropdown>
+            </div>
+            <div class="two fields">
+              <div class="field">
+                <label>Größe (vh)</label>
+                <input type="number" step="0.1" v-model="entry.localStyle.h2.fontsize">
+              </div>
+              <div class="field">
+                <color-picker v-model="entry.localStyle.h2.color" label="Farbe"></color-picker>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ui message info inverted mini"><i class="info circle icon"></i> Im individuellen Modus werden keine Bilder angezeigt.</p>
+      </div>
+
+      <!-- GLOBAL STYLE SETTINGS (only images for now) -->
+      <div v-if="!entry.useLocalStyle" style="margin-top: 20px;">
+        <div class="field">
+          <label>Bild (Optional)</label>
+          <div v-if="!entry.image" class="ui placeholder segment inverted" style="min-height: 150px; cursor: pointer;" @dragover.prevent @drop.prevent="handleImageDrop" @click="$refs.imgInput.click()">
+            <div class="ui icon header">
+              <i class="image outline icon"></i>
+              Bild hierher ziehen oder klicken
+            </div>
+            <input type="file" ref="imgInput" style="display: none" accept="image/*" @change="handleImageDrop({ dataTransfer: { files: $event.target.files } })">
+          </div>
+          <div v-else class="ui segment inverted checkerboard" style="text-align: center; position: relative; padding: 0; min-height: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <img :src="entry.image" style="height: 150px; width: 100%; object-fit: contain; display: block; margin: 0 auto;">
+            <div class="ui top right attached label red" style="cursor: pointer; z-index: 10;" @click="entry.image = null"><i class="trash icon"></i></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="ui toggle checkbox inverted">
+            <input type="checkbox" v-model="entry.showGlobalLogo">
+            <label>Globales Logo anzeigen</label>
+          </div>
         </div>
       </div>
 
@@ -73,22 +169,47 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import ColorPicker from './ColorPicker.vue';
+import FomanticDropdown from './FomanticDropdown.vue';
+import { systemFonts } from '../store.js';
+
 const ipc = (typeof window !== 'undefined' && window.require) ? window.require('electron').ipcRenderer : null;
 
-const entry = ref({ name: '', title: '', image: null, showGlobalLogo: true });
+const WEB_FONTS = [
+    'Arial, sans-serif', 'Helvetica, sans-serif', 'Verdana, sans-serif', 'Trebuchet MS, sans-serif',
+    'Times New Roman, serif', 'Georgia, serif', 'Garamond, serif', 'Courier New, monospace'
+];
+
+const allFonts = computed(() => {
+    return [...new Set([...WEB_FONTS, ...systemFonts.value])];
+});
+
+const createDefaultLocalStyle = () => ({
+    x: 5, y: 80, minWidth: 20, minHeight: 5,
+    justifyContent: 'center', alignItems: 'center',
+    bgColor: 'rgba(0,0,0,0.8)',
+    h1: { fontfamily: 'Helvetica, sans-serif', fontsize: 5, color: '#ffffff' },
+    h2: { fontfamily: 'Helvetica, sans-serif', fontsize: 3.7, color: '#ffffff' }
+});
+
+const entry = ref({ 
+    name: '', title: '', image: null, showGlobalLogo: true, 
+    useLocalStyle: false, localStyle: createDefaultLocalStyle() 
+});
 const entryId = ref(null);
 
 onMounted(() => {
     ipc.on('setup-editor', (event, arg) => {
         if (arg.entry) {
             entry.value = JSON.parse(JSON.stringify(arg.entry));
-            // Migration: handle old hideGlobalLogo property if it exists
+            // Migration
             if (entry.value.hideGlobalLogo !== undefined) {
                 entry.value.showGlobalLogo = !entry.value.hideGlobalLogo;
                 delete entry.value.hideGlobalLogo;
             }
             if (entry.value.showGlobalLogo === undefined) entry.value.showGlobalLogo = true;
+            if (!entry.value.localStyle) entry.value.localStyle = createDefaultLocalStyle();
         }
         entryId.value = arg.id;
     });
@@ -104,7 +225,10 @@ const save = (close = true) => {
     
     if (!close) {
         if (entryId.value === null) {
-            entry.value = { name: '', title: '', image: null, showGlobalLogo: true };
+            entry.value = { 
+                name: '', title: '', image: null, showGlobalLogo: true, 
+                useLocalStyle: false, localStyle: createDefaultLocalStyle() 
+            };
         }
     }
 };

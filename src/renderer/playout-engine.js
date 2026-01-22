@@ -138,20 +138,25 @@ async function playLowerthird(item) {
         existing.el.find('h2').text(item.title || '');
         existing.showGlobalLogo = item.showGlobalLogo !== false;
         
-        const $logo = existing.el.find('.logo');
-        if (item.showGlobalLogo === false || !currentDesign?.logo) {
-            $logo.remove();
+        // Update local style properties if enabled
+        if (item.useLocalStyle && item.localStyle) {
+            applyLocalStyles(existing.el, item.localStyle);
         } else {
-            if ($logo.length) $logo.attr('src', currentDesign.logo);
-            else existing.el.find('.bb-box').prepend('<img src="' + currentDesign.logo + '" class="logo">');
-        }
+            const $logo = existing.el.find('.logo');
+            if (item.showGlobalLogo === false || !currentDesign?.logo) {
+                $logo.remove();
+            } else {
+                if ($logo.length) $logo.attr('src', currentDesign.logo);
+                else existing.el.find('.bb-box').prepend('<img src="' + currentDesign.logo + '" class="logo">');
+            }
 
-        const $img = existing.el.find('.image');
-        if (item.image) {
-            if ($img.length) $img.attr('src', item.image);
-            else existing.el.find('.text').before('<img src="' + item.image + '" class="image">');
-        } else {
-            $img.remove();
+            const $img = existing.el.find('.image');
+            if (item.image) {
+                if ($img.length) $img.attr('src', item.image);
+                else existing.el.find('.text').before('<img src="' + item.image + '" class="image">');
+            } else {
+                $img.remove();
+            }
         }
         return;
     }
@@ -160,12 +165,17 @@ async function playLowerthird(item) {
     try {
         if (activeLowerthirds.length > 0) await stopAll();
 
-        console.log("[ENGINE] Rendering new instance - Logo:", !!currentDesign?.logo, "ItemImg:", !!item.image);
+        console.log("[ENGINE] Rendering new instance - LocalStyle:", !!item.useLocalStyle);
 
         const id = "bb-" + Date.now();
-        const logoHtml = (currentDesign?.logo && item.showGlobalLogo !== false) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
-        const imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
+        let logoHtml = (currentDesign?.logo && item.showGlobalLogo !== false) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
+        let imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
         
+        if (item.useLocalStyle) {
+            logoHtml = '';
+            imageHtml = '';
+        }
+
         const html = '<div id="' + id + '" class="bauchbinde bauchbinde-instance">' +
             '<div class="bb-box">' +
                 logoHtml +
@@ -180,7 +190,11 @@ async function playLowerthird(item) {
         $('#bauchbinde-container').append(html);
         const el = $("#" + id);
         
-        if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.show) {
+        if (item.useLocalStyle && item.localStyle) {
+            applyLocalStyles(el, item.localStyle);
+            // Simple Fade Animation for Local Style
+            await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
+        } else if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.show) {
             const stepPromises = currentAnimation.show.map(async (step) => {
                 let selector = step.selector === '.white' ? '.bb-box' : step.selector;
                 const targetEl = selector === '.bauchbinde-instance' ? el[0] : el.find(selector)[0];
@@ -196,10 +210,58 @@ async function playLowerthird(item) {
         } else {
             await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
         }
-        activeLowerthirds.push({ id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false });
+        activeLowerthirds.push({ id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false, useLocalStyle: !!item.useLocalStyle });
     } finally {
         playLock = false;
     }
+}
+
+function applyLocalStyles(el, s) {
+    const transformColor = (c) => {
+        const rgba = getRGBA(c);
+        if (currentMode === 'key') return "rgba(255, 255, 255, " + rgba.a + ")";
+        if (currentMode === 'fill') return "rgb(" + rgba.r + ", " + rgba.g + ", " + rgba.b + ")";
+        return c;
+    };
+
+    el.css({
+        position: 'absolute',
+        left: s.x + 'vw',
+        top: s.y + 'vh',
+        bottom: 'auto',
+        margin: 0,
+        textAlign: 'left' // Reset global text align
+    });
+
+    const box = el.find('.bb-box');
+    box.css({
+        background: transformColor(s.bgColor),
+        minWidth: s.minWidth + 'vw',
+        minHeight: s.minHeight + 'vh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: s.justifyContent || 'center',
+        alignItems: s.alignItems || 'center',
+        padding: '1vh 2vh'
+    });
+
+    const h1 = el.find('h1');
+    h1.css({
+        fontFamily: s.h1.fontfamily,
+        fontSize: s.h1.fontsize + 'vh',
+        lineHeight: s.h1.fontsize + 'vh',
+        color: transformColor(s.h1.color),
+        margin: 0
+    });
+
+    const h2 = el.find('h2');
+    h2.css({
+        fontFamily: s.h2.fontfamily,
+        fontSize: s.h2.fontsize + 'vh',
+        lineHeight: s.h2.fontsize + 'vh',
+        color: transformColor(s.h2.color),
+        margin: 0
+    });
 }
 
 async function stopAll() {
@@ -207,7 +269,7 @@ async function stopAll() {
     activeLowerthirds = [];
 
     const hidePromises = currentActive.map(async (lt) => {
-        if (currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
+        if (!lt.useLocalStyle && currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
             const stepPromises = currentAnimation.hide.map(async (step) => {
                 let selector = step.selector === '.white' ? '.bb-box' : step.selector;
                 const targetEl = selector === '.bauchbinde-instance' ? lt.el[0] : lt.el.find(selector)[0];
