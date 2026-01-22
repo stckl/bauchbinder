@@ -508,6 +508,13 @@ const buildCss = () => {
 `;
   };
 
+  const cssProp = (prop, value, unit) => {
+      if (typeof value === 'number' && !isNaN(value)) {
+          return `  ${prop}: ${value}${unit};\n`;
+      }
+      return ''; // Do not output if value is not a valid number
+  };
+
   let css = ".bauchbinde {\n";
   css += "  display: flex;\n";
   
@@ -519,39 +526,39 @@ const buildCss = () => {
 
       if (hCount === 0) { // No left/right enabled
           if (c.width.enabled) {
-              const widthVal = c.width.value || 0;
-              css += `  width: ${widthVal}vw;\n`;
+              const widthVal = c.width.value;
+              css += cssProp('width', widthVal, 'vw');
               css += `  left: calc(50vw - ${widthVal}vw / 2);\n`;
-              css += `  right: auto;\n`; // Ensure right is not set
+              css += `  right: auto;\n`;
           } else { // No left/right/width enabled
               css += `  width: auto;\n`;
               css += `  left: auto;\n`;
               css += `  right: auto;\n`;
           }
       } else { // left/right or both enabled
-          if (c.left.enabled) css += `  left: ${(c.left.value || 0)}vw;\n`; else css += `  left: auto;\n`;
-          if (c.right.enabled) css += `  right: ${(c.right.value || 0)}vw;\n`; else css += `  right: auto;\n`;
-          if (c.width.enabled) css += `  width: ${(c.width.value || 0)}vw;\n`; else css += `  width: auto;\n`;
+          if (c.left.enabled) css += cssProp('left', c.left.value, 'vw'); else css += `  left: auto;\n`;
+          if (c.right.enabled) css += cssProp('right', c.right.value, 'vw'); else css += `  right: auto;\n`;
+          if (c.width.enabled) css += cssProp('width', c.width.value, 'vw'); else css += `  width: auto;\n`;
       }
 
       // Vertical positioning
       const vCount = (c.top.enabled ? 1 : 0) + (c.bottom.enabled ? 1 : 0);
       if (vCount === 0) { // No top/bottom enabled
           if (c.height.enabled) {
-              const heightVal = c.height.value || 0;
-              css += `  height: ${heightVal}vh;\n`;
+              const heightVal = c.height.value;
+              css += cssProp('height', heightVal, 'vh');
               css += `  top: calc(50vh - ${heightVal}vh / 2);\n`;
-              css += `  bottom: auto;\n`; // Ensure bottom is not set
+              css += `  bottom: auto;\n`;
           } else { // No top/bottom/height enabled
               css += `  height: auto;\n`;
               css += `  top: auto;\n`;
               css += `  bottom: auto;\n`;
-              css += `  align-items: center;\n`; // If height is auto, align the flex items (box) vertically
+              css += `  align-items: center;\n`;
           }
       } else { // top/bottom or both enabled
-          if (c.top.enabled) css += `  top: ${(c.top.value || 0)}vh;\n`; else css += `  top: auto;\n`;
-          if (c.bottom.enabled) css += `  bottom: ${(c.bottom.value || 0)}vh;\n`; else css += `  bottom: auto;\n`;
-          if (c.height.enabled) css += `  height: ${(c.height.value || 0)}vh;\n`; else css += `  height: auto;\n`;
+          if (c.top.enabled) css += cssProp('top', c.top.value, 'vh'); else css += `  top: auto;\n`;
+          if (c.bottom.enabled) css += cssProp('bottom', c.bottom.value, 'vh'); else css += `  bottom: auto;\n`;
+          if (c.height.enabled) css += cssProp('height', c.height.value, 'vh'); else css += `  height: auto;\n`;
       }
   } else { // Fallback for old states without state.design.container
       css += `  width: 100vw;\n`;
@@ -655,13 +662,23 @@ const parseCssToProperties = (css) => {
     if (state.design.container) {
         ['left', 'right', 'width'].forEach(p => {
             const v = extractValue('.bauchbinde', p);
-            if (v) { state.design.container[p].value = parseFloat(v); state.design.container[p].enabled = true; }
-            else { state.design.container[p].enabled = false; }
+            if (v && v !== 'auto') { 
+                const parsedValue = parseFloat(v);
+                state.design.container[p].value = isNaN(parsedValue) ? 0 : parsedValue;
+                state.design.container[p].enabled = true; 
+            } else { 
+                state.design.container[p].enabled = false; 
+            }
         });
         ['top', 'bottom', 'height'].forEach(p => {
             const v = extractValue('.bauchbinde', p);
-            if (v) { state.design.container[p].value = parseFloat(v); state.design.container[p].enabled = true; }
-            else { state.design.container[p].enabled = false; }
+            if (v && v !== 'auto') { 
+                const parsedValue = parseFloat(v);
+                state.design.container[p].value = isNaN(parsedValue) ? 0 : parsedValue;
+                state.design.container[p].enabled = true; 
+            } else { 
+                state.design.container[p].enabled = false; 
+            }
         });
     }
 
