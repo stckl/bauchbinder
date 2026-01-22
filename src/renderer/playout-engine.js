@@ -81,6 +81,7 @@ function updateCSS(data) {
 
     // LIVE UPDATE for Logo if something is showing
     activeLowerthirds.forEach(lt => {
+        if (lt.hideGlobalLogo) return;
         const $logo = lt.el.find('.logo');
         if (data.logo) {
             if ($logo.length) $logo.attr('src', data.logo);
@@ -134,7 +135,16 @@ async function playLowerthird(item) {
         console.log("[ENGINE] Live update for item ID:", item.id);
         existing.el.find('h1').text(item.name || '');
         existing.el.find('h2').text(item.title || '');
+        existing.hideGlobalLogo = !!item.hideGlobalLogo;
         
+        const $logo = existing.el.find('.logo');
+        if (item.hideGlobalLogo || !currentDesign?.logo) {
+            $logo.remove();
+        } else {
+            if ($logo.length) $logo.attr('src', currentDesign.logo);
+            else existing.el.find('.bb-box').prepend('<img src="' + currentDesign.logo + '" class="logo">');
+        }
+
         const $img = existing.el.find('.image');
         if (item.image) {
             if ($img.length) $img.attr('src', item.image);
@@ -150,7 +160,7 @@ async function playLowerthird(item) {
     console.log("[ENGINE] Rendering new instance - Logo:", !!currentDesign?.logo, "ItemImg:", !!item.image);
 
     const id = "bb-" + Date.now();
-    const logoHtml = currentDesign?.logo ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
+    const logoHtml = (currentDesign?.logo && !item.hideGlobalLogo) ? '<img src="' + currentDesign.logo + '" class="logo">' : '';
     const imageHtml = item.image ? '<img src="' + item.image + '" class="image">' : '';
     
     const html = '<div id="' + id + '" class="bauchbinde bauchbinde-instance">' +
@@ -182,7 +192,7 @@ async function playLowerthird(item) {
     } else {
         animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1] }, { duration: 750, easing: 'out-quad' });
     }
-    activeLowerthirds.push({ id, idFromStatus: item.id, el });
+    activeLowerthirds.push({ id, idFromStatus: item.id, el, hideGlobalLogo: !!item.hideGlobalLogo });
 }
 
 async function stopAll() {

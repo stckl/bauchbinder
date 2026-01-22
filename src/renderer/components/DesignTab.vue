@@ -227,7 +227,20 @@
         </div>
 
         <h4 class="ui dividing header inverted">Bilder</h4>
-        <h5 class="ui header inverted" style="margin-top: 10px;">Stil: Bild (Global)</h5>
+        <h5 class="ui header inverted" style="margin-top: 10px;">Upload: Bild (Global)</h5>
+        <div class="field">
+          <div v-if="!state.design.logo" class="ui segment" style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;" @dragover.prevent @drop.prevent="handleLogoDrop" @click="$refs.logoInput.click()">
+            <i class="huge image outline icon" style="color: #555;"></i>
+            <p style="margin-top: 10px; color: #888;">Bild hierher ziehen oder klicken</p>
+            <input type="file" ref="logoInput" style="display: none" accept="image/*" @change="handleLogoDrop({ dataTransfer: { files: $event.target.files } })">
+          </div>
+          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px;">
+             <img :src="state.design.logo" style="max-height: 100px; max-width: 100%; display: block; margin: 0 auto;">
+             <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px;" @click="removeLogo"><i class="trash icon"></i></div>
+          </div>
+        </div>
+
+        <h5 class="ui header inverted" style="margin-top: 20px;">Stil: Bild (Global)</h5>
         <div class="ui doubling four column grid">
           <div class="column field">
             <label>Höhe (in vh)</label>
@@ -289,78 +302,6 @@
         </div>
 
         <h5 class="ui header inverted" style="margin-top: 20px;">Stil: Bild (Bauchbinde)</h5>
-        <div class="ui doubling four column grid">
-          <div class="column field">
-            <label>Höhe (in vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" min="0" max="100" v-model="state.design.imageStyle.height">
-              <i class="arrows alternate vertical icon"></i>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Breite (in vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" min="0" max="100" v-model="state.design.imageStyle.width">
-              <i class="arrows alternate horizontal icon"></i>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Ecken Rundung</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="1" min="0" max="1000" v-model="state.design.imageStyle.radius">
-              <i class="circle outline icon"></i>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Abstand Links (vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.imageStyle.marginLeft">
-              <i class="arrow left icon"></i>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Abstand Rechts (vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.imageStyle.marginRight">
-              <i class="arrow right icon"></i>
-            </div>
-          </div>
-          <div class="column field">
-            <label>Positionierung</label>
-            <select class="ui inverted dropdown fluid" v-model="state.design.imageStyle.position">
-              <option value="static">Standard (Flex)</option>
-              <option value="relative">Relativ</option>
-              <option value="absolute">Absolut</option>
-            </select>
-          </div>
-          <div class="column field" v-if="state.design.imageStyle.position !== 'static'">
-            <label>X-Pos (vw)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.imageStyle.x">
-              <i class="arrows alternate horizontal icon"></i>
-            </div>
-          </div>
-          <div class="column field" v-if="state.design.imageStyle.position !== 'static'">
-            <label>Y-Pos (vh)</label>
-            <div class="ui left icon input fluid inverted">
-              <input type="number" step="0.1" v-model="state.design.imageStyle.y">
-              <i class="arrows alternate vertical icon"></i>
-            </div>
-          </div>
-        </div>
-
-        <h5 class="ui header inverted" style="margin-top: 20px;">Upload: Bild (Global)</h5>
-        <div class="field">
-          <div v-if="!state.design.logo" class="ui segment" style="border: 2px dashed #444; background: #1b1c1d; padding: 20px; text-align: center; cursor: pointer;" @dragover.prevent @drop.prevent="handleLogoDrop" @click="$refs.logoInput.click()">
-            <i class="huge image outline icon" style="color: #555;"></i>
-            <p style="margin-top: 10px; color: #888;">Bild hierher ziehen oder klicken</p>
-            <input type="file" ref="logoInput" style="display: none" accept="image/*" @change="handleLogoDrop({ dataTransfer: { files: $event.target.files } })">
-          </div>
-          <div v-else class="ui segment checkerboard" style="text-align: center; position: relative; padding: 10px;">
-             <img :src="state.design.logo" style="max-height: 100px; max-width: 100%; display: block; margin: 0 auto;">
-             <div class="ui mini inverted red icon button" style="position: absolute; top: 10px; right: 10px;" @click="removeLogo"><i class="trash icon"></i></div>
-          </div>
-        </div>
 
         <h4 class="ui dividing header inverted">Unified CSS Editor</h4>
         <div class="field">
