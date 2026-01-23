@@ -134,13 +134,22 @@ class BauchbinderInstance extends InstanceBase {
 
 	updateVariables() {
 		const activeItem = this.lowerThirds.find((item) => item.id === this.activeId)
-		this.setVariableValues({
+		const values = {
 			active_id: this.activeId ?? 'none',
 			active_name: activeItem?.name ?? '',
 			active_title: activeItem?.title ?? '',
 			item_count: this.lowerThirds.length,
 			is_active: this.activeId !== null ? 'true' : 'false',
-		})
+		}
+
+		// Set slot variables for slots 1-20
+		for (let i = 1; i <= 20; i++) {
+			const item = this.lowerThirds.find((lt) => lt.id === i)
+			values[`slot_${i}_name`] = item?.name ?? ''
+			values[`slot_${i}_title`] = item?.title ?? ''
+		}
+
+		this.setVariableValues(values)
 	}
 
 	async showLowerThird(id) {

@@ -1,10 +1,11 @@
 {
 	"name": "companion-module-bauchbinder",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"main": "src/main.js",
 	"scripts": {
 		"format": "prettier -w .",
-		"package": "companion-module-build"
+		"package": "companion-module-build",
+		"set-version": "node scripts/set-version.js"
 	},
 	"license": "Unlicense",
 	"repository": {

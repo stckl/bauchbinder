@@ -9,6 +9,46 @@ permissions:
   contents: write
 
 jobs:
+  build-companion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: companion-module/package-lock.json
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Install Dependencies
+        working-directory: companion-module
+        run: npm ci
+
+      - name: Set Companion Module Version
+        working-directory: companion-module
+        run: npm run set-version -- ${{ steps.version.outputs.VERSION }}
+
+      - name: Build Companion Module
+        working-directory: companion-module
+        run: npm run package
+
+      - name: Rename package with version
+        working-directory: companion-module
+        run: |
+          mv pkg/bauchbinder.tgz pkg/bauchbinder-companion-v${{ steps.version.outputs.VERSION }}.tgz
+
+      - name: Upload Companion Module to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: companion-module/pkg/bauchbinder-companion-v${{ steps.version.outputs.VERSION }}.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-mac:
     runs-on: macos-latest
     steps:

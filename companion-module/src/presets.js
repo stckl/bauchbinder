@@ -30,15 +30,15 @@ module.exports = function (self) {
 		],
 	}
 
-	// Presets: Show Lower Third 1-10
-	for (let i = 1; i <= 10; i++) {
+	// Presets: Show Lower Third 1-20
+	for (let i = 1; i <= 20; i++) {
 		presets[`show_${i}`] = {
 			type: 'button',
 			category: 'Lower Thirds',
 			name: `Show ${i}`,
 			style: {
-				text: `${i}`,
-				size: '24',
+				text: `$(${self.label}:slot_${i}_name)`,
+				size: 'auto',
 				color: combineRgb(255, 255, 255),
 				bgcolor: combineRgb(0, 0, 100),
 			},
@@ -60,15 +60,15 @@ module.exports = function (self) {
 		}
 	}
 
-	// Preset: Toggle Lower Third 1-10
-	for (let i = 1; i <= 10; i++) {
+	// Preset: Toggle Lower Third 1-20
+	for (let i = 1; i <= 20; i++) {
 		presets[`toggle_${i}`] = {
 			type: 'button',
 			category: 'Lower Thirds (Toggle)',
 			name: `Toggle ${i}`,
 			style: {
-				text: `T${i}`,
-				size: '24',
+				text: `$(${self.label}:slot_${i}_name)`,
+				size: 'auto',
 				color: combineRgb(255, 255, 255),
 				bgcolor: combineRgb(100, 100, 0),
 			},

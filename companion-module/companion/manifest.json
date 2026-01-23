@@ -3,7 +3,7 @@
 	"name": "Bauchbinder",
 	"shortname": "bauchbind",
 	"description": "Control Bauchbinder Lower Thirds Software",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"license": "Unlicense",
 	"repository": "git+https://github.com/stckl/bauchbinder.git",
 	"bugs": "https://github.com/stckl/bauchbinder/issues",
@@ -21,6 +21,12 @@
 	},
 	"legacyIds": [],
 	"manufacturer": "Michael Stöckle",
-	"products": ["Bauchbinder"],
-	"keywords": ["lower-thirds", "graphics", "broadcast"]
+	"products": [
+		"Bauchbinder"
+	],
+	"keywords": [
+		"lower-thirds",
+		"graphics",
+		"broadcast"
+	]
 }

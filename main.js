@@ -211,6 +211,34 @@ io.on('connection', (socket) => {
     });
 });
 
+http.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        const port = expressapp.get('port');
+        console.error(`[express.js] Port ${port} ist bereits belegt!`);
+
+        // Show error dialog when app is ready
+        const showError = () => {
+            dialog.showErrorBox(
+                'Port bereits belegt',
+                `Der Port ${port} wird bereits verwendet.\n\n` +
+                `Mögliche Ursachen:\n` +
+                `• Eine andere Instanz von Bauchbinder läuft bereits\n` +
+                `• Ein anderes Programm verwendet Port ${port}\n\n` +
+                `Bitte schließe die andere Anwendung und versuche es erneut.`
+            );
+            app.exit(1);
+        };
+
+        if (app.isReady()) {
+            showError();
+        } else {
+            app.on('ready', showError);
+        }
+    } else {
+        console.error('[express.js] Server error:', err);
+    }
+});
+
 http.listen(expressapp.get('port'), () => {
     console.log('[express.js] listening on *:' + expressapp.get('port'));
 });

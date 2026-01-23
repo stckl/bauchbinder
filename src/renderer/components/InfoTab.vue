@@ -19,16 +19,10 @@
           <div class="item"><b>Direkt-Import (v4):</b> Nutze die "Import from file" Funktion in Companion und wähle die .companionbundle Datei aus.</div>
         </div>
         <br>
-        <div class="ui buttons">
-          <a href="downloads/bauchbinder.tgz" class="ui icon label labeled purple button" download>
-            <i class="download icon"></i>
-            Modul (.tgz)
-          </a>
-          <a href="downloads/bauchbinder-companion.zip" class="ui icon label labeled basic purple button" download>
-            <i class="file archive icon"></i>
-            ZIP-Archiv
-          </a>
-        </div>
+        <a href="downloads/bauchbinder.tgz" class="ui icon label labeled purple button" download>
+          <i class="download icon"></i>
+          Modul herunterladen (.tgz)
+        </a>
         
         <h4 style="margin-top: 20px;">Legacy: Generic HTTP</h4>
         <p>Anbindung über das "Generic HTTP Modul":<br>BaseURL: http://localhost:5001/v1/<br>Button Action anzeigen: [POST] "show/X" wobei X die ID des Eintrags ist z.B. "show/1"<br>Button Action ausblenden: [POST] "hide"</p>
