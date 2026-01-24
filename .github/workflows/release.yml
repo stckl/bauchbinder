@@ -40,7 +40,7 @@ jobs:
       - name: Rename package with version
         working-directory: companion-module
         run: |
-          mv pkg/bauchbinder.tgz pkg/bauchbinder-companion-v${{ steps.version.outputs.VERSION }}.tgz
+          mv pkg/*.tgz pkg/bauchbinder-companion-v${{ steps.version.outputs.VERSION }}.tgz
 
       - name: Upload Companion Module to Release
         uses: softprops/action-gh-release@v2
