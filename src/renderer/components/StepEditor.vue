@@ -90,7 +90,7 @@
           </div>
         </div>
 
-        <div class="title"><i class="dropdown icon"></i> Bewegung (X & Y)</div>
+        <div class="title"><i class="dropdown icon"></i> Bewegung (X, Y & Z)</div>
         <div class="content">
           <div class="field">
             <label>X-Achse</label>
@@ -114,6 +114,17 @@
             <div v-if="getMotionYType() !== 'none'" class="fields inverted">
               <div class="field"><label>Start</label><input type="text" v-model="step.properties[getMotionYType()][0]"></div>
               <div class="field"><label>Ziel</label><input type="text" v-model="step.properties[getMotionYType()][1]"></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Z-Achse</label>
+            <select :value="getMotionZType()" @change="setMotionZ($event.target.value)" class="ui mini dropdown inverted selection">
+              <option value="none">-- Keine --</option>
+              <option value="translateZ">Transform Z (px)</option>
+            </select>
+            <div v-if="getMotionZType() !== 'none'" class="fields inverted">
+              <div class="field"><label>Start</label><input type="text" v-model="step.properties.translateZ[0]"></div>
+              <div class="field"><label>Ziel</label><input type="text" v-model="step.properties.translateZ[1]"></div>
             </div>
           </div>
         </div>
@@ -329,6 +340,16 @@ const getMotionYType = () => {
 const setMotionY = (val) => {
     ['translateY', 'top', 'bottom'].forEach(p => delete step.value.properties[p]);
     if (val !== 'none') step.value.properties[val] = [phase.value==='show'?'100vh':'0vh', '0vh'];
+};
+
+const getMotionZType = () => {
+    if (step.value.properties.translateZ !== undefined) return 'translateZ';
+    return 'none';
+};
+
+const setMotionZ = (val) => {
+    delete step.value.properties.translateZ;
+    if (val !== 'none') step.value.properties.translateZ = [phase.value==='show'?'100px':'0px', '0px'];
 };
 
 const toHex = (color) => {
