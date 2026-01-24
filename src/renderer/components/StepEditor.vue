@@ -68,7 +68,7 @@
         <div class="title active"><i class="dropdown icon"></i> Sichtbarkeit & Größe</div>
         <div class="content active">
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.opacity !== undefined" @change="toggleProp('opacity', phase==='show'?[0, 1]:[1, 0])">
               <label>Deckkraft</label>
             </div>
@@ -79,7 +79,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.scale !== undefined" @change="toggleProp('scale', phase==='show'?[0, 1]:[1, 0])">
               <label>Größe (Scale)</label>
             </div>
@@ -132,7 +132,7 @@
         <div class="title"><i class="dropdown icon"></i> Rotation</div>
         <div class="content">
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.rotateX !== undefined" @change="toggleProp('rotateX', ['0deg', '360deg'])">
               <label>Rotation X</label>
             </div>
@@ -143,7 +143,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.rotateY !== undefined" @change="toggleProp('rotateY', ['0deg', '360deg'])">
               <label>Rotation Y</label>
             </div>
@@ -154,7 +154,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.rotateZ !== undefined" @change="toggleProp('rotateZ', ['0deg', '360deg'])">
               <label>Rotation Z</label>
             </div>
@@ -168,7 +168,7 @@
         <div class="title"><i class="dropdown icon"></i> Farbe</div>
         <div class="content">
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.backgroundColor !== undefined" @change="toggleProp('backgroundColor', ['rgba(255,255,255,1)', 'rgba(255,255,255,0)'])">
               <label>Hintergrundfarbe</label>
             </div>
@@ -190,7 +190,7 @@
         <div class="title"><i class="dropdown icon"></i> Ränder</div>
         <div class="content">
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.borderWidth !== undefined" @change="toggleProp('borderWidth', ['0px', '2px'])">
               <label>Rahmendicke</label>
             </div>
@@ -201,7 +201,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.borderColor !== undefined" @change="toggleProp('borderColor', ['rgba(255,255,255,1)', 'rgba(255,255,255,0)'])">
               <label>Rahmenfarbe</label>
             </div>
@@ -220,7 +220,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.borderRadius !== undefined" @change="toggleProp('borderRadius', ['0px', '10px'])">
               <label>Eckenradius</label>
             </div>
@@ -234,7 +234,7 @@
         <div v-if="step.selector === 'h1' || step.selector === 'h2'" class="title"><i class="dropdown icon"></i> Schrift</div>
         <div v-if="step.selector === 'h1' || step.selector === 'h2'" class="content">
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.fontSize !== undefined" @change="toggleProp('fontSize', ['0vh', '5vh'])">
               <label>Schriftgröße</label>
             </div>
@@ -245,7 +245,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.color !== undefined" @change="toggleProp('color', ['rgba(0,0,0,1)', 'rgba(0,0,0,1)'])">
               <label>Schriftfarbe</label>
             </div>
@@ -264,7 +264,7 @@
           </div>
 
           <div class="inline field">
-            <div class="ui checkbox inverted tiny">
+            <div class="ui inverted toggle checkbox tiny">
               <input type="checkbox" :checked="step.properties.fontWeight !== undefined" @change="toggleProp('fontWeight', [400, 700])">
               <label>Schriftstärke</label>
             </div>

@@ -337,7 +337,7 @@ function createStepEditorWin(phase, index) {
     return;
   }
   winStep = new BrowserWindow({
-    width: 500, height: 700,
+    width: 1000, height: 700,
     parent: win,
     backgroundColor: '#1b1c1d',
     webPreferences: { nodeIntegration: true, contextIsolation: false }
