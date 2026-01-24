@@ -91,7 +91,7 @@ import AnimationTab from './components/AnimationTab.vue';
 import InfoTab from './components/InfoTab.vue';
 import EntryEditor from './components/EntryEditor.vue';
 import StepEditor from './components/StepEditor.vue';
-import { state, activeIndex, systemFonts } from './store.js'; 
+import { state, activeIndex, animatingIndices, systemFonts } from './store.js'; 
 
 // Browser-safe Electron access
 const isElectron = typeof window !== 'undefined' && window.process && window.process.versions?.electron;
@@ -170,6 +170,17 @@ onMounted(() => {
         ipc.on('status-update', (event, arg) => {
             if (arg && arg.activeId !== undefined) {
                 activeIndex.value = arg.activeId !== null ? (arg.activeId - 1) : -1;
+            }
+        });
+        ipc.on('animating-add', (event, idx) => {
+            if (!animatingIndices.value.includes(idx)) {
+                animatingIndices.value.push(idx);
+            }
+        });
+        ipc.on('animating-remove', (event, idx) => {
+            const i = animatingIndices.value.indexOf(idx);
+            if (i !== -1) {
+                animatingIndices.value.splice(i, 1);
             }
         });
         ipc.on('update-data', (event, arg) => {

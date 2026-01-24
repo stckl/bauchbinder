@@ -135,8 +135,8 @@ let lastAnimation = {
   duration: 1000,
   easing: 'easeInOutCirc',
   code: '',
-  show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
-  hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
+  show: [{ selector: '.bauchbinde-box', properties: { opacity: [0, 1] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
+  hide: [{ selector: '.bauchbinde-box', properties: { opacity: [1, 0] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
 };
 
 expressapp.set('port', process.env.PORT || 5001);
@@ -354,10 +354,41 @@ function createStepEditorWin(phase, index) {
   winStep.on('closed', () => { winStep = null; });
 }
 
+const animatingTimeouts = new Map();
+
+function getAnimationDuration(steps) {
+  if (!steps || !steps.length) return 750;
+  return Math.max(...steps.map(s => (s.duration || 750) + (s.delay || 0)));
+}
+
+function startAnimating(index, duration) {
+  // Clear existing timeout for this index if any
+  if (animatingTimeouts.has(index)) {
+    clearTimeout(animatingTimeouts.get(index));
+  }
+
+  sendToWindows('animating-add', index);
+
+  const timeout = setTimeout(() => {
+    sendToWindows('animating-remove', index);
+    animatingTimeouts.delete(index);
+  }, duration + 50);
+
+  animatingTimeouts.set(index, timeout);
+}
+
 function showLowerThird(arg) {
   activeLowerThirdData = JSON.parse(JSON.stringify(arg));
   activeLowerThirdId = arg.id || null;
   const status = { activeId: activeLowerThirdId, activeItem: activeLowerThirdData };
+
+  // Start animating for show animation
+  const animatingId = arg.id ? arg.id - 1 : -1;
+  if (animatingId >= 0) {
+    const duration = getAnimationDuration(lastAnimation?.show);
+    startAnimating(animatingId, duration);
+  }
+
   sendToWindows('show-lowerthird', activeLowerThirdData);
   io.emit('show-lowerthird', activeLowerThirdData);
   sendToWindows('status-update', status);
@@ -374,10 +405,33 @@ function showLowerThirdByID(arg) {
 }
 
 function hideLowerThird() {
+  // Start animating for hide animation
+  const animatingId = activeLowerThirdId ? activeLowerThirdId - 1 : -1;
+  if (animatingId >= 0) {
+    const duration = getAnimationDuration(lastAnimation?.hide);
+    startAnimating(animatingId, duration);
+  }
+
   activeLowerThirdId = null;
   activeLowerThirdData = null;
   sendToWindows('hide-lowerthird', null);
   io.emit('hide-lowerthird', null);
+  io.emit('status-update', { activeId: activeLowerThirdId, activeItem: null });
+  sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: null });
+}
+
+function cancelLowerThird() {
+  // Clear all animating timeouts and send remove for each
+  animatingTimeouts.forEach((timeout, index) => {
+    clearTimeout(timeout);
+    sendToWindows('animating-remove', index);
+  });
+  animatingTimeouts.clear();
+
+  activeLowerThirdId = null;
+  activeLowerThirdData = null;
+  sendToWindows('cancel-lowerthird', null);
+  io.emit('cancel-lowerthird', null);
   io.emit('status-update', { activeId: activeLowerThirdId, activeItem: null });
   sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: null });
 }
@@ -425,6 +479,7 @@ ipc.handle('download-to-base64', async (event, url) => {
 
 ipc.on('show-lowerthird', (event, arg) => showLowerThird(arg));
 ipc.on('hide-lowerthird', () => hideLowerThird());
+ipc.on('cancel-lowerthird', () => cancelLowerThird());
 ipc.on('kill-playout', () => {
   sendToWindows('kill-playout', null);
   io.emit('kill-playout', null);

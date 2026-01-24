@@ -24,7 +24,8 @@ let currentMode = 'h5';
 let currentDesign = null;
 let currentAnimation = { type: 'fade', duration: 750, easing: 'easeInOutCirc' };
 let activeLowerthirds = [];
-let playLock = false;
+let hidingLowerthirds = []; // Elements currently fading out
+let pendingIds = new Set(); // IDs currently being shown (to prevent duplicates)
 
 // Convert old anime.js 3.x easing names to 4.x format
 function convertEasing(easing) {
@@ -124,10 +125,16 @@ function updateJS(data) {
 }
 
 function handleStatusUpdate(arg) {
+    // Only used for initial state sync, not for live updates
+    // Live updates come via show-lowerthird/hide-lowerthird events
     if (arg && arg.activeItem) {
-        playLowerthird(arg.activeItem);
+        // Only play if not already showing this item
+        const existing = activeLowerthirds.find(lt => lt.idFromStatus === arg.activeItem.id);
+        if (!existing) {
+            playLowerthird(arg.activeItem);
+        }
     } else if (arg && arg.activeId === null && activeLowerthirds.length > 0) {
-        stopAll();
+        fadeOutAll();
     }
 }
 
@@ -153,8 +160,11 @@ function transformProperties(props) {
 }
 
 async function playLowerthird(item) {
-    if (!item || !animate || playLock) return;
-    
+    if (!item || !animate) return;
+
+    // Prevent duplicate calls for same ID (race condition between show-lowerthird and status-update)
+    if (pendingIds.has(item.id)) return;
+
     // LIVE UPDATE: Check if we are already showing this ID
     const existing = activeLowerthirds.find(lt => lt.idFromStatus === item.id);
     if (existing) {
@@ -169,7 +179,7 @@ async function playLowerthird(item) {
             existing.el.find('h2').text(item.title || '');
         }
         existing.showGlobalLogo = item.showGlobalLogo !== false;
-        
+
         // Update local style properties if enabled
         if (item.useLocalStyle && item.localStyle) {
             applyLocalStyles(existing.el, item.localStyle);
@@ -193,9 +203,30 @@ async function playLowerthird(item) {
         return;
     }
 
-    playLock = true;
+    // Mark this ID as pending to prevent duplicate calls
+    pendingIds.add(item.id);
+
+    const switchDelay = currentAnimation?.switchDelay || 0;
+    const oldLowerthirds = [...activeLowerthirds];
+    const hasActive = oldLowerthirds.length > 0;
+
+    // Clear active list immediately so new one can be added
+    activeLowerthirds = [];
+
+    // Negative delay: start fade-in first, then fade-out after |delay| ms
+    if (hasActive && switchDelay < 0) {
+        setTimeout(() => hideElements(oldLowerthirds), Math.abs(switchDelay));
+    }
+
+    // Positive delay: start fade-out first, then fade-in after delay ms
+    if (hasActive && switchDelay >= 0) {
+        hideElements(oldLowerthirds); // Don't await - run in parallel
+        if (switchDelay > 0) {
+            await new Promise(r => setTimeout(r, switchDelay));
+        }
+    }
+
     try {
-        if (activeLowerthirds.length > 0) await stopAll();
 
         console.log("[ENGINE] Rendering new instance - LocalStyle:", !!item.useLocalStyle);
 
@@ -231,7 +262,11 @@ async function playLowerthird(item) {
         
         $('#bauchbinde-container').append(html);
         const el = $("#" + id);
-        
+
+        // Add to active list BEFORE animation so stopAll() can find it
+        const ltEntry = { id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false, useLocalStyle: !!item.useLocalStyle };
+        activeLowerthirds.push(ltEntry);
+
         if (item.useLocalStyle && item.localStyle) {
             applyLocalStyles(el, item.localStyle);
             // Simple Fade Animation for Local Style
@@ -256,9 +291,10 @@ async function playLowerthird(item) {
         } else {
             await animate(el[0], { opacity: currentMode === 'fill' ? [1, 1] : [0, 1], duration: 750, easing: 'out-quad' });
         }
-        activeLowerthirds.push({ id, idFromStatus: item.id, el, showGlobalLogo: item.showGlobalLogo !== false, useLocalStyle: !!item.useLocalStyle });
+    } catch (err) {
+        console.error("[ENGINE] Animation error:", err);
     } finally {
-        playLock = false;
+        pendingIds.delete(item.id);
     }
 }
 
@@ -333,37 +369,58 @@ function applyLocalStyles(el, s) {
     });
 }
 
-async function stopAll() {
+async function hideElements(elements, skipTracking = false) {
+    // Add to hiding list so stopAll can find them
+    if (!skipTracking) {
+        hidingLowerthirds.push(...elements);
+    }
+
+    const hidePromises = elements.map(async (lt) => {
+        try {
+            if (!lt.useLocalStyle && currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
+                console.log("[ENGINE] Running hide animation, steps:", currentAnimation.hide.length);
+                const stepPromises = currentAnimation.hide.map(async (step) => {
+                    console.log("[ENGINE] Hide step - duration:", step.duration, "delay:", step.delay, "easing:", step.easing);
+                    let selector = step.selector;
+                    if (selector === '.white' || selector === '.bb-box') selector = '.bauchbinde-box';
+                    const targetEl = (selector === '.bauchbinde' || selector === '.bauchbinde-instance') ? lt.el[0] : lt.el.find(selector)[0];
+                    if (targetEl) {
+                        await animate(targetEl, {
+                            ...transformProperties(step.properties),
+                            duration: step.duration || 500,
+                            delay: step.delay || 0,
+                            easing: convertEasing(step.easing)
+                        });
+                    }
+                });
+                await Promise.all(stepPromises);
+            } else {
+                await animate(lt.el[0], { opacity: currentMode === 'fill' ? 1 : 0, duration: 500, easing: 'out-quad' });
+            }
+        } finally {
+            lt.el.remove();
+            // Remove from hiding list
+            const idx = hidingLowerthirds.indexOf(lt);
+            if (idx !== -1) hidingLowerthirds.splice(idx, 1);
+        }
+    });
+    await Promise.all(hidePromises);
+}
+
+async function fadeOutAll() {
+    // Normal fade out with animation
     const currentActive = [...activeLowerthirds];
     activeLowerthirds = [];
+    await hideElements(currentActive);
+}
 
-    const hidePromises = currentActive.map(async (lt) => {
-        if (!lt.useLocalStyle && currentAnimation && currentAnimation.type === 'structured' && currentAnimation.hide && currentAnimation.hide.length > 0) {
-            console.log("[ENGINE] Running hide animation, steps:", currentAnimation.hide.length);
-            const stepPromises = currentAnimation.hide.map(async (step) => {
-                console.log("[ENGINE] Hide step - duration:", step.duration, "delay:", step.delay, "easing:", step.easing);
-                let selector = step.selector;
-                if (selector === '.white' || selector === '.bb-box') selector = '.bauchbinde-box';
-                // .bauchbinde-instance targets the root element (same as .bauchbinde)
-                const targetEl = (selector === '.bauchbinde' || selector === '.bauchbinde-instance') ? lt.el[0] : lt.el.find(selector)[0];
-                if (targetEl) {
-                    // anime.js 4.x: duration/delay/easing go in the properties object, not separate options
-                    await animate(targetEl, {
-                        ...transformProperties(step.properties),
-                        duration: step.duration || 500,
-                        delay: step.delay || 0,
-                        easing: convertEasing(step.easing)
-                    });
-                }
-            });
-            await Promise.all(stepPromises);
-        } else {
-            await animate(lt.el[0], { opacity: currentMode === 'fill' ? 1 : 0, duration: 500, easing: 'out-quad' });
-        }
-        lt.el.remove();
-    });
-
-    await Promise.all(hidePromises);
+function cancelAll() {
+    // Immediately remove all elements without animation
+    const allElements = [...activeLowerthirds, ...hidingLowerthirds];
+    activeLowerthirds = [];
+    hidingLowerthirds = [];
+    pendingIds.clear();
+    allElements.forEach(lt => lt.el.remove());
 }
 
 export function initEngine(mode) {
@@ -378,7 +435,8 @@ export function initEngine(mode) {
         on('update-css', (d) => updateCSS(d));
         on('update-js', (d) => updateJS(d));
         on('show-lowerthird', (d) => playLowerthird(d));
-        on('hide-lowerthird', () => stopAll());
+        on('hide-lowerthird', () => fadeOutAll());
+        on('cancel-lowerthird', () => cancelAll());
         on('status-update', (d) => handleStatusUpdate(d));
     };
 

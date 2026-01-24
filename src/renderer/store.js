@@ -110,11 +110,13 @@ h2 {
         duration: 1000,
         easing: 'easeInOutCirc',
         code: '',
-        show: [{ selector: '.bb-box', properties: { opacity: [0, 1] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
-        hide: [{ selector: '.bb-box', properties: { opacity: [1, 0] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }]
+        show: [{ selector: '.bauchbinde-box', properties: { opacity: [0, 1] }, duration: 1000, delay: 0, easing: 'easeInOutCirc' }],
+        hide: [{ selector: '.bauchbinde-box', properties: { opacity: [1, 0] }, duration: 750, delay: 0, easing: 'easeInOutCirc' }],
+        switchDelay: 750
     }
 });
 
 export const activeIndex = ref(-1);
+export const animatingIndices = ref([]);
 export const systemFonts = ref([]);
 export const manualFonts = ref([]);

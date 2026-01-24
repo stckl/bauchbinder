@@ -13,7 +13,7 @@
       <div class="col">
         <draggable v-model="state.lowerthirds" item-key="name" draggable=".card" class="ui cards" @end="onDragEnd">
           <template #item="{element, index}">
-            <div class="card inverted" :class="{ active: (activeIndex == index) }">
+            <div class="card inverted" :class="{ active: (activeIndex == index), animating: animatingIndices.includes(index) }">
               <div class="content">
                 <span class="right floated"><i class="edit icon" @click="openEditor(index)"></i> {{index+1}}</span>
                 
@@ -24,7 +24,7 @@
               </div>
               <div class="ui bottom attached green button" @click="playLowerthird(index)">
                 <i class="play icon"></i>
-                anzeigen
+                einblenden
               </div>
             </div>
           </template>
@@ -35,22 +35,27 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
 import draggable from 'vuedraggable';
-import { state, activeIndex } from '../store.js';
+import { state, activeIndex, animatingIndices } from '../store.js';
 const ipc = (typeof window !== 'undefined' && window.require) ? window.require('electron').ipcRenderer : null;
 
 const openEditor = (id) => {
     if (ipc) ipc.send('open-entry-editor', id);
 };
 
-const playLowerthird = (i) => { 
+const playLowerthird = (i) => {
     const item = JSON.parse(JSON.stringify(state.lowerthirds[i]));
     item.id = i + 1;
-    if (ipc) ipc.send('show-lowerthird', item); 
+    if (ipc) ipc.send('show-lowerthird', item);
 };
 
-const onDragEnd = () => { 
-    if (ipc) ipc.send('update-data', JSON.parse(JSON.stringify(state.lowerthirds))); 
+const onDragEnd = () => {
+    if (ipc) ipc.send('update-data', JSON.parse(JSON.stringify(state.lowerthirds)));
 };
 </script>
+
+<style scoped>
+.card.animating {
+    box-shadow: 0 0 0 3px #fbbd08 !important;
+}
+</style>
