@@ -47,6 +47,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: companion-module/pkg/bauchbinder-companion-v${{ steps.version.outputs.VERSION }}.tgz
+          draft: true
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -61,7 +63,19 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Install Companion Dependencies
+        working-directory: companion-module
+        run: npm ci
+
+      - name: Set Companion Module Version
+        working-directory: companion-module
+        run: npm run set-version -- ${{ steps.version.outputs.VERSION }}
+
+      - name: Install App Dependencies
         run: npm ci
 
       - name: Build Frontend
@@ -81,7 +95,6 @@ jobs:
 
   build-win:
     runs-on: windows-latest
-    needs: build-mac
     steps:
       - uses: actions/checkout@v4
 
@@ -91,7 +104,20 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Install Companion Dependencies
+        working-directory: companion-module
+        run: npm ci
+
+      - name: Set Companion Module Version
+        working-directory: companion-module
+        run: npm run set-version -- ${{ steps.version.outputs.VERSION }}
+
+      - name: Install App Dependencies
         run: npm ci
 
       - name: Build Frontend
