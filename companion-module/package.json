@@ -1,6 +1,6 @@
 {
 	"name": "companion-module-bauchbinder",
-	"version": "0.0.1",
+	"version": "4.2.0",
 	"main": "src/main.js",
 	"scripts": {
 		"format": "prettier -w .",

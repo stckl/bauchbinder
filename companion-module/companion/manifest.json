@@ -3,7 +3,7 @@
 	"name": "Bauchbinder",
 	"shortname": "bauchbind",
 	"description": "Control Bauchbinder Lower Thirds Software",
-	"version": "0.0.1",
+	"version": "4.2.0",
 	"license": "Unlicense",
 	"repository": "git+https://github.com/stckl/bauchbinder.git",
 	"bugs": "https://github.com/stckl/bauchbinder/issues",

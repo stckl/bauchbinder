@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "start": "electron .",
     "generate-icons": "electron-icon-builder --input=assets/Bauchbinder_icon.png --output=assets --flatten",
-    "build-companion": "cd companion-module && npm install && npm run package && cd .. && cp companion-module/*.tgz public/downloads/bauchbinder.tgz",
+    "build-companion": "cd companion-module && npm install && npm run set-version -- $(node -p \"require('../package.json').version\") && npm run package && cd .. && cp companion-module/*.tgz public/downloads/bauchbinder.tgz",
     "pack-win": "npm run build-companion && npm run build && electron-builder build --windows --x64 --publish always",
     "pack-macarm": "npm run build-companion && npm run build && electron-builder build --macos --arm64 --publish always"
   },
