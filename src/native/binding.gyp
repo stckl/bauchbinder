@@ -32,9 +32,10 @@
           },
           "libraries": [
             "-lole32",
-            "-loleaut32"
+            "-loleaut32",
+            "-lcomsuppw"
           ],
-          "sources": ["sdk/DeckLinkAPIDispatch.cpp"]
+          "sources": ["sdk/DeckLinkAPI_i.c"]
         }]
       ]
     }

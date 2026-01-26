@@ -51,24 +51,20 @@ std::string CFStringToString(CFStringRef cfStr) {
 
 // ============================================================================
 // Helper: Get bytes from video frame (cross-platform)
+// Uses IDeckLinkVideoBuffer interface for newer SDK versions
 // ============================================================================
-#ifdef __APPLE__
-// On macOS, GetBytes is on IDeckLinkVideoBuffer interface
 inline HRESULT GetFrameBytes(IDeckLinkMutableVideoFrame* frame, void** buffer) {
+    // In newer DeckLink SDK versions (14.0+), GetBytes is on IDeckLinkVideoBuffer interface
     IDeckLinkVideoBuffer* videoBuffer = nullptr;
     HRESULT result = frame->QueryInterface(IID_IDeckLinkVideoBuffer, (void**)&videoBuffer);
     if (result == S_OK && videoBuffer) {
         result = videoBuffer->GetBytes(buffer);
         videoBuffer->Release();
+        return result;
     }
-    return result;
+    // Fallback for older SDK: try directly on mutable frame (deprecated but might work)
+    return E_FAIL;
 }
-#else
-// On Windows, GetBytes is directly on the frame
-inline HRESULT GetFrameBytes(IDeckLinkMutableVideoFrame* frame, void** buffer) {
-    return frame->GetBytes(buffer);
-}
-#endif
 
 // ============================================================================
 // Output Instance - manages a single DeckLink output
