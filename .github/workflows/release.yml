@@ -184,10 +184,20 @@ jobs:
           npx @electron/rebuild -v $(node -p "require('../../package.json').devDependencies.electron.replace('^', '')") -a x64
           dir build\Release\
 
+      - name: Build Companion Module for App
+        working-directory: companion-module
+        run: npm run package
+
+      - name: Copy Companion Module to public/downloads
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path public/downloads
+          Copy-Item companion-module/*.tgz public/downloads/bauchbinder.tgz
+
       - name: Build Frontend
         run: npm run build
 
       - name: Build and Publish Windows App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run pack-win
+        run: npx electron-builder build --windows --x64 --publish always
