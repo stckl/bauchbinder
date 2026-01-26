@@ -26,7 +26,7 @@ class DeckLinkManager extends EventEmitter {
     this.outputKeyId = -1;
     this.isRunning = false;
     this.config = {
-      mode: 'keyfill', // 'keyfill' or 'chromakey'
+      mode: 'keyfill', // 'keyfill', 'externalkey', or 'chromakey'
       fillDeviceIndex: 0,
       keyDeviceIndex: 1,
       displayMode: 0x48703530, // bmdModeHD1080p50
@@ -103,8 +103,9 @@ class DeckLinkManager extends EventEmitter {
 
   /**
    * Start scheduled playback
-   * In Key/Fill mode: uses two devices
-   * In Chromakey mode: uses one device
+   * - Key/Fill mode: uses two separate devices
+   * - External Keyer mode: uses one device with hardware keyer (e.g. UltraStudio HD Mini)
+   * - Chromakey mode: uses one device with colored background
    */
   async start() {
     if (!decklinkAvailable) {
@@ -123,18 +124,27 @@ class DeckLinkManager extends EventEmitter {
       frameRate: this.config.frameRate
     };
 
-    const isChromakey = this.config.mode === 'chromakey';
+    const mode = this.config.mode;
+    const isChromakey = mode === 'chromakey';
+    const isExternalKey = mode === 'externalkey';
+    const isSingleDevice = isChromakey || isExternalKey;
 
     try {
-      // Create Fill output (used in both modes)
-      console.log(`[DeckLink] Creating ${isChromakey ? 'Chromakey' : 'Fill'} output on device ${this.config.fillDeviceIndex}`);
+      // External Keyer mode: enable hardware keying on the device
+      if (isExternalKey) {
+        outputOptions.enableKeyer = true;
+      }
+
+      // Create Fill output (used in all modes)
+      const outputLabel = isChromakey ? 'Chromakey' : (isExternalKey ? 'External Keyer (Fill+Key)' : 'Fill');
+      console.log(`[DeckLink] Creating ${outputLabel} output on device ${this.config.fillDeviceIndex}`);
       this.outputFillId = decklink.createOutput(this.config.fillDeviceIndex, outputOptions);
       if (this.outputFillId < 0) {
         throw new Error('Failed to create output');
       }
 
-      // Create Key output (only in Key/Fill mode)
-      if (!isChromakey) {
+      // Create Key output (only in separate Key/Fill mode)
+      if (!isSingleDevice) {
         console.log(`[DeckLink] Creating Key output on device ${this.config.keyDeviceIndex}`);
         this.outputKeyId = decklink.createOutput(this.config.keyDeviceIndex, outputOptions);
         if (this.outputKeyId < 0) {
@@ -144,13 +154,13 @@ class DeckLinkManager extends EventEmitter {
         }
       }
 
-      // Start Fill/Chromakey output
+      // Start Fill/Chromakey/ExternalKeyer output
       if (!decklink.startOutput(this.outputFillId)) {
         throw new Error('Failed to start output');
       }
 
-      // Start Key output (only in Key/Fill mode)
-      if (!isChromakey && this.outputKeyId >= 0) {
+      // Start Key output (only in separate Key/Fill mode)
+      if (!isSingleDevice && this.outputKeyId >= 0) {
         if (!decklink.startOutput(this.outputKeyId)) {
           decklink.stopOutput(this.outputFillId);
           throw new Error('Failed to start Key output');
@@ -159,7 +169,9 @@ class DeckLinkManager extends EventEmitter {
 
       this.isRunning = true;
       this.emit('started', { mode: this.config.mode });
-      console.log(`[DeckLink] Playback started in ${isChromakey ? 'Chromakey' : 'Key/Fill'} mode`);
+
+      const modeLabel = isChromakey ? 'Chromakey' : (isExternalKey ? 'External Keyer' : 'Key/Fill');
+      console.log(`[DeckLink] Playback started in ${modeLabel} mode`);
 
     } catch (err) {
       console.error('[DeckLink] Error starting playback:', err);
@@ -192,8 +204,8 @@ class DeckLinkManager extends EventEmitter {
 
   /**
    * Schedule a frame for output
-   * @param {Buffer} fillFrame - BGRA frame buffer for Fill/Chromakey output
-   * @param {Buffer} keyFrame - BGRA frame buffer for Key output (ignored in chromakey mode)
+   * @param {Buffer} fillFrame - BGRA frame buffer for Fill/Chromakey/ExternalKeyer output
+   * @param {Buffer} keyFrame - BGRA frame buffer for Key output (only used in separate Key/Fill mode)
    */
   scheduleFrame(fillFrame, keyFrame) {
     if (!this.isRunning) {
@@ -201,14 +213,18 @@ class DeckLinkManager extends EventEmitter {
     }
 
     let success = true;
-    const isChromakey = this.config.mode === 'chromakey';
+    const mode = this.config.mode;
+    const isSingleDevice = mode === 'chromakey' || mode === 'externalkey';
 
+    // In External Keyer mode, send the BGRA frame with alpha - hardware splits it
+    // In Chromakey mode, send the frame with colored background
+    // In Key/Fill mode, send fill frame to fill device
     if (fillFrame && this.outputFillId >= 0) {
       success = decklink.scheduleFrame(this.outputFillId, fillFrame) && success;
     }
 
-    // Only schedule key frame in Key/Fill mode
-    if (!isChromakey && keyFrame && this.outputKeyId >= 0) {
+    // Only schedule separate key frame in Key/Fill mode (two devices)
+    if (!isSingleDevice && keyFrame && this.outputKeyId >= 0) {
       success = decklink.scheduleFrame(this.outputKeyId, keyFrame) && success;
     }
 
@@ -227,6 +243,20 @@ class DeckLinkManager extends EventEmitter {
    */
   isChromakeyMode() {
     return this.config.mode === 'chromakey';
+  }
+
+  /**
+   * Check if running in external keyer mode (single device with hardware key/fill split)
+   */
+  isExternalKeyerMode() {
+    return this.config.mode === 'externalkey';
+  }
+
+  /**
+   * Check if running in single device mode (chromakey or external keyer)
+   */
+  isSingleDeviceMode() {
+    return this.config.mode === 'chromakey' || this.config.mode === 'externalkey';
   }
 
   /**

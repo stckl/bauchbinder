@@ -23,9 +23,7 @@
         <!-- Status -->
         <div class="ui message" :class="statusClass">
           <div class="header">{{ statusText }}</div>
-          <p v-if="decklink.running">
-            {{ config.mode === 'chromakey' ? 'Chromakey-Signal wird ausgegeben.' : 'Key/Fill-Signale werden ausgegeben.' }}
-          </p>
+          <p v-if="decklink.running">{{ runningModeText }}</p>
         </div>
 
         <!-- Mode Selection -->
@@ -34,14 +32,20 @@
           <div class="grouped fields">
             <div class="field">
               <div class="ui radio checkbox inverted">
+                <input type="radio" v-model="config.mode" value="externalkey" :disabled="decklink.running">
+                <label>External Keyer (1 Gerät, z.B. UltraStudio HD Mini)</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox inverted">
                 <input type="radio" v-model="config.mode" value="keyfill" :disabled="decklink.running">
-                <label>Key/Fill (2 Ausgänge)</label>
+                <label>Key/Fill (2 separate Ausgänge)</label>
               </div>
             </div>
             <div class="field">
               <div class="ui radio checkbox inverted">
                 <input type="radio" v-model="config.mode" value="chromakey" :disabled="decklink.running">
-                <label>Chromakey (1 Ausgang)</label>
+                <label>Chromakey (1 Ausgang mit Farbhintergrund)</label>
               </div>
             </div>
           </div>
@@ -51,12 +55,12 @@
           <!-- Device Selection -->
           <h3>Geräte-Auswahl</h3>
 
-          <div :class="config.mode === 'chromakey' ? 'field' : 'two fields'">
+          <div :class="isSingleDeviceMode ? 'field' : 'two fields'">
             <div class="field">
-              <label>{{ config.mode === 'chromakey' ? 'Ausgang' : 'Fill-Ausgang' }}</label>
+              <label>{{ deviceLabel }}</label>
               <select v-model="config.fillDeviceIndex" class="ui dropdown inverted" :disabled="decklink.running">
-                <option v-for="device in decklink.devices" :key="'fill-' + device.index" :value="device.index">
-                  {{ device.displayName }}
+                <option v-for="device in availableDevices" :key="'fill-' + device.index" :value="device.index">
+                  {{ device.displayName }}{{ device.supportsKeyer ? ' (Keyer)' : '' }}
                 </option>
               </select>
             </div>
@@ -149,7 +153,13 @@
         <!-- Info -->
         <div class="ui info message" style="margin-top: 20px;">
           <div class="header">Hinweis</div>
-          <ul class="list" v-if="config.mode === 'keyfill'">
+          <ul class="list" v-if="config.mode === 'externalkey'">
+            <li>External Keyer nutzt die Hardware-Keying-Funktion des Geräts.</li>
+            <li>SDI Out 1 = Fill (RGB), SDI Out 2 = Key (Alpha als Graustufen).</li>
+            <li>Ideal für UltraStudio HD Mini, DeckLink Duo und ähnliche Karten.</li>
+            <li>Das Gerät muss "Keyer" unterstützen (siehe Geräteliste).</li>
+          </ul>
+          <ul class="list" v-else-if="config.mode === 'keyfill'">
             <li>Für Key/Fill-Ausgabe benötigst du zwei separate SDI/HDMI-Ausgänge.</li>
             <li>Fill enthält das RGB-Bild, Key enthält den Alpha-Kanal (schwarz/weiß).</li>
             <li>Die Ausgabe verwendet GPU-beschleunigtes Offscreen-Rendering mit 60fps.</li>
@@ -183,7 +193,7 @@ const displayModes = ref([]);
 
 // Configuration
 const config = reactive({
-  mode: 'keyfill', // 'keyfill' or 'chromakey'
+  mode: 'externalkey', // 'externalkey', 'keyfill', or 'chromakey'
   fillDeviceIndex: 0,
   keyDeviceIndex: 1,
   displayMode: null,
@@ -210,9 +220,18 @@ const chromakeyHex = computed({
 });
 
 // Computed
+const isSingleDeviceMode = computed(() => {
+  return config.mode === 'chromakey' || config.mode === 'externalkey';
+});
+
 const canStart = computed(() => {
-  if (config.mode === 'chromakey') {
-    // Chromakey: only need one device
+  if (isSingleDeviceMode.value) {
+    // Chromakey or External Keyer: only need one device
+    if (config.mode === 'externalkey') {
+      // For external keyer, device must support keying
+      const device = decklink.devices.find(d => d.index === config.fillDeviceIndex);
+      return device?.supportsKeyer && config.displayMode !== null;
+    }
     return decklink.devices.length >= 1 && config.displayMode !== null;
   } else {
     // Key/Fill: need two different devices
@@ -220,6 +239,26 @@ const canStart = computed(() => {
            config.fillDeviceIndex !== config.keyDeviceIndex &&
            config.displayMode !== null;
   }
+});
+
+const deviceLabel = computed(() => {
+  if (config.mode === 'externalkey') return 'Gerät (Key/Fill)';
+  if (config.mode === 'chromakey') return 'Ausgang';
+  return 'Fill-Ausgang';
+});
+
+const runningModeText = computed(() => {
+  if (config.mode === 'externalkey') return 'Key/Fill-Signal wird über External Keyer ausgegeben.';
+  if (config.mode === 'chromakey') return 'Chromakey-Signal wird ausgegeben.';
+  return 'Key/Fill-Signale werden ausgegeben.';
+});
+
+const availableDevices = computed(() => {
+  if (config.mode === 'externalkey') {
+    // Show all devices but indicate which support keying
+    return decklink.devices;
+  }
+  return decklink.devices;
 });
 
 const statusText = computed(() => {

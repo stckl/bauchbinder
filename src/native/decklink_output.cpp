@@ -56,6 +56,8 @@ class DeckLinkOutputInstance {
 public:
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
+    IDeckLinkConfiguration* config = nullptr;
+    IDeckLinkKeyer* keyer = nullptr;
     IDeckLinkMutableVideoFrame* frame = nullptr;
 
     int width = 1920;
@@ -65,6 +67,7 @@ public:
     BMDTimeValue frameDuration = 1000;
     BMDTimeScale timeScale = 50000;
 
+    bool enableKeyer = false;  // External keyer mode (Key/Fill on single device)
     std::atomic<bool> running{false};
     std::atomic<int64_t> frameCount{0};
     std::mutex frameMutex;
@@ -72,6 +75,8 @@ public:
     ~DeckLinkOutputInstance() {
         Stop();
         if (frame) frame->Release();
+        if (keyer) keyer->Release();
+        if (config) config->Release();
         if (output) output->Release();
         if (device) device->Release();
     }
@@ -80,6 +85,17 @@ public:
         if (running || !output) return false;
 
         HRESULT result;
+
+        // Enable external keyer if requested
+        if (enableKeyer && keyer) {
+            // Enable external keying - this routes Fill to SDI Out 1, Key to SDI Out 2
+            result = keyer->Enable(true);  // true = external keying
+            if (result != S_OK) {
+                // Non-fatal: some devices might not support keying
+            }
+            // Set keyer level to 100% (full alpha)
+            keyer->SetLevel(255);
+        }
 
         // Enable video output
         result = output->EnableVideoOutput(displayMode, bmdVideoOutputFlagDefault);
@@ -127,6 +143,11 @@ public:
         if (output) {
             output->StopScheduledPlayback(0, nullptr, 0);
             output->DisableVideoOutput();
+        }
+
+        // Disable keyer
+        if (enableKeyer && keyer) {
+            keyer->Disable();
         }
 
         if (frame) {
@@ -217,12 +238,15 @@ Napi::Value GetDevices(const Napi::CallbackInfo& info) {
 
         // Check capabilities
         IDeckLinkOutput* output = nullptr;
-        if (device->QueryInterface(IID_IDeckLinkOutput, (void**)&output) == S_OK) {
-            deviceObj.Set("supportsOutput", Napi::Boolean::New(env, true));
-            output->Release();
-        } else {
-            deviceObj.Set("supportsOutput", Napi::Boolean::New(env, false));
-        }
+        bool hasOutput = device->QueryInterface(IID_IDeckLinkOutput, (void**)&output) == S_OK;
+        deviceObj.Set("supportsOutput", Napi::Boolean::New(env, hasOutput));
+        if (output) output->Release();
+
+        // Check for keyer support (needed for Key/Fill on single device like UltraStudio)
+        IDeckLinkKeyer* keyer = nullptr;
+        bool hasKeyer = device->QueryInterface(IID_IDeckLinkKeyer, (void**)&keyer) == S_OK;
+        deviceObj.Set("supportsKeyer", Napi::Boolean::New(env, hasKeyer));
+        if (keyer) keyer->Release();
 
         if (displayName) FreeDLString(displayName);
         if (modelName) FreeDLString(modelName);
@@ -288,12 +312,13 @@ Napi::Value CreateOutput(const Napi::CallbackInfo& info) {
 
     int deviceIndex = info[0].As<Napi::Number>().Int32Value();
 
-    // Optional: display mode
+    // Optional: display mode and keyer
     BMDDisplayMode displayMode = bmdModeHD1080p50;
     int width = 1920;
     int height = 1080;
     BMDTimeValue frameDuration = 1000;
     BMDTimeScale timeScale = 50000;
+    bool enableKeyer = false;
 
     if (info.Length() > 1 && info[1].IsObject()) {
         Napi::Object options = info[1].As<Napi::Object>();
@@ -310,6 +335,9 @@ Napi::Value CreateOutput(const Napi::CallbackInfo& info) {
             double fps = options.Get("frameRate").As<Napi::Number>().DoubleValue();
             timeScale = (BMDTimeScale)(fps * 1000);
             frameDuration = 1000;
+        }
+        if (options.Has("enableKeyer")) {
+            enableKeyer = options.Get("enableKeyer").As<Napi::Boolean>().Value();
         }
     }
 
@@ -345,10 +373,29 @@ Napi::Value CreateOutput(const Napi::CallbackInfo& info) {
         return env.Null();
     }
 
+    // Get configuration interface (optional)
+    IDeckLinkConfiguration* config = nullptr;
+    device->QueryInterface(IID_IDeckLinkConfiguration, (void**)&config);
+
+    // Get keyer interface (optional, for Key/Fill on single device)
+    IDeckLinkKeyer* keyer = nullptr;
+    if (enableKeyer) {
+        if (device->QueryInterface(IID_IDeckLinkKeyer, (void**)&keyer) != S_OK) {
+            output->Release();
+            if (config) config->Release();
+            device->Release();
+            Napi::Error::New(env, "Device does not support keying").ThrowAsJavaScriptException();
+            return env.Null();
+        }
+    }
+
     // Create instance
     DeckLinkOutputInstance* instance = new DeckLinkOutputInstance();
     instance->device = device;
     instance->output = output;
+    instance->config = config;
+    instance->keyer = keyer;
+    instance->enableKeyer = enableKeyer;
     instance->displayMode = displayMode;
     instance->width = width;
     instance->height = height;
