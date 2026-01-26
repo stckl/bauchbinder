@@ -50,6 +50,27 @@ std::string CFStringToString(CFStringRef cfStr) {
 #endif
 
 // ============================================================================
+// Helper: Get bytes from video frame (cross-platform)
+// ============================================================================
+#ifdef __APPLE__
+// On macOS, GetBytes is on IDeckLinkVideoBuffer interface
+inline HRESULT GetFrameBytes(IDeckLinkMutableVideoFrame* frame, void** buffer) {
+    IDeckLinkVideoBuffer* videoBuffer = nullptr;
+    HRESULT result = frame->QueryInterface(IID_IDeckLinkVideoBuffer, (void**)&videoBuffer);
+    if (result == S_OK && videoBuffer) {
+        result = videoBuffer->GetBytes(buffer);
+        videoBuffer->Release();
+    }
+    return result;
+}
+#else
+// On Windows, GetBytes is directly on the frame
+inline HRESULT GetFrameBytes(IDeckLinkMutableVideoFrame* frame, void** buffer) {
+    return frame->GetBytes(buffer);
+}
+#endif
+
+// ============================================================================
 // Output Instance - manages a single DeckLink output
 // ============================================================================
 class DeckLinkOutputInstance {
@@ -118,8 +139,9 @@ public:
 
         // Clear frame to transparent black
         void* frameBytes;
-        frame->GetBytes(&frameBytes);
-        memset(frameBytes, 0, width * height * 4);
+        if (GetFrameBytes(frame, &frameBytes) == S_OK) {
+            memset(frameBytes, 0, width * height * 4);
+        }
 
         // Start scheduled playback
         result = output->StartScheduledPlayback(0, timeScale, 1.0);
@@ -164,7 +186,9 @@ public:
         std::lock_guard<std::mutex> lock(frameMutex);
 
         void* frameBytes;
-        frame->GetBytes(&frameBytes);
+        if (GetFrameBytes(frame, &frameBytes) != S_OK) {
+            return false;
+        }
 
         size_t expectedSize = width * height * 4;
         if (size >= expectedSize) {
@@ -279,11 +303,11 @@ Napi::Value GetDisplayModes(const Napi::CallbackInfo& info) {
     ModeInfo modes[] = {
         {bmdModeHD1080p50, "1080p50", 1920, 1080, 50.0},
         {bmdModeHD1080p5994, "1080p59.94", 1920, 1080, 59.94},
-        {bmdModeHD1080p60, "1080p60", 1920, 1080, 60.0},
+        {bmdModeHD1080p6000, "1080p60", 1920, 1080, 60.0},
         {bmdModeHD1080i50, "1080i50", 1920, 1080, 25.0},
         {bmdModeHD1080i5994, "1080i59.94", 1920, 1080, 29.97},
         {bmdModeHD720p50, "720p50", 1280, 720, 50.0},
-        {bmdModeHD720p60, "720p60", 1280, 720, 60.0},
+        {bmdModeHD720p6000, "720p60", 1280, 720, 60.0},
     };
 
     for (size_t i = 0; i < sizeof(modes)/sizeof(modes[0]); i++) {
