@@ -67,6 +67,25 @@ inline HRESULT GetFrameBytes(IDeckLinkMutableVideoFrame* frame, void** buffer) {
 }
 
 // ============================================================================
+// Helper: Create DeckLink Iterator (cross-platform)
+// ============================================================================
+inline IDeckLinkIterator* GetDeckLinkIterator() {
+    IDeckLinkIterator* iterator = nullptr;
+#ifdef _WIN32
+    // Windows: Use COM to create the iterator
+    HRESULT result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL,
+                                       IID_IDeckLinkIterator, (void**)&iterator);
+    if (FAILED(result)) {
+        return nullptr;
+    }
+#else
+    // macOS: Use the SDK's factory function
+    iterator = CreateDeckLinkIteratorInstance();
+#endif
+    return iterator;
+}
+
+// ============================================================================
 // Output Instance - manages a single DeckLink output
 // ============================================================================
 class DeckLinkOutputInstance {
@@ -235,9 +254,9 @@ Napi::Value GetDevices(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     Napi::Array result = Napi::Array::New(env);
 
-    IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
+    IDeckLinkIterator* iterator = GetDeckLinkIterator();
     if (!iterator) {
-        // DeckLink drivers not installed
+        // DeckLink drivers not installed or COM not initialized
         return result;
     }
 
@@ -362,9 +381,9 @@ Napi::Value CreateOutput(const Napi::CallbackInfo& info) {
     }
 
     // Find device
-    IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
+    IDeckLinkIterator* iterator = GetDeckLinkIterator();
     if (!iterator) {
-        Napi::Error::New(env, "DeckLink drivers not installed").ThrowAsJavaScriptException();
+        Napi::Error::New(env, "DeckLink drivers not installed or COM not initialized").ThrowAsJavaScriptException();
         return env.Null();
     }
 
