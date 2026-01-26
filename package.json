@@ -12,7 +12,9 @@
     "generate-icons": "electron-icon-builder --input=assets/Bauchbinder_icon.png --output=assets --flatten",
     "build-companion": "cd companion-module && npm install && npm run set-version -- $(node -p \"require('../package.json').version\") && npm run package && cd .. && cp companion-module/*.tgz public/downloads/bauchbinder.tgz",
     "pack-win": "npm run build-companion && npm run build && electron-builder build --windows --x64 --publish always",
-    "pack-macarm": "npm run build-companion && npm run build && electron-builder build --macos --arm64 --publish always"
+    "pack-macarm": "npm run build-companion && npm run build && electron-builder build --macos --arm64 --publish always",
+    "build-decklink": "cd src/native && npm install && npx node-gyp rebuild && cd ../..",
+    "rebuild-decklink": "cd src/native && npx @electron/rebuild -f && cd ../.."
   },
   "build": {
     "appId": "de.mstockle.bauchbinder",
@@ -26,6 +28,9 @@
       "animations/**/*",
       "themes/**/*",
       "assets/icons/**/*",
+      "src/decklink/**/*",
+      "src/native/index.js",
+      "src/native/build/Release/*.node",
       "main.js",
       "playoutWin.js",
       "package.json"
@@ -69,6 +74,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.7.1",
     "@rollup/plugin-inject": "^5.0.5",
     "@vitejs/plugin-vue": "^6.0.3",
     "bestzip": "^2.2.1",

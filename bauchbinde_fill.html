@@ -8,6 +8,29 @@
         if (typeof require !== 'undefined') {
             window.jQuery = window.$ = require('jquery');
         }
+
+        // Chromakey mode: set background color from URL params
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('chromakey') === '1') {
+                const r = parseInt(params.get('r')) || 0;
+                const g = parseInt(params.get('g')) || 177;
+                const b = parseInt(params.get('b')) || 64;
+                document.documentElement.style.setProperty('--chromakey-bg', `rgb(${r}, ${g}, ${b})`);
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.style.background = `rgb(${r}, ${g}, ${b})`;
+                });
+            }
+
+            // Listen for runtime chromakey color changes (IPC)
+            if (typeof require !== 'undefined') {
+                const { ipcRenderer } = require('electron');
+                ipcRenderer.on('set-chromakey-color', (event, color) => {
+                    const { r, g, b } = color;
+                    document.body.style.background = `rgb(${r}, ${g}, ${b})`;
+                });
+            }
+        })();
     </script>
 </head>
 <body class="fill">

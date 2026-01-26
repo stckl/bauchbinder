@@ -26,6 +26,18 @@ const logger = winston.createLogger({
   ]
 });
 
+// DeckLink Output (optional dependency)
+let DeckLinkOutput = null;
+let deckLinkOutput = null;
+try {
+  const decklink = require('./src/decklink');
+  DeckLinkOutput = decklink.DeckLinkOutput;
+  deckLinkOutput = new DeckLinkOutput();
+  console.log('[DeckLink] Module loaded, available:', deckLinkOutput.isAvailable());
+} catch (err) {
+  console.log('[DeckLink] Module not available:', err.message);
+}
+
 let win, winKey, winFill, winEditor, winStep;
 let data = [{ name: 'Max Mustermann', title: 'Beispiel-Titel für Bauchbinde', image: null }];
 let activeLowerThirdId = null;
@@ -393,6 +405,11 @@ function showLowerThird(arg) {
   io.emit('show-lowerthird', activeLowerThirdData);
   sendToWindows('status-update', status);
   io.emit('status-update', status);
+
+  // Forward to DeckLink OSR windows
+  if (deckLinkOutput && deckLinkOutput.getStatus().running) {
+    deckLinkOutput.showLowerThird(activeLowerThirdData);
+  }
 }
 
 function showLowerThirdByID(arg) {
@@ -418,6 +435,11 @@ function hideLowerThird() {
   io.emit('hide-lowerthird', null);
   io.emit('status-update', { activeId: activeLowerThirdId, activeItem: null });
   sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: null });
+
+  // Forward to DeckLink OSR windows
+  if (deckLinkOutput && deckLinkOutput.getStatus().running) {
+    deckLinkOutput.hideLowerThird();
+  }
 }
 
 function cancelLowerThird() {
@@ -434,6 +456,11 @@ function cancelLowerThird() {
   io.emit('cancel-lowerthird', null);
   io.emit('status-update', { activeId: activeLowerThirdId, activeItem: null });
   sendToWindows('status-update', { activeId: activeLowerThirdId, activeItem: null });
+
+  // Forward to DeckLink OSR windows
+  if (deckLinkOutput && deckLinkOutput.getStatus().running) {
+    deckLinkOutput.cancelLowerThird();
+  }
 }
 
 ipc.on('request-state', (event) => {
@@ -452,12 +479,20 @@ ipc.on('update-css', (event, arg) => {
   lastDesign = arg;
   sendToWindows('update-css', arg);
   io.emit('update-css', arg);
+  // Forward to DeckLink OSR windows
+  if (deckLinkOutput && deckLinkOutput.getStatus().running) {
+    deckLinkOutput.updateCSS(arg);
+  }
 });
 
 ipc.on('update-js', (event, arg) => {
   lastAnimation = arg;
   sendToWindows('update-js', arg);
   io.emit('update-js', arg);
+  // Forward to DeckLink OSR windows
+  if (deckLinkOutput && deckLinkOutput.getStatus().running) {
+    deckLinkOutput.updateAnimation(arg);
+  }
 });
 
 ipc.on('log-debug', (event, arg) => {
@@ -523,6 +558,76 @@ ipc.on('delete-entry', (event, id) => {
 ipc.on('toggle-fullscreen-key', () => { if (winKey) winKey.setFullScreen(!winKey.isFullScreen()); });
 ipc.on('toggle-fullscreen-fill', () => { if (winFill) winFill.setFullScreen(!winFill.isFullScreen()); });
 
+// ============ DeckLink IPC Handlers ============
+
+ipc.on('decklink-get-status', (event) => {
+  if (deckLinkOutput) {
+    event.sender.send('decklink-status', deckLinkOutput.getStatus());
+  } else {
+    event.sender.send('decklink-status', { available: false, running: false, devices: [] });
+  }
+});
+
+ipc.on('decklink-enumerate-devices', async (event) => {
+  if (deckLinkOutput) {
+    const devices = await deckLinkOutput.getDevices();
+    event.sender.send('decklink-devices', devices);
+  } else {
+    event.sender.send('decklink-devices', []);
+  }
+});
+
+ipc.on('decklink-get-display-modes', (event) => {
+  if (deckLinkOutput) {
+    const modes = deckLinkOutput.getDisplayModes();
+    event.sender.send('decklink-display-modes', modes);
+  } else {
+    event.sender.send('decklink-display-modes', []);
+  }
+});
+
+ipc.on('decklink-configure', (event, config) => {
+  if (deckLinkOutput) {
+    deckLinkOutput.configure(config);
+    console.log('[DeckLink] Configured:', config);
+  }
+});
+
+ipc.on('decklink-start', async (event) => {
+  if (deckLinkOutput) {
+    try {
+      await deckLinkOutput.start();
+      // Send current state to OSR windows
+      deckLinkOutput.updateCSS(lastDesign);
+      deckLinkOutput.updateAnimation(lastAnimation);
+      // If there's an active lower third, show it
+      if (activeLowerThirdData) {
+        deckLinkOutput.showLowerThird(activeLowerThirdData);
+      }
+      event.sender.send('decklink-status', deckLinkOutput.getStatus());
+      console.log('[DeckLink] Started');
+    } catch (err) {
+      console.error('[DeckLink] Start failed:', err);
+      event.sender.send('decklink-error', { message: err.message });
+    }
+  }
+});
+
+ipc.on('decklink-stop', async (event) => {
+  if (deckLinkOutput) {
+    try {
+      await deckLinkOutput.stop();
+      event.sender.send('decklink-status', deckLinkOutput.getStatus());
+      console.log('[DeckLink] Stopped');
+    } catch (err) {
+      console.error('[DeckLink] Stop failed:', err);
+      event.sender.send('decklink-error', { message: err.message });
+    }
+  }
+});
+
+// ============ End DeckLink IPC Handlers ============
+
 app.on('ready', () => {
   createWindow();
   for(let i=0; i<=9; i++) {
@@ -532,6 +637,16 @@ app.on('ready', () => {
   }
 });
 
-app.on('will-quit', () => { globalShortcut.unregisterAll(); });
+app.on('will-quit', async () => {
+  globalShortcut.unregisterAll();
+  // Stop DeckLink output if running
+  if (deckLinkOutput && deckLinkOutput.getStatus().running) {
+    try {
+      await deckLinkOutput.stop();
+    } catch (err) {
+      console.error('[DeckLink] Error stopping on quit:', err);
+    }
+  }
+});
 app.on('window-all-closed', () => { app.quit(); });
 app.on('activate', () => { if (win === null) createWindow(); });

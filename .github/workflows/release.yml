@@ -78,6 +78,31 @@ jobs:
       - name: Install App Dependencies
         run: npm ci
 
+      - name: Setup DeckLink SDK
+        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        env:
+          DECKLINK_SDK_URL: ${{ secrets.DECKLINK_SDK_URL }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [ -n "$GITLAB_TOKEN" ]; then
+            curl -L -H "PRIVATE-TOKEN: $GITLAB_TOKEN" -o /tmp/decklink-sdk.zip "$DECKLINK_SDK_URL"
+          else
+            curl -L -o /tmp/decklink-sdk.zip "$DECKLINK_SDK_URL"
+          fi
+          unzip -o /tmp/decklink-sdk.zip -d /tmp/decklink-sdk/
+          cp /tmp/decklink-sdk/*/Mac/include/*.h src/native/sdk/ || cp /tmp/decklink-sdk/Mac/include/*.h src/native/sdk/
+          cp /tmp/decklink-sdk/*/Mac/include/*.cpp src/native/sdk/ || cp /tmp/decklink-sdk/Mac/include/*.cpp src/native/sdk/
+          ls -la src/native/sdk/
+
+      - name: Build DeckLink Native Addon
+        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        working-directory: src/native
+        run: |
+          npm install
+          npx node-gyp rebuild
+          npx @electron/rebuild -v $(node -p "require('../../package.json').devDependencies.electron.replace('^', '')") -a arm64
+          ls -la build/Release/
+
       - name: Build Frontend
         run: npm run build
 
@@ -119,6 +144,41 @@ jobs:
 
       - name: Install App Dependencies
         run: npm ci
+
+      - name: Setup DeckLink SDK
+        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        shell: pwsh
+        env:
+          DECKLINK_SDK_URL: ${{ secrets.DECKLINK_SDK_URL }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          $headers = @{}
+          if ($env:GITLAB_TOKEN) {
+            $headers["PRIVATE-TOKEN"] = $env:GITLAB_TOKEN
+          }
+          Invoke-WebRequest -Uri $env:DECKLINK_SDK_URL -OutFile "$env:TEMP\decklink-sdk.zip" -Headers $headers
+          Expand-Archive -Path "$env:TEMP\decklink-sdk.zip" -DestinationPath "$env:TEMP\decklink-sdk" -Force
+          $sdkRoot = Get-ChildItem "$env:TEMP\decklink-sdk" -Directory | Select-Object -First 1
+          Copy-Item "$($sdkRoot.FullName)\Win\include\*" -Destination "src\native\sdk\" -Force
+          Get-ChildItem "src\native\sdk"
+
+      - name: Compile IDL with MIDL
+        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        shell: cmd
+        working-directory: src/native/sdk
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          midl /h DeckLinkAPI.h /iid DeckLinkAPI_i.c DeckLinkAPI.idl
+          dir *.h
+
+      - name: Build DeckLink Native Addon
+        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        working-directory: src/native
+        run: |
+          npm install
+          npx node-gyp rebuild
+          npx @electron/rebuild -v $(node -p "require('../../package.json').devDependencies.electron.replace('^', '')") -a x64
+          dir build\Release\
 
       - name: Build Frontend
         run: npm run build

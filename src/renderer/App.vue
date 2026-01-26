@@ -25,6 +25,7 @@
       <a class="item" :class="{ active: activeTab === 'items' }" @click="activeTab = 'items'">Bauchbinden</a>
       <a class="item" :class="{ active: activeTab === 'design' }" @click="activeTab = 'design'">Gestaltung</a>
       <a class="item" :class="{ active: activeTab === 'animation' }" @click="activeTab = 'animation'">Animation</a>
+      <a class="item" :class="{ active: activeTab === 'output' }" @click="activeTab = 'output'">Ausgabe</a>
       <a class="item" :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">Info</a>
     </div>
 
@@ -38,6 +39,10 @@
 
     <div class="ui tab segment" :class="{ active: activeTab === 'animation' }">
       <AnimationTab :is-active="activeTab === 'animation'" />
+    </div>
+
+    <div class="ui tab segment" :class="{ active: activeTab === 'output' }">
+      <OutputTab />
     </div>
 
     <div class="ui tab segment" :class="{ active: activeTab === 'info' }">
@@ -88,6 +93,7 @@ import { ref, onMounted, nextTick } from 'vue';
 import ItemsTab from './components/ItemsTab.vue';
 import DesignTab from './components/DesignTab.vue';
 import AnimationTab from './components/AnimationTab.vue';
+import OutputTab from './components/OutputTab.vue';
 import InfoTab from './components/InfoTab.vue';
 import EntryEditor from './components/EntryEditor.vue';
 import StepEditor from './components/StepEditor.vue';

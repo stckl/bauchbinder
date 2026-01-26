@@ -1,0 +1,9 @@
+# Build artifacts
+build/
+node_modules/
+
+# SDK files (must be added manually, not redistributable)
+sdk/*.h
+sdk/*.cpp
+!sdk/README.md
+!sdk/.gitkeep
