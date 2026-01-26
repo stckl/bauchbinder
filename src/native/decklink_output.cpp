@@ -307,7 +307,7 @@ Napi::Value GetDisplayModes(const Napi::CallbackInfo& info) {
         {bmdModeHD1080i50, "1080i50", 1920, 1080, 25.0},
         {bmdModeHD1080i5994, "1080i59.94", 1920, 1080, 29.97},
         {bmdModeHD720p50, "720p50", 1280, 720, 50.0},
-        {bmdModeHD720p6000, "720p60", 1280, 720, 60.0},
+        {bmdModeHD720p60, "720p60", 1280, 720, 60.0},
     };
 
     for (size_t i = 0; i < sizeof(modes)/sizeof(modes[0]); i++) {
