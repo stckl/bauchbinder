@@ -59,6 +59,7 @@ convert-problems/
 debug.log
 macos_certificate.p12
 GEMINI.md
+CLAUDE.md
 
 # DeckLink SDK (not redistributable)
 sdk-download/*
