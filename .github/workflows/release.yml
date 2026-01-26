@@ -54,6 +54,8 @@ jobs:
 
   build-mac:
     runs-on: macos-latest
+    env:
+      HAS_DECKLINK_SDK: ${{ secrets.DECKLINK_SDK_URL && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -79,7 +81,7 @@ jobs:
         run: npm ci
 
       - name: Setup DeckLink SDK
-        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        if: env.HAS_DECKLINK_SDK == 'true'
         env:
           DECKLINK_SDK_URL: ${{ secrets.DECKLINK_SDK_URL }}
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
@@ -95,7 +97,7 @@ jobs:
           ls -la src/native/sdk/
 
       - name: Build DeckLink Native Addon
-        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        if: env.HAS_DECKLINK_SDK == 'true'
         working-directory: src/native
         run: |
           npm install
@@ -120,6 +122,8 @@ jobs:
 
   build-win:
     runs-on: windows-latest
+    env:
+      HAS_DECKLINK_SDK: ${{ secrets.DECKLINK_SDK_URL && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -146,7 +150,7 @@ jobs:
         run: npm ci
 
       - name: Setup DeckLink SDK
-        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        if: env.HAS_DECKLINK_SDK == 'true'
         shell: pwsh
         env:
           DECKLINK_SDK_URL: ${{ secrets.DECKLINK_SDK_URL }}
@@ -163,7 +167,7 @@ jobs:
           Get-ChildItem "src\native\sdk"
 
       - name: Compile IDL with MIDL
-        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        if: env.HAS_DECKLINK_SDK == 'true'
         shell: cmd
         working-directory: src/native/sdk
         run: |
@@ -172,7 +176,7 @@ jobs:
           dir *.h
 
       - name: Build DeckLink Native Addon
-        if: ${{ secrets.DECKLINK_SDK_URL != '' }}
+        if: env.HAS_DECKLINK_SDK == 'true'
         working-directory: src/native
         run: |
           npm install
